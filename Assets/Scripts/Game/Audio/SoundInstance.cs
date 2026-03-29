@@ -58,26 +58,16 @@ public class SoundInstance : MonoBehaviour
 
     public void SetNewVolumeMultiple(float newVolumeMultipleValue) => volumeMultiple = newVolumeMultipleValue;  // 볼륨 배수 설정 (AudioManager에서 전체 볼륨이 바뀌었을 때 이걸로 개별 사운드의 볼륨 재설정)
 
-    public void StopSound(string targetSoundName, float duration)   // 사운드 정지 (targetSoundName이 자기 이름이랑 같으면 멈춤, duration이 0보다 크면 페이드 아웃)
+    public void StopSound(float duration)   // 사운드 정지 (targetSoundName이 자기 이름이랑 같으면 멈춤, duration이 0보다 크면 페이드 아웃)
     {
         if (isStopping) return;
 
-        if ((targetSoundName == soundName) || string.IsNullOrEmpty(targetSoundName))
-        {
-            isStopping = true;
-
-            if (duration > 0)
-            {
-                StartCoroutine(StopSound(duration));
-            }
-            else
-            {
-                JUST_SHUT_THE_BUCK_UP();
-            }
-        }
+        isStopping = true;
+        if (duration > 0) StartCoroutine(StopSoundCoroutine(duration));
+        else JUST_SHUT_THE_BUCK_UP();
     }
 
-    IEnumerator StopSound(float duration)   // StopSound에서 호출하는 사운드를 서서히 줄여서 멈추는 코루틴
+    IEnumerator StopSoundCoroutine(float duration)   // StopSound에서 호출하는 사운드를 서서히 줄여서 멈추는 코루틴
     {
         float time = 0;
         float startVolume = AS.volume;
