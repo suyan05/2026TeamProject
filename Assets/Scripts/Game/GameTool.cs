@@ -1,0 +1,63 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class GameTool : MonoBehaviour
+{
+    private Dictionary<GameObject, Coroutine> activeCoroutines = new Dictionary<GameObject, Coroutine>();
+
+    public void RotateObjectToPos(GameObject obj, Vector2 target, float offsetAngle = 0f, float duration = 0f)
+    {
+        if (obj == null) return;
+
+        Vector2 direction = target - (Vector2)obj.transform.position;
+        float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        float finalAngle = targetAngle + offsetAngle;
+
+        if (duration > 0f)
+        {
+            if (activeCoroutines.ContainsKey(obj) && activeCoroutines[obj] != null)
+            {
+                StopCoroutine(activeCoroutines[obj]);
+            }
+
+            activeCoroutines[obj] = StartCoroutine(RotateRoutine(obj, finalAngle, duration));
+        }
+        else
+        {
+            obj.transform.rotation = Quaternion.Euler(0f, 0f, finalAngle);
+        }
+    }
+    
+
+    private IEnumerator RotateRoutine(GameObject obj, float targetAngle, float duration)
+    {
+        float startAngle = obj.transform.eulerAngles.z;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            if (obj == null) yield break;
+
+            elapsedTime += Time.deltaTime;
+
+            float currentAngle = Mathf.LerpAngle(startAngle, targetAngle, elapsedTime / duration);
+            obj.transform.rotation = Quaternion.Euler(0f, 0f, currentAngle);
+
+            yield return null;
+        }
+
+        if (obj != null)
+        {
+            obj.transform.rotation = Quaternion.Euler(0f, 0f, targetAngle);
+            activeCoroutines.Remove(obj);
+        }
+    }
+
+    int GetRandomInt(int number1, int number2)
+    {
+        if (number1 == number2) return number1;
+        else if (number1 > number2) return Random.Range(number2, number1 + 1);
+        else return Random.Range(number1, number2 + 1);
+    }
+}
