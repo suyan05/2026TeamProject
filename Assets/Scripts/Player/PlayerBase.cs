@@ -6,7 +6,7 @@ public class PlayerBase : MonoBehaviour
     public float jumpForce = 7f;
     private Rigidbody2D rb;
     private bool isGrounded;
-    private bool onPlatform; // ��/�Ʒ� �̵� ������ �÷��� ���� �ִ��� üũ
+    private bool onPlatform; // ??/??? ??? ?????? ?��??? ???? ????? ??
 
     void Start()
     {
@@ -15,17 +15,17 @@ public class PlayerBase : MonoBehaviour
 
     void Update()
     {
-        // �¿� �̵�
+        // ?��? ???
         float horizontal = Input.GetAxisRaw("Horizontal");
         rb.linearVelocity = new Vector2(horizontal * moveSpeed, rb.linearVelocity.y);
 
-        // ����
+        // ????
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         }
 
-        // ��/�Ʒ� �÷��� �̵� (��: ��ٸ�, ����������)
+        // ??/??? ?��??? ??? (??: ????, ??????????)
         if (onPlatform)
         {
             float vertical = Input.GetAxisRaw("Vertical");
@@ -35,13 +35,13 @@ public class PlayerBase : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // ���� ��Ҵ��� üũ
+        // ???? ?????? ??
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
         }
 
-        // ��/�Ʒ� �̵� ������ �÷����� ��Ҵ��� üũ
+        // ??/??? ??? ?????? ?��????? ?????? ??
         if (collision.gameObject.CompareTag("Platform"))
         {
             onPlatform = true;
