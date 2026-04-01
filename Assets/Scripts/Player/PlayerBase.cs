@@ -6,7 +6,7 @@ public class PlayerBase : MonoBehaviour
     public float jumpForce = 7f;
     private Rigidbody2D rb;
     private bool isGrounded;
-    private bool onPlatform; // À§/¾Æ·¡ ÀÌµ¿ °¡´ÉÇÑ ÇÃ·§Æû À§¿¡ ÀÖ´ÂÁö Ã¼Å©
+    private bool onPlatform; // ï¿½ï¿½/ï¿½Æ·ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ Ã¼Å©
 
     void Start()
     {
@@ -15,33 +15,33 @@ public class PlayerBase : MonoBehaviour
 
     void Update()
     {
-        // ÁÂ¿ì ÀÌµ¿
+        // ï¿½Â¿ï¿½ ï¿½Ìµï¿½
         float horizontal = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(horizontal * moveSpeed, rb.velocity.y);
+        rb.linearVelocity = new Vector2(horizontal * moveSpeed, rb.linearVelocity.y);
 
-        // Á¡ÇÁ
+        // ï¿½ï¿½ï¿½ï¿½
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         }
 
-        // À§/¾Æ·¡ ÇÃ·§Æû ÀÌµ¿ (¿¹: »ç´Ù¸®, ¿¤¸®º£ÀÌÅÍ)
+        // ï¿½ï¿½/ï¿½Æ·ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ (ï¿½ï¿½: ï¿½ï¿½Ù¸ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
         if (onPlatform)
         {
             float vertical = Input.GetAxisRaw("Vertical");
-            rb.velocity = new Vector2(rb.velocity.x, vertical * moveSpeed);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, vertical * moveSpeed);
         }
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // ¶¥¿¡ ´ê¾Ò´ÂÁö Ã¼Å©
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ò´ï¿½ï¿½ï¿½ Ã¼Å©
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
         }
 
-        // À§/¾Æ·¡ ÀÌµ¿ °¡´ÉÇÑ ÇÃ·§Æû¿¡ ´ê¾Ò´ÂÁö Ã¼Å©
+        // ï¿½ï¿½/ï¿½Æ·ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ò´ï¿½ï¿½ï¿½ Ã¼Å©
         if (collision.gameObject.CompareTag("Platform"))
         {
             onPlatform = true;
