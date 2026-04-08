@@ -61,6 +61,7 @@ public class CameraMovement : MonoBehaviour
             enabled = false;
         }
     }
+
     private void OnDestroy()
     {
         if (Instance == this)
@@ -513,7 +514,6 @@ public class CameraMovement : MonoBehaviour
         explodingFovCoroutine = null;
     }
 
-    // 기존 AllStop 메서드를 아래 코드로 교체
     public static void AllStop()
     {
         if (Instance == null) return;
