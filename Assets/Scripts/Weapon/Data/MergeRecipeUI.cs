@@ -1,4 +1,7 @@
-// UI에 가능한 조합식 표시
+// ---------------------------------------------------------
+// MergeRecipeUI
+// - UI에 "현재 만들 수 있는 조합식"을 자동으로 표시
+// ---------------------------------------------------------
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
