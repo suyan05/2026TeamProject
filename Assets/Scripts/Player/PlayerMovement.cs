@@ -1,4 +1,3 @@
-using Unity.Hierarchy;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
@@ -24,7 +23,7 @@ public class PlayerMovement : MonoBehaviour
     const KeyCode LeftKey = KeyCode.A;
     const KeyCode RightKey = KeyCode.D;
     const KeyCode JumpKey = KeyCode.Space;
-    sbyte lastInputDirection; // 마지막 입력 방향 (-1: 왼쪽, 1: 오른쪽)
+    sbyte lastInputDirection = 1; // 마지막 입력 방향 (-1: 왼쪽, 1: 오른쪽)
     float currentSpeed;   // 현재 이동 속도
     bool isGrounded;    // 지면에 있는지 여부
 
@@ -44,6 +43,7 @@ public class PlayerMovement : MonoBehaviour
 
         MoveHandler();
         JumpHandler();
+        RotationHandler();
     }
 
     void MoveHandler()
@@ -58,7 +58,7 @@ public class PlayerMovement : MonoBehaviour
             }
             else
             {
-                currentSpeed -= deceleration * Time.deltaTime;
+                currentSpeed -= deceleration * Time.deltaTime * 1.5f;
                 currentSpeed = Mathf.Max(currentSpeed, 0f);
             }
         }
@@ -105,6 +105,29 @@ public class PlayerMovement : MonoBehaviour
         {
             horizontal = 0;
             return false;
+        }
+    }
+
+    void RotationHandler()
+    {
+        float targetYAngle = (lastInputDirection == 1) ? 0.01f : 179.99f;
+
+        Quaternion targetRotation = Quaternion.Euler(0, targetYAngle, 0);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)   // 벽 충돌 시 속도 초기화
+    {
+        foreach (ContactPoint2D contact in collision.contacts)
+        {
+            if (Mathf.Abs(contact.normal.x) > 0.5f)
+            {
+                if ((lastInputDirection > 0 && contact.normal.x < -0.5f) ||
+                    (lastInputDirection < 0 && contact.normal.x > 0.5f))
+                {
+                    currentSpeed = 0f;
+                }
+            }
         }
     }
 
