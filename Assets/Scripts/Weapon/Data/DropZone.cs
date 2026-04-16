@@ -1,22 +1,50 @@
-// ---------------------------------------------------------
-// DropZone
-// - 드래그한 UI 아이템을 합성대에 드롭하면
-//   MergeStation에 아이템을 추가함
-// ---------------------------------------------------------
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class DropZone : MonoBehaviour, IDropHandler
 {
     public MergeStation station;
+    public Transform spawnPoint;
 
     public void OnDrop(PointerEventData eventData)
     {
-        GameObject dropped = eventData.pointerDrag;
+        if (eventData == null || eventData.pointerDrag == null)
+            return;
 
-        if (dropped != null)
+        var dropped = eventData.pointerDrag.GetComponent<InventoryItemUI>();
+        if (dropped == null)
+            return;
+
+        if (station == null)
         {
-            station.AddItem(dropped);
+            Debug.LogWarning("MergeStation이 할당되지 않았습니다.", this);
+            return;
         }
+
+        if (spawnPoint == null)
+        {
+            Debug.LogWarning("spawnPoint가 할당되지 않았습니다.", this);
+            return;
+        }
+
+        if (dropped.itemData == null)
+        {
+            Debug.LogWarning("드롭된 오브젝트에 ItemData가 없습니다.", dropped);
+            return;
+        }
+
+        if (dropped.itemData.worldPrefab == null)
+        {
+            Debug.LogWarning("ItemData에 worldPrefab이 할당되지 않았습니다.", dropped.itemData);
+            return;
+        }
+
+        GameObject obj = Instantiate(
+            dropped.itemData.worldPrefab,
+            spawnPoint.position,
+            Quaternion.identity
+        );
+
+        station.AddItem(obj);
     }
 }

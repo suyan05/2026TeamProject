@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 1d109f6e4bcaa1847aafc7a1da6a3d16
+guid: 150fc8d63d5efd24c8d413136d64af2c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5556090211858348704
-    second: PavingStones029_1K-PNG_AmbientOcclusion_0
+      213: 6519306559665096031
+    second: Metal050C_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: PavingStones029_1K-PNG_AmbientOcclusion_0
+      name: Metal050C_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1024
-        height: 1024
+        x: 8
+        y: 8
+        width: 496
+        height: 496
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0658826c36dc4e2b0800000000000000
-      internalID: -5556090211858348704
+      spriteID: f5546b676ca397a50800000000000000
+      internalID: 6519306559665096031
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      PavingStones029_1K-PNG_AmbientOcclusion_0: -5556090211858348704
+      Metal050C_0: 6519306559665096031
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
