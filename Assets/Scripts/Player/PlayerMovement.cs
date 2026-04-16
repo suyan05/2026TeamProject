@@ -13,6 +13,10 @@ public class PlayerMovement : MonoBehaviour
     [Header("레이어 마스크")]
     public LayerMask groundLayerMask;    // 지면 레이어
 
+    [Header("임시용 (화살)")]
+    public ArrowController arrowPrefab;
+    public Transform firePoint;
+
     [Header("키")]
     public KeyCode weapon1Key = KeyCode.Alpha1;
     public KeyCode weapon2Key = KeyCode.Alpha2;
@@ -36,8 +40,19 @@ public class PlayerMovement : MonoBehaviour
         col = GetComponent<Collider2D>();
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(skill1Key)) LaunchArrow();
+    }
 
-    void Update()
+    void LaunchArrow()
+    {
+        ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
+        
+        arrowScript.Shoot(Vector3.right * lastInputDirection, 10f);
+    }
+
+    private void FixedUpdate()
     {
         UpdateStates();
 
@@ -53,18 +68,18 @@ public class PlayerMovement : MonoBehaviour
             if (!(lastInputDirection != horizontal && currentSpeed > maxSpeed * 0.1f))
             {
                 lastInputDirection = horizontal;
-                currentSpeed += acceleration * Time.deltaTime;
+                currentSpeed += acceleration * Time.fixedDeltaTime;
                 currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
             }
             else
             {
-                currentSpeed -= deceleration * Time.deltaTime * 1.5f;
+                currentSpeed -= deceleration * Time.fixedDeltaTime * 1.5f;
                 currentSpeed = Mathf.Max(currentSpeed, 0f);
             }
         }
         else
         {
-            currentSpeed -= deceleration * Time.deltaTime;
+            currentSpeed -= deceleration * Time.fixedDeltaTime;
             currentSpeed = Mathf.Max(currentSpeed, 0f);
         }
 
