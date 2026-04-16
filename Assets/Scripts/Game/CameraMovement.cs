@@ -70,14 +70,11 @@ public class CameraMovement : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         if (normalizeRotation && !isRotating) mainRotation = NormalizeAngles(mainRotation);
         if (positionTrackingTarget != null) lastTrackingTargetPos = positionTrackingTarget.position;
-    }
 
-    private void LateUpdate()
-    {
         transform.position = mainPosition + new Vector3(shakePositionOffset.x, shakePositionOffset.y, 0f);
         transform.rotation = Quaternion.Euler(new Vector3(mainRotation.x, mainRotation.y, mainRotation.z + shakeRotationOffset));
         cam.fieldOfView = mainFOV + ExplodingFovOffset;
