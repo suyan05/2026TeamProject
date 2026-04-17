@@ -37,7 +37,6 @@ public class EnemyDummy : MonoBehaviour, IEnemyCombat
 
     public void GetDamage(float damage, Transform attacker)
     {
-        print("1");
         currentHP -= damage;
         if (currentHP <= 0) Dead(attacker.position);
     }

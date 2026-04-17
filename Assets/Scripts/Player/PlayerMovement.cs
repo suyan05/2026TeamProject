@@ -17,6 +17,12 @@ public class PlayerMovement : MonoBehaviour
     public ArrowController arrowPrefab;
     public Transform firePoint;
 
+    [Header("근접")]
+    public float damage = 20f;   // 근접 공격 대미지
+    public Vector2 hitboxOffset = Vector2.zero;    // 히트박스 오프셋
+    public Vector2 hitboxSize = new Vector2(1.0f, 1.0f); // 크기 (width, height)
+    public LayerMask enemyLayer;    // 적 레이어
+
     [Header("키")]
     public KeyCode weapon1Key = KeyCode.Alpha1;
     public KeyCode weapon2Key = KeyCode.Alpha2;
@@ -43,13 +49,38 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         if (Input.GetKeyDown(skill1Key)) LaunchArrow();
+        if (Input.GetKeyDown(skill2Key)) MeleeAttack();
     }
 
     void LaunchArrow()
     {
         ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
-        
+
         arrowScript.Shoot(Vector3.right * lastInputDirection, 10f);
+    }
+
+    void MeleeAttack()
+    {
+        Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * lastInputDirection, hitboxOffset.y);
+        Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
+
+        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
+            worldCenter,            // 중심 위치
+            hitboxSize,             // 크기
+            0f,                     // 회전 각도
+            enemyLayer             // 감지할 레이어
+        );
+
+        if (hitTargets.Length > 0)
+        {
+            foreach (Collider2D targetCollider in hitTargets)
+            {
+                if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
+                {
+                    enemyCombat.GetDamage(damage, transform);
+                }
+            }
+        }
     }
 
     private void FixedUpdate()
@@ -148,7 +179,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateStates()
     {
-       isGrounded = CheckIsGrounded();
+        isGrounded = CheckIsGrounded();
     }
 
     bool CheckIsGrounded()
@@ -157,5 +188,15 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, 0.05f, groundLayerMask);
 
         return hit.collider != null;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+
+        Vector2 hitboxLocalAdjustedOffset = new Vector2(hitboxOffset.x * lastInputDirection, hitboxOffset.y);
+        Vector2 hitboxGizmoCenter = (Vector2)transform.position + hitboxLocalAdjustedOffset;
+
+        Gizmos.DrawWireCube(hitboxGizmoCenter, new Vector3(hitboxSize.x, hitboxSize.y, 0f));
     }
 }
