@@ -3,6 +3,10 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class PlayerMovement : MonoBehaviour
 {
+    public static PlayerMovement Instance { get; private set; }
+
+    [Header("플레이어 최대 체력")]
+    public const float maxHp = 100.0f;
     [Header("플레이어 이동")]
     public float maxSpeed = 5f;   // 이동 속도
     public float jumpForce = 7f;   // 점프 힘
@@ -35,6 +39,7 @@ public class PlayerMovement : MonoBehaviour
     const KeyCode JumpKey = KeyCode.Space;
     sbyte lastInputDirection = 1; // 마지막 입력 방향 (-1: 왼쪽, 1: 오른쪽)
     float currentSpeed;   // 현재 이동 속도
+    float currentHp;      // 현재 체력
     bool isGrounded;    // 지면에 있는지 여부
 
     Rigidbody2D rb; // 플레이어의 Rigidbody2D 컴포넌트
@@ -42,14 +47,41 @@ public class PlayerMovement : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance == null) Instance = this;
+        else
+        {
+            Destroy(gameObject);
+        }
+
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
+    }
+
+    private void Start()
+    {
+        currentHp = maxHp;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(skill1Key)) LaunchArrow();
         if (Input.GetKeyDown(skill2Key)) MeleeAttack();
+    }
+
+    public void GetDamage(float damageAmount, Transform damageSource)
+    {
+        currentHp -= damageAmount;
+        Debug.Log("Player Get Damage: " + damageAmount + ", Current HP: " + currentHp);
+        if (currentHp <= 0f)
+        {
+            Die();
+        }
+    }
+
+    void Die()
+    {
+        // 사망 처리
+        Debug.Log("Player has died.");
     }
 
     void LaunchArrow()
