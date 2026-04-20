@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c0f2fd6ddc2b7d04fb53a64e50336e5c
+guid: 1260438c2a725c74da918107780fbcd7
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4165282186811538955
-    second: PLANT_CLR_002_0
+      213: -214410934354405538
+    second: forest-monster-skin1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: PLANT_CLR_002_0
+      name: forest-monster-skin1_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5f106d17be1f136c0800000000000000
-      internalID: -4165282186811538955
+      spriteID: e5798d52462460df0800000000000000
+      internalID: -214410934354405538
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      PLANT_CLR_002_0: -4165282186811538955
+      forest-monster-skin1_0: -214410934354405538
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
