@@ -1,8 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
-public class ArrowController : MonoBehaviour
+public class EnemyArrowController : MonoBehaviour
 {
     [Header("대미지")]
     public float damage = 10f;    // 화살이 가하는 대미지
@@ -83,9 +82,9 @@ public class ArrowController : MonoBehaviour
         stuckTarget = collision.transform;
         stuckOffset = transform.position - stuckTarget.position;
 
-        if (collision.gameObject.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
+        if (collision.gameObject == PlayerMovement.Instance.gameObject)
         {
-            enemyCombat.GetDamage(damage, transform);
+            PlayerMovement.Instance.GetDamage(damage, transform);
         }
 
         // 사라지는 코루틴 시작
