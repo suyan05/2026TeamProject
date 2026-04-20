@@ -25,8 +25,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
     [Header("대미지")]
     public float damage = 0.4f;  // 공격 대미지
-    public float knockbackPower = 1f;
-    public float knockbacktime = 0.05f;
 
     [Header("히트박스")]
     public Vector2 hitboxOffset = Vector2.zero;    // 히트박스 오프셋

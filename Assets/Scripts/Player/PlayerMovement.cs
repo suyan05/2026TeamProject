@@ -57,6 +57,11 @@ public class PlayerMovement : MonoBehaviour
         col = GetComponent<Collider2D>();
     }
 
+    private void OnMouseDown()
+    {
+        print("Player Clicked");
+    }
+
     private void Start()
     {
         currentHp = maxHp;

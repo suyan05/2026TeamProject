@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class ArrowAttackEnemy : MonoBehaviour
+public class ArrowAttackEnemy : MonoBehaviour, IEnemyCombat
 {
     [Header("체력")]
     public float maxHp = 30f;   // 최대 체력
@@ -17,15 +17,16 @@ public class ArrowAttackEnemy : MonoBehaviour
     public Transform upperGroundCheckPos;    // 땅 위쪽
     public Transform lowerGroundCheckPos;    // 땅 아래쪽
 
-    [Header("공격")]
+    [Header("공격 시간")]
     public float readyToAttackTime = 0.5f;  // 공격으로 전환 시간
     public float attackChargeTime = 0.42f;  // 공격의 준비 시간
     public float attackCooldown = 0.35f;    // 공격 대기시간 (공격 쿨타임)
 
-    [Header("대미지")]
+    [Header("공격 화살 / 대미지")]
+    public EnemyArrowController arrowPrefab;   // 발사할 화살 프리팹
+    public Transform firePoint;   // 화살 발사 위치
+    public float arrowSpeed = 10f;   // 화살 속도
     public float damage = 0.4f;  // 공격 대미지
-    public float knockbackPower = 1f;
-    public float knockbacktime = 0.05f;
 
     [Header("히트박스")]
     public Vector2 hitboxOffset = Vector2.zero;    // 히트박스 오프셋
@@ -278,27 +279,9 @@ public class ArrowAttackEnemy : MonoBehaviour
 
     void Attack()
     {
-        Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * facingSign, hitboxOffset.y);
-        Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
-
-        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter,            // 중심 위치
-            hitboxSize,             // 크기
-            0f,                     // 회전 각도
-            playerLayer             // 감지할 레이어
-        );
-
-        if (hitTargets.Length > 0)
-        {
-            foreach (Collider2D targetCollider in hitTargets)
-            {
-                if (targetCollider.gameObject == playerObject)
-                {
-                    PlayerMovement.Instance.GetDamage(damage, transform);
-                    break;
-                }
-            }
-        }
+        EnemyArrowController arrow = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
+        arrow.damage = damage;
+        arrow.Shoot(isFacingRight ? Vector2.right : Vector2.left, arrowSpeed);
     }
 
     IEnumerator EndAttack()
@@ -381,6 +364,8 @@ public class ArrowAttackEnemy : MonoBehaviour
         Vector2 hitboxGizmoCenter = (Vector2)transform.position + hitboxLocalAdjustedOffset;
 
         Gizmos.DrawWireCube(hitboxGizmoCenter, new Vector3(hitboxSize.x, hitboxSize.y, 0f));
+
+        Gizmos.DrawWireSphere(firePoint.position, 0.1f);
 
         Gizmos.color = Color.blue;
 
