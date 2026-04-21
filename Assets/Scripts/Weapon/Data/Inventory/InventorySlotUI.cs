@@ -16,6 +16,7 @@ public class InventorySlotUI : MonoBehaviour, IDropHandler
 
         ItemData item = dragged.itemData;
 
+        // 새 위치에 배치 가능한지 먼저 검사
         if (inventory.grid.CanPlaceItem(item, x, y))
         {
             inventory.RemoveItem(item);
@@ -23,10 +24,9 @@ public class InventorySlotUI : MonoBehaviour, IDropHandler
         }
         else
         {
+            // 배치 불가 -> 원래 자리로 복구
             inventory.grid.PlaceItem(item, dragged.originalX, dragged.originalY);
         }
-
-        inventory.grid.DebugPrintGrid();
 
         inventoryUI.RefreshItems();
     }

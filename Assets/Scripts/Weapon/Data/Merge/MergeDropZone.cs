@@ -1,32 +1,24 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using System.Collections.Generic;
 
 public class MergeDropZone : MonoBehaviour, IDropHandler
 {
-    public MergeStation mergeStation;
-    public MergeManager mergeManager;
-
-    private List<ItemData> selectedItems = new List<ItemData>();
+    public MergeStationUI station;
+    public GameObject mergeSlotPrefab;
+    public RectTransform slotContainer;
 
     public void OnDrop(PointerEventData eventData)
     {
         InventoryItemUI itemUI = eventData.pointerDrag.GetComponent<InventoryItemUI>();
         if (itemUI == null) return;
 
-        selectedItems.Add(itemUI.itemData);
+        GameObject slotObj = Instantiate(mergeSlotPrefab, slotContainer);
+        MergeSlotUI slot = slotObj.GetComponent<MergeSlotUI>();
+        slot.SetItem(itemUI.itemData);
 
-        GameObject worldObj = Instantiate(itemUI.itemData.worldPrefab);
-        mergeStation.AddItem(worldObj);
+        station.AddSlot(slotObj.GetComponent<RectTransform>());
 
+        itemUI.inventory.RemoveItem(itemUI.itemData);
         Destroy(itemUI.gameObject);
-    }
-
-    public void TryMerge()
-    {
-        mergeManager.TryMerge(selectedItems);
-
-        selectedItems.Clear();
-        mergeStation.ClearItems();
     }
 }

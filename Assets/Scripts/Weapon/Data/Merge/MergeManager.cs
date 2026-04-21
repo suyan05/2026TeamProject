@@ -4,45 +4,55 @@ using System.Linq;
 
 public class MergeManager : MonoBehaviour
 {
-    public Transform dropPoint;       // 결과 아이템 생성 위치
-    public List<MergeRecipe> recipes; // 등록된 조합식
-    public ItemDatabase itemDB;       // 아이템 DB
+    public List<MergeRecipe> recipes;
+    public ItemDatabase itemDB;
+    public Inventory inventory;
 
-    public void TryMerge(List<ItemData> selectedItems)
+    public MergeStationUI station;
+    public MergeOutputSlotUI outputSlot;
+
+    public void TryMerge()
     {
-        if (selectedItems == null || selectedItems.Count == 0)
+        List<ItemData> selected = new List<ItemData>();
+
+        foreach (var slot in station.slotList)
+        {
+            MergeSlotUI s = slot.GetComponent<MergeSlotUI>();
+            if (s.item != null)
+                selected.Add(s.item);
+        }
+
+        if (selected.Count == 0)
             return;
 
-        List<int> selectedIDs = selectedItems.Select(i => i.itemID).ToList();
+        List<int> ids = selected.Select(i => i.itemID).ToList();
 
         foreach (var recipe in recipes)
         {
-            if (IsMatch(recipe, selectedIDs))
+            if (IsMatch(recipe, ids))
             {
-                SpawnResult(recipe.resultItemID);
+                foreach (var item in selected)
+                    inventory.RemoveItem(item);
+
+                ItemData result = itemDB.GetItemByID(recipe.resultItemID);
+                inventory.TryAddItem(result);
+
+                outputSlot.SetResult(result);
+
+                station.ClearSlots();
                 return;
             }
         }
 
-        Debug.Log("조합 실패: 해당 조합식 없음");
+        Debug.Log("조합 실패");
     }
 
-    bool IsMatch(MergeRecipe recipe, List<int> selectedIDs)
+    bool IsMatch(MergeRecipe recipe, List<int> ids)
     {
-        if (recipe.ingredientIDs.Count != selectedIDs.Count)
+        if (recipe.ingredientIDs.Count != ids.Count)
             return false;
 
         return recipe.ingredientIDs.OrderBy(i => i)
-            .SequenceEqual(selectedIDs.OrderBy(i => i));
-    }
-
-    void SpawnResult(int resultID)
-    {
-        ItemData result = itemDB.GetItemByID(resultID);
-
-        if (result == null || result.worldPrefab == null)
-            return;
-
-        Instantiate(result.worldPrefab, dropPoint.position, Quaternion.identity);
+            .SequenceEqual(ids.OrderBy(i => i));
     }
 }
