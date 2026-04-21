@@ -15,6 +15,9 @@ public class EnemyLaser : MonoBehaviour
     [Header("공격")]
     public float damage = 0.3f;
 
+    [Header("분산")]
+    public float laserDispersion = 0f;
+
     [Header("크기")]
     public float laserThickness = 0.2f;
 
@@ -87,6 +90,12 @@ public class EnemyLaser : MonoBehaviour
     {
         if (target != null) targetPos = target.position;
         LookPos(targetPos);
+
+        if (laserDispersion > 0)
+        {
+            float randomAngle = Random.Range(-laserDispersion / 2f, laserDispersion / 2f);
+            Rotate(randomAngle);
+        }
 
         if (timeToFire > 0)
         {
