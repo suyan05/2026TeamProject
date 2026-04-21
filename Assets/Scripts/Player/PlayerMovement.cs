@@ -6,7 +6,7 @@ public class PlayerMovement : MonoBehaviour
     public static PlayerMovement Instance { get; private set; }
 
     [Header("플레이어 최대 체력")]
-    public const float maxHp = 100.0f;
+    [SerializeField] public readonly float maxHp = 100.0f;
     [Header("플레이어 이동")]
     public float maxSpeed = 5f;   // 이동 속도
     public float jumpForce = 7f;   // 점프 힘
@@ -19,6 +19,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("임시용 (화살)")]
     public ArrowController arrowPrefab;
+    public float maxArrowAngle = 30f;   // 최대 발사 각도 (수평 기준)
     public Transform firePoint;
 
     [Header("근접")]
@@ -40,6 +41,8 @@ public class PlayerMovement : MonoBehaviour
     sbyte lastInputDirection = 1; // 마지막 입력 방향 (-1: 왼쪽, 1: 오른쪽)
     float currentSpeed;   // 현재 이동 속도
     float currentHp;      // 현재 체력
+    float maxArrowPower = 20f;   // 최대 화살 발사 힘
+    float arrowPower = 0f;   // 화살 발사 힘
     bool isGrounded;    // 지면에 있는지 여부
 
     Rigidbody2D rb; // 플레이어의 Rigidbody2D 컴포넌트
@@ -69,7 +72,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(skill1Key)) LaunchArrow();
+        if (Input.GetKey(skill1Key))
+        {
+            arrowPower += Time.deltaTime * 30f;
+            arrowPower = Mathf.Min(arrowPower, maxArrowPower);
+        }
+        else if (Input.GetKeyUp(skill1Key))
+        {
+            LaunchArrow();
+            arrowPower = 0f;
+        }
+
+
         if (Input.GetKeyDown(skill2Key)) MeleeAttack();
     }
 
@@ -93,7 +107,12 @@ public class PlayerMovement : MonoBehaviour
     {
         ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
 
-        arrowScript.Shoot(Vector3.right * lastInputDirection, 10f);
+        arrowPower = Mathf.Max(arrowPower, 3f); // 최소 발사 힘
+
+        Vector2 arrowFireDirection = (Vector3.right * lastInputDirection) + (Vector3)rb.linearVelocity;
+
+        float arrowSpeed = arrowPower + (rb.linearVelocity.magnitude / 3f);
+        arrowScript.Shoot(arrowFireDirection, arrowSpeed);
     }
 
     void MeleeAttack()

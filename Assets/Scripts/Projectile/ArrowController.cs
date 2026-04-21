@@ -67,7 +67,7 @@ public class ArrowController : MonoBehaviour
         rb.AddForce(direction.normalized * force, ForceMode2D.Impulse);
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
         if (isStuck) return;
         isStuck = true;
@@ -91,7 +91,6 @@ public class ArrowController : MonoBehaviour
         // 사라지는 코루틴 시작
         StartCoroutine(ShrinkAndDestroy());
     }
-
     private IEnumerator ShrinkAndDestroy()
     {
         yield return new WaitForSeconds(waitTimeBeforeShrink);

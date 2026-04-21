@@ -1709,6 +1709,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1024
   arrowPrefab: {fileID: 2353487750690169481, guid: 63a5622b8c312224689e2aee4ab82538, type: 3}
+  maxArrowAngle: 10
   firePoint: {fileID: 1588022528}
   damage: 20
   hitboxOffset: {x: 1.5, y: 0}
