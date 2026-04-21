@@ -1,81 +1,122 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class InventoryUI : MonoBehaviour
 {
     public Inventory inventory;
-    public InventoryGrid grid;
 
-    [Header("아이템 UI 프리팹")]
-    public GameObject itemUIPrefab;
+    public RectTransform gridParent;
+    public RectTransform itemParent;
 
-    [Header("아이템들이 배치될 부모 오브젝트")]
-    public Transform gridParent;
+    public GameObject slotPrefab;
+    public GameObject itemPrefab;
 
-    [Header("자동 배치 딜레이(초)")]
-    public float autoPlaceDelay = 0.2f;
+    public int slotSize = 64;
 
-    void OnEnable()
+    public InventorySlotUI[,] slotUIs;
+
+    void Start()
     {
-        if (inventory != null)
-            inventory.OnInventoryChanged += RefreshUI;
-        if (grid != null)
-            grid.OnGridExpanded += RefreshUI;
-        RefreshUI();
+        RebuildGrid();
+        RefreshItems();
     }
 
-    void OnDisable()
+    // 그리드 재생성
+    public void RebuildGrid()
     {
-        if (inventory != null)
-            inventory.OnInventoryChanged -= RefreshUI;
-        if (grid != null)
-            grid.OnGridExpanded -= RefreshUI;
-        StopAllCoroutines();
-    }
-
-    void ResizeGridUI()
-    {
-        if (gridParent == null || grid == null) return;
-        RectTransform rt = gridParent.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(
-            grid.gridWidth * 64f,
-            grid.gridHeight * 64f
-        );
-    }
-
-    void RefreshUI()
-    {
-        ResizeGridUI();
-
         foreach (Transform child in gridParent)
             Destroy(child.gameObject);
 
-        if (inventory == null || grid == null || itemUIPrefab == null) return;
+        GenerateGrid();
+    }
 
-        foreach (var item in inventory.Items)
+    // 슬롯 배경 생성 (0,0 중심 기준)
+    void GenerateGrid()
+    {
+        slotUIs = new InventorySlotUI[inventory.gridWidth, inventory.gridHeight];
+
+        float centerX = (inventory.gridWidth * slotSize) / 2f;
+        float centerY = (inventory.gridHeight * slotSize) / 2f;
+
+        for (int y = 0; y < inventory.gridHeight; y++)
         {
-            GameObject ui = Instantiate(itemUIPrefab, gridParent);
-            ui.SetActive(true); // 오브젝트 강제 활성화
-
-            InventoryItemUI uiItem = ui.GetComponent<InventoryItemUI>();
-            if (uiItem != null)
+            for (int x = 0; x < inventory.gridWidth; x++)
             {
-                uiItem.Init(item, grid, inventory);
+                GameObject slotObj = Instantiate(slotPrefab, gridParent);
+                RectTransform rt = slotObj.GetComponent<RectTransform>();
+
+                float posX = (x * slotSize) - centerX + slotSize / 2f;
+                float posY = centerY - (y * slotSize) - slotSize / 2f;
+
+                rt.anchoredPosition = new Vector2(posX, posY);
+
+                InventorySlotUI slotUI = slotObj.GetComponent<InventorySlotUI>();
+                slotUI.x = x;
+                slotUI.y = y;
+                slotUI.inventory = inventory;
+                slotUI.inventoryUI = this;
+
+                slotUIs[x, y] = slotUI;
             }
+        }
+    }
 
-            var img = ui.GetComponentInChildren<Image>();
-            if (img != null)
-                img.sprite = item.icon;
+    // 아이템 UI 생성
+    public void RefreshItems()
+    {
+        // 기존 UI 제거
+        foreach (Transform child in itemParent)
+            Destroy(child.gameObject);
 
-            var pos = grid.GetItemPosition(item);
-            if (pos.HasValue)
+        // 인벤토리에 있는 모든 아이템 UI 생성
+        foreach (var item in inventory.items)
+        {
+            int foundX = -1;
+            int foundY = -1;
+
+            // 아이템이 차지한 칸 중 "가장 왼쪽 위 칸" 찾기
+            for (int y = 0; y < inventory.grid.gridHeight; y++)
             {
-                var rect = ui.GetComponent<RectTransform>();
-                if (rect != null)
-                    rect.anchoredPosition = new Vector2(pos.Value.x * 64f, pos.Value.y * 64f);
+                for (int x = 0; x < inventory.grid.gridWidth; x++)
+                {
+                    var slot = inventory.grid.slots[x, y];
+                    if (slot != null && slot.item == item)
+                    {
+                        foundX = x;
+                        foundY = y;
+                        goto Found; // 첫 번째 발견된 칸이 곧 아이템의 기준 위치
+                    }
+                }
             }
+        Found:
+
+            // 아이템이 실제로 차지한 칸이 없다면 스킵
+            if (foundX == -1)
+                continue;
+
+            // UI 생성
+            GameObject itemObj = Instantiate(itemPrefab, itemParent);
+            InventoryItemUI itemUI = itemObj.GetComponent<InventoryItemUI>();
+
+            itemUI.inventory = inventory;
+            itemUI.inventoryUI = this;
+            itemUI.SetItem(item);
+
+            RectTransform rt = itemObj.GetComponent<RectTransform>();
+            RectTransform slotRT = slotUIs[foundX, foundY].GetComponent<RectTransform>();
+
+            // 아이템 크기 계산
+            float w = item.width * slotSize;
+            float h = item.height * slotSize;
+
+            // 슬롯 중심과 아이템 중심 차이 보정
+            float offsetX = (w - slotSize) / 2f;
+            float offsetY = (h - slotSize) / 2f;
+
+            // 최종 위치 적용
+            rt.anchoredPosition = slotRT.anchoredPosition + new Vector2(offsetX, -offsetY);
+
+            // 크기 적용
+            rt.sizeDelta = new Vector2(w, h);
         }
     }
 }

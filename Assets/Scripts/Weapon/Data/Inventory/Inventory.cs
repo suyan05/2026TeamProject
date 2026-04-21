@@ -1,54 +1,46 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System;
 
 public class Inventory : MonoBehaviour
 {
-    [Header("플레이어가 보유한 아이템들")]
-    [SerializeField]
-    private List<ItemData> items = new List<ItemData>();
-    public IReadOnlyList<ItemData> Items => items;
+    public int gridWidth = 6;
+    public int gridHeight = 6;
 
-    [Header("최대 보유 아이템 개수 (0이면 무제한)")]
-    public int maxCapacity = 0;
+    public InventoryGrid grid;
+    public List<ItemData> items = new List<ItemData>();
 
-    // 인벤토리 변경 시 호출되는 이벤트 (옵션)
-    public event Action OnInventoryChanged;
+    void Awake()
+    {
+        grid = new InventoryGrid(gridWidth, gridHeight);
+    }
 
     // 아이템 추가
-    public bool AddItem(ItemData item)
+    public bool TryAddItem(ItemData item)
     {
-        if (item == null) return false;
-        if (maxCapacity > 0 && items.Count >= maxCapacity)
+        for (int y = 0; y < gridHeight; y++)
         {
-            Debug.Log("인벤토리가 가득 찼습니다.");
-            return false;
+            for (int x = 0; x < gridWidth; x++)
+            {
+                if (grid.CanPlaceItem(item, x, y))
+                {
+                    grid.PlaceItem(item, x, y);
+                    items.Add(item);
+
+                    grid.DebugPrintGrid();
+
+                    return true;
+                }
+            }
         }
-        items.Add(item);
-        OnInventoryChanged?.Invoke();
-        return true;
+        return false;
     }
 
-    // 아이템 제거
-    public bool RemoveItem(ItemData item)
+    public void RemoveItem(ItemData item)
     {
-        if (item == null) return false;
-        bool removed = items.Remove(item);
-        if (removed)
-            OnInventoryChanged?.Invoke();
-        return removed;
+        grid.RemoveItem(item);
+        items.Remove(item);
+
+        grid.DebugPrintGrid();
     }
 
-    // 아이템 보유 여부 확인
-    public bool Contains(ItemData item)
-    {
-        return items.Contains(item);
-    }
-
-    // 아이템 전체 제거
-    public void Clear()
-    {
-        items.Clear();
-        OnInventoryChanged?.Invoke();
-    }
 }
