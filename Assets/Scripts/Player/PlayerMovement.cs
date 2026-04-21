@@ -111,6 +111,24 @@ public class PlayerMovement : MonoBehaviour
 
         Vector2 arrowFireDirection = (Vector3.right * lastInputDirection) + (Vector3)rb.linearVelocity;
 
+        float currentAngle = Mathf.Atan2(arrowFireDirection.y, arrowFireDirection.x) * Mathf.Rad2Deg;
+        float minAngle, maxAngle;
+        if (lastInputDirection > 0)
+        {
+            minAngle = -maxArrowAngle;
+            maxAngle = maxArrowAngle;
+        }
+        else
+        {
+            if (currentAngle < 0) currentAngle += 360f;
+            minAngle = 180f - maxArrowAngle;
+            maxAngle = 180f + maxArrowAngle;
+        }
+
+        float clampedAngle = Mathf.Clamp(currentAngle, minAngle, maxAngle);
+        float rad = clampedAngle * Mathf.Deg2Rad;
+        arrowFireDirection = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+
         float arrowSpeed = arrowPower + (rb.linearVelocity.magnitude / 3f);
         arrowScript.Shoot(arrowFireDirection, arrowSpeed);
     }
