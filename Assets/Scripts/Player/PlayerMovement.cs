@@ -35,6 +35,7 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode skill1Key = KeyCode.E;
     public KeyCode skill2Key = KeyCode.Q;
     public KeyCode skull3Key = KeyCode.F;
+    public KeyCode inventory = KeyCode.Tab;
 
     const KeyCode LeftKey = KeyCode.A;
     const KeyCode RightKey = KeyCode.D;
@@ -73,15 +74,25 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        // inventory 키로 인벤토리 열고 닫기
+        if (Input.GetKeyDown(inventory))
+        {
+            UIManager.Instance.ToggleInventory();
+        }
+
         if (Input.GetKey(skill1Key))
         {
             arrowPower += Time.deltaTime * 30f;
             arrowPower = Mathf.Min(arrowPower, maxArrowPower);
+
+            UIManager.Instance.UpdateChargeGauge(arrowPower, maxArrowPower);
         }
         else if (Input.GetKeyUp(skill1Key))
         {
             LaunchArrow();
             arrowPower = 0f;
+
+            UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
         }
 
 
