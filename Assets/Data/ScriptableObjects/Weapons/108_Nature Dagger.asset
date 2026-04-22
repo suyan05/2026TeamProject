@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 262493dcf87632e4d8aae3ecf890cca8, type: 3}
+  m_Name: 108_Nature Dagger
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSO
+  id: 108
+  nameKr: "\uC790\uC5F0 \uB2E8\uAC80"
+  nameEn: Nature Dagger
+  attribute: 1
+  rarity: 3
+  attackSpeed: 3
+  attackMin: 32
+  attackMax: 48
+  feature: "\uBC29\uC5B4 \uAC10\uC18C"
+  description: "\uC18D\uB3C4 \uADF9\uB300"

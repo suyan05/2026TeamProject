@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 262493dcf87632e4d8aae3ecf890cca8, type: 3}
+  m_Name: 122_Barrier Shield
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSO
+  id: 122
+  nameKr: "\uACB0\uACC4 \uBC29\uD328"
+  nameEn: Barrier Shield
+  attribute: 2
+  rarity: 2
+  attackSpeed: 0
+  attackMin: 6
+  attackMax: 9
+  feature: "\uC544\uAD70 \uBCF4\uD638"
+  description: "\uD300\uD50C"

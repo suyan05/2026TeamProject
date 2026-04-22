@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 262493dcf87632e4d8aae3ecf890cca8, type: 3}
+  m_Name: 119_Shadow Dagger
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSO
+  id: 119
+  nameKr: "\uADF8\uB9BC\uC790 \uB2E8\uAC80"
+  nameEn: Shadow Dagger
+  attribute: 6
+  rarity: 1
+  attackSpeed: 3
+  attackMin: 7
+  attackMax: 11
+  feature: "\uCE58\uBA85 \uC99D\uAC00"
+  description: "\uC554\uC0B4"
