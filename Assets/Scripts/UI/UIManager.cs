@@ -23,7 +23,11 @@ public class UIManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
         else Destroy(gameObject);
     }
 
@@ -64,20 +68,22 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// 페이드 커튼의 알파값 변경. duration이 0보다 크면 점진적으로 변경됨.
     /// </summary>
-    public void SetCurtainToggle(bool isActive, float duration = 0f)
+    public void SetCurtainToggle(bool isActive, float duration, float waitingTime = 0f)
     {
         if (fadeCurtain == null) return;
 
+        fadeCurtain.gameObject.SetActive(true);
         float targetAlpha = isActive ? 1f : 0f;
-        fadeCurtain.gameObject.SetActive(isActive);
-
+        
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
-        fadeCoroutine = StartCoroutine(SetCurtainAlphaCoroutine(targetAlpha, duration));
+        fadeCoroutine = StartCoroutine(SetCurtainAlphaCoroutine(targetAlpha, duration, isActive, waitingTime));
     }
 
-    IEnumerator SetCurtainAlphaCoroutine(float targetAlpha, float duration)
+    IEnumerator SetCurtainAlphaCoroutine(float targetAlpha, float duration, bool isActive, float waitingTime)
     {
-        if (duration <= 0f)
+        yield return new WaitForSeconds(waitingTime);
+
+        if (duration > 0f)
         {
             float startAlpha = fadeCurtain.color.a;
             float elapsed = 0f;
@@ -93,6 +99,8 @@ public class UIManager : MonoBehaviour
         }
 
         SetImageAlpha(fadeCurtain, targetAlpha);
+        if (!isActive) fadeCurtain.gameObject.SetActive(false);
+
         fadeCoroutine = null;
     }
 

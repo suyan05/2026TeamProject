@@ -620,7 +620,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &424720262
 RectTransform:
   m_ObjectHideFlags: 0
@@ -647,7 +647,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 424720261}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -2485,7 +2485,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1727441225}
   - component: {fileID: 1727441226}
-  - component: {fileID: 1727441227}
+  - component: {fileID: 1727441229}
   - component: {fileID: 1727441228}
   m_Layer: 0
   m_Name: TriggerBox
@@ -2521,24 +2521,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6978154decae64f45acf4fc6713ce758, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriggerBox
-  rangeType: 2
+  rangeType: 1
   hitboxOffset: {x: 0, y: 0}
   hitboxSize: {x: 1, y: 1}
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
---- !u!114 &1727441227
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1727441224}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba189fe9678361247b3b29537ef50149, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TestTriggerBoxPart
 --- !u!61 &1727441228
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2585,6 +2573,24 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &1727441229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1727441224}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c14397bafce244089c9519daccaf12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriggerBox_SceneTransition
+  loadThisScene: 1
+  customSceneName: 
+  standbyTime: 0
+  fadeOutDuration: 1
+  fadeInDuration: 1
+  destroyAfterTrigger: 1
 --- !u!1 &1772206931
 GameObject:
   m_ObjectHideFlags: 0
