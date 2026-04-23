@@ -68,6 +68,9 @@ public class EnemyArrowController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        bool isPlayer = collision.gameObject == PlayerMovement.Instance.gameObject;
+        if (isPlayer && PlayerMovement.Instance.isRolling) return; // 플레이어를 맟췄는데 플레이어가 구르기 중이면 무시
+
         if (isStuck) return;
         isStuck = true;
 
@@ -82,7 +85,7 @@ public class EnemyArrowController : MonoBehaviour
         stuckTarget = collision.transform;
         stuckOffset = transform.position - stuckTarget.position;
 
-        if (collision.gameObject == PlayerMovement.Instance.gameObject)
+        if (isPlayer)
         {
             PlayerMovement.Instance.GetDamage(damage, transform);
         }

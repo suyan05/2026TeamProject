@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
@@ -28,12 +29,17 @@ public class PlayerMovement : MonoBehaviour
     public Vector2 hitboxSize = new Vector2(1.0f, 1.0f); // 크기 (width, height)
     public LayerMask enemyLayer;    // 적 레이어
 
+    [Header("구르기")]
+    public float rollDuration = 0.5f; // 구르기 지속 시간
+    public float rollSpeedMultiplier = 1.5f; // 구르기 속도 배율
+    public float rollCoolDown = 0.4f;
+
     [Header("키")]
     public KeyCode weapon1Key = KeyCode.Alpha1;
     public KeyCode weapon2Key = KeyCode.Alpha2;
     public KeyCode skill1Key = KeyCode.E;
     public KeyCode skill2Key = KeyCode.Q;
-    public KeyCode skull3Key = KeyCode.F;
+    public KeyCode skill3Key = KeyCode.F;
     public KeyCode inventory = KeyCode.Tab;
 
     const KeyCode LeftKey = KeyCode.A;
@@ -45,6 +51,8 @@ public class PlayerMovement : MonoBehaviour
     float maxArrowPower = 20f;   // 최대 화살 발사 힘
     float arrowPower = 0f;   // 화살 발사 힘
     bool isGrounded;    // 지면에 있는지 여부
+    bool canRoll = true;
+    [HideInInspector] public bool isRolling;    // 구르기 중인지 여부
 
     Rigidbody2D rb; // 플레이어의 Rigidbody2D 컴포넌트
     Collider2D col; // 플레이어의 Collider2D 컴포넌트
@@ -94,12 +102,15 @@ public class PlayerMovement : MonoBehaviour
             if (UIManager.Instance != null) UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
         }
 
-
         if (Input.GetKeyDown(skill2Key)) MeleeAttack();
+
+        if (Input.GetKeyDown(skill3Key)) Roll();
     }
 
     public void GetDamage(float damageAmount, Transform damageSource)
     {
+        if (isRolling) return;
+
         currentHp -= damageAmount;
         Debug.Log("Player Get Damage: " + damageAmount + ", Current HP: " + currentHp);
         if (currentHp <= 0f)
@@ -168,11 +179,35 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    void Roll()
+    {
+        if (!canRoll || !isGrounded) return;
+        StartCoroutine(RollCoroutine());
+    }
+
+    IEnumerator RollCoroutine()
+    {
+        isRolling = true;
+        canRoll = false;
+
+        float elapsedTime = 0f;
+        while (elapsedTime < rollDuration)
+        {
+            rb.linearVelocity = new Vector2(lastInputDirection * maxSpeed * rollSpeedMultiplier, rb.linearVelocity.y);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        isRolling = false;
+
+        yield return new WaitForSeconds(rollDuration);
+        canRoll = true;
+    }
+
     private void FixedUpdate()
     {
         UpdateStates();
 
-        MoveHandler();
+        if (!isRolling) MoveHandler();
         JumpHandler();
         RotationHandler();
     }

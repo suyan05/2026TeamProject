@@ -1838,12 +1838,16 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 4096
+  rollDuration: 0.3
+  rollSpeedMultiplier: 1.5
+  rollCoolDown: 0.4
   weapon1Key: 49
   weapon2Key: 50
   skill1Key: 101
   skill2Key: 113
-  skull3Key: 102
+  skill3Key: 102
   inventory: 9
+  isRolling: 0
 --- !u!1 &1546372022
 GameObject:
   m_ObjectHideFlags: 0
