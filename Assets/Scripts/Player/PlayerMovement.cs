@@ -76,7 +76,7 @@ public class PlayerMovement : MonoBehaviour
         // inventory 키로 인벤토리 열고 닫기
         if (Input.GetKeyDown(inventory))
         {
-            UIManager.Instance.ToggleInventory();
+            if (UIManager.Instance != null) UIManager.Instance.ToggleInventory();
         }
 
         if (Input.GetKey(skill1Key))
@@ -84,14 +84,14 @@ public class PlayerMovement : MonoBehaviour
             arrowPower += Time.deltaTime * 30f;
             arrowPower = Mathf.Min(arrowPower, maxArrowPower);
 
-            UIManager.Instance.UpdateChargeGauge(arrowPower, maxArrowPower);
+            if (UIManager.Instance != null) UIManager.Instance.UpdateChargeGauge(arrowPower, maxArrowPower);
         }
         else if (Input.GetKeyUp(skill1Key))
         {
             LaunchArrow();
             arrowPower = 0f;
 
-            UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
+            if (UIManager.Instance != null) UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
         }
 
 
