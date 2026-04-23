@@ -52,6 +52,10 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
     public LayerMask obstacleMask;  // 장애물을 감지할 레이어
     public LayerMask playerLayer;   // 감지 레이어
 
+    [Header("적 HP바 자동 생성")]
+    public GameObject hpBarPrefab;
+    private EnemyHPBarFollow hpBar;
+
     private int facingSign = 1; // 바라보는 방향
 
     private float currentNormalizedSpeed = 0;   // 정규화된 속도
@@ -87,6 +91,21 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
         SetState(state.idle);
 
         if (EnemyCounter.Instance != null) EnemyCounter.Instance.AddEnemy();
+
+        playerObject = PlayerMovement.Instance.gameObject;
+        isFacingRight = true;
+        currentHp = maxHp;
+        SetState(state.idle);
+
+        // HP바 생성
+        GameObject ui = Instantiate(
+            hpBarPrefab,
+            UIManager.Instance.worldCanvas.transform
+        );
+
+        hpBar = ui.GetComponent<EnemyHPBarFollow>();
+        hpBar.target = transform;
+        hpBar.offset = new Vector3(0, 1.2f, 0); // 머리 위 위치
     }
 
     void Update()
@@ -375,6 +394,10 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
     public void GetDamage(float damage, Transform attackerTransform)
     {
         currentHp -= damage;
+
+        if (hpBar != null)
+            hpBar.SetHP(currentHp, maxHp);
+
         if (currentHp <= 0f)
         {
             Dead();

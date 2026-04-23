@@ -2,61 +2,105 @@ using UnityEngine;
 
 public class MergeStationInteract : MonoBehaviour
 {
-    public GameObject mergeUI;
-    private bool isOpen = false;
+    public GameObject mergeUI;          // 머지 UI
+    public GameObject interactUI;       // E키 UI
+    public float interactDistance = 2f; // 상호작용 거리
 
-    [Header("상호작용 거리")]
-    public float interactDistance = 1.5f;
+    public bool isOpen;
 
     private Transform player;
+    private Camera cam;
+    private RectTransform interactRT;
 
-    private void Start()
+    private MergeStationUI stationUI;
+
+    private void Awake()
     {
-        player = PlayerMovement.Instance.transform;
+        
+        if (mergeUI == null)
+        {
+            Transform t = UIManager.Instance.transform.Find("MergePanel");
+            if (t != null) mergeUI = t.gameObject;
+        }
+
+        if (interactUI == null)
+        {
+            Transform t = UIManager.Instance.transform.Find("Button");
+            if (t != null) interactUI = t.gameObject;
+        }
+
+        stationUI = FindObjectOfType<MergeStationUI>();
+        player = GameObject.FindWithTag("Player").transform;
+        cam = Camera.main;
+
+        if (interactUI != null)
+        {
+            interactRT = interactUI.GetComponent<RectTransform>();
+            interactUI.SetActive(false);
+        }
     }
 
     private void Update()
     {
-        DrawInteractionRange();
+        float dist = Vector3.Distance(player.position, transform.position);
 
-        if (Input.GetKeyDown(KeyCode.Z))
+        // 플레이어가 가까이 왔을 때
+        if (dist <= interactDistance)
         {
-            if (IsPlayerInRange())
+            if (!isOpen)
             {
-                ToggleMergeUI();
+                interactUI.SetActive(true);
+                UpdateInteractUIPosition();
             }
+
+            if (Input.GetKeyDown(KeyCode.E))
+                ToggleMergeUI();
+        }
+        else
+        {
+            interactUI.SetActive(false);
         }
     }
 
-    bool IsPlayerInRange()
+    // E키 UI를 머지 스테이션 위치에 맞춰 화면에 표시
+    private void UpdateInteractUIPosition()
     {
-        float dist = Vector2.Distance(player.position, transform.position);
-        return dist <= interactDistance;
-    }
+        if (interactRT == null) return;
 
-    void DrawInteractionRange()
-    {
-        // Scene 뷰에서만 보이는 원형 범위 표시
-        Debug.DrawLine(transform.position,
-                       transform.position + Vector3.right * interactDistance,
-                       Color.yellow);
+        Vector3 worldPos = transform.position + Vector3.up * 1.5f; // 스테이션 위쪽에 표시
+        Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
 
-        Debug.DrawLine(transform.position,
-                       transform.position + Vector3.left * interactDistance,
-                       Color.yellow);
-
-        Debug.DrawLine(transform.position,
-                       transform.position + Vector3.up * interactDistance,
-                       Color.yellow);
-
-        Debug.DrawLine(transform.position,
-                       transform.position + Vector3.down * interactDistance,
-                       Color.yellow);
+        interactRT.position = screenPos;
     }
 
     public void ToggleMergeUI()
     {
-        isOpen = !isOpen;
-        mergeUI.SetActive(isOpen);
+        if (isOpen)
+            CloseMergeUI();
+        else
+            OpenMergeUI();
+    }
+
+    public void OpenMergeUI()
+    {
+        isOpen = true;
+        mergeUI.SetActive(true);
+
+        PlayerMovement.Instance.controlLocked = true;
+        UIManager.Instance.inventoryUI.SetActive(true);
+
+        interactUI.SetActive(false);
+    }
+
+    public void CloseMergeUI()
+    {
+        isOpen = false;
+        mergeUI.SetActive(false);
+
+        PlayerMovement.Instance.controlLocked = false;
+        UIManager.Instance.inventoryUI.SetActive(false);
+
+        if (stationUI != null)
+            stationUI.ClearAll();
     }
 }

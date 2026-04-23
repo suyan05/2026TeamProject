@@ -1,9 +1,8 @@
 using UnityEngine;
-using System.Collections.Generic;
 
-[CreateAssetMenu(fileName = "NewMergeRecipe", menuName = "Merge/Recipe")]
+[CreateAssetMenu(menuName = "Merge/MergeRecipe")]
 public class MergeRecipe : ScriptableObject
 {
-    public List<int> ingredientIDs = new List<int>();
-    public int resultItemID;
+    public ItemData[] ingredients;
+    public ItemData result;
 }

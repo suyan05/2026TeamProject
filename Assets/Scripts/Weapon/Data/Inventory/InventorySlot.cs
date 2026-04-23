@@ -1,10 +1,8 @@
-using UnityEngine;
-
 public class InventorySlot
 {
-    public ItemData item;
+    public ItemInstance item;
 
-    public InventorySlot(ItemData item)
+    public InventorySlot(ItemInstance item)
     {
         this.item = item;
     }

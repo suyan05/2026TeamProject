@@ -7,27 +7,25 @@ public class Inventory : MonoBehaviour
     public int gridHeight = 6;
 
     public InventoryGrid grid;
-    public List<ItemData> items = new List<ItemData>();
+    public List<ItemInstance> items = new List<ItemInstance>();
 
     void Awake()
     {
         grid = new InventoryGrid(gridWidth, gridHeight);
     }
 
-    // 아이템 추가
-    public bool TryAddItem(ItemData item)
+    public bool TryAddItem(ItemData data)
     {
+        ItemInstance instance = new ItemInstance(data);
+
         for (int y = 0; y < gridHeight; y++)
         {
             for (int x = 0; x < gridWidth; x++)
             {
-                if (grid.CanPlaceItem(item, x, y))
+                if (grid.CanPlaceItem(instance, x, y))
                 {
-                    grid.PlaceItem(item, x, y);
-                    items.Add(item);
-
-                    grid.DebugPrintGrid();
-
+                    grid.PlaceItem(instance, x, y);
+                    items.Add(instance);
                     return true;
                 }
             }
@@ -35,12 +33,9 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
-    public void RemoveItem(ItemData item)
+    public void RemoveItem(ItemInstance instance)
     {
-        grid.RemoveItem(item);
-        items.Remove(item);
-
-        grid.DebugPrintGrid();
+        grid.RemoveItem(instance);
+        items.Remove(instance);
     }
-
 }

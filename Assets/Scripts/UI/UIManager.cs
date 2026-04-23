@@ -1,10 +1,14 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
+
+    [Header("World Canvas (적 HP바 등 표시용)")]
+    public Canvas worldCanvas;
 
     [Header("인벤토리 UI")]
     public GameObject inventoryUI;
@@ -19,6 +23,17 @@ public class UIManager : MonoBehaviour
     [Header("페이드 커튼")]
     public Image fadeCurtain;
 
+    [Header("Player HP UI")]
+    public Slider playerHpBar;
+
+    [Header("Enemy HP UI")]
+    public Transform enemyHpPanel;      // Vertical Layout Group
+    public GameObject enemyHpItemPrefab;
+    public float enemyDetectRadius = 10f;   // 플레이어 주변 감지 범위
+    public LayerMask enemyLayer;
+
+    private Dictionary<GameObject, EnemyHPItem> enemyUIMap = new Dictionary<GameObject, EnemyHPItem>();
+
     Coroutine fadeCoroutine;
 
     private void Awake()
@@ -28,7 +43,10 @@ public class UIManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void LateUpdate()
@@ -60,9 +78,12 @@ public class UIManager : MonoBehaviour
     {
         if (inventoryUI == null) return;
 
-        bool isActive = inventoryUI.activeSelf;
-        inventoryUI.SetActive(!isActive);
+        bool isActive = !inventoryUI.activeSelf;
+        inventoryUI.SetActive(isActive);
+
+        GameStateManager.Current = isActive ? GameState.InventoryOpen : GameState.Normal;
     }
+
 
 
     /// <summary>
@@ -112,4 +133,80 @@ public class UIManager : MonoBehaviour
         img.color = color;
     }
 
+    public void UpdatePlayerHP()
+    {
+        if (PlayerMovement.Instance == null) return;
+
+        float cur = PlayerMovement.Instance.currentHp;
+        float max = PlayerMovement.Instance.maxHp;
+
+        playerHpBar.value = cur / max;
+    }
+
+    public void UpdateNearbyEnemiesHP()
+    {
+        // 1) 기존 UI 정리
+        foreach (var kv in enemyUIMap)
+        {
+            if (kv.Key == null) Destroy(kv.Value.gameObject);
+        }
+
+        // null 제거
+        List<GameObject> removeList = new List<GameObject>();
+        foreach (var kv in enemyUIMap)
+        {
+            if (kv.Key == null) removeList.Add(kv.Key);
+        }
+        foreach (var r in removeList) enemyUIMap.Remove(r);
+
+        // 2) 주변 적 탐색
+        Collider2D[] enemies = Physics2D.OverlapCircleAll(
+            PlayerMovement.Instance.transform.position,
+            enemyDetectRadius,
+            enemyLayer
+        );
+
+        foreach (Collider2D col in enemies)
+        {
+            GameObject enemy = col.gameObject;
+
+            // 이미 UI가 있으면 업데이트만
+            if (enemyUIMap.ContainsKey(enemy))
+            {
+                UpdateEnemyHPUI(enemy, enemyUIMap[enemy]);
+            }
+            else
+            {
+                // 새 UI 생성
+                GameObject uiObj = Instantiate(enemyHpItemPrefab, enemyHpPanel);
+                EnemyHPItem item = uiObj.GetComponent<EnemyHPItem>();
+                enemyUIMap.Add(enemy, item);
+
+                UpdateEnemyHPUI(enemy, item);
+            }
+        }
+    }
+
+    void UpdateEnemyHPUI(GameObject enemy, EnemyHPItem ui)
+    {
+        // 적 스크립트 가져오기
+        var melee = enemy.GetComponent<MeleeAttackEnemy>();
+        var arrow = enemy.GetComponent<ArrowAttackEnemy>();
+        var laser = enemy.GetComponent<LaserAttackEnemy>();
+
+        float cur = 0;
+        float max = 0;
+
+        if (melee != null) { cur = melee.currentHp; max = melee.maxHp; }
+        else if (arrow != null) { cur = arrow.currentHp; max = arrow.maxHp; }
+        else if (laser != null) { cur = laser.currentHp; max = laser.maxHp; }
+
+        ui.SetHP(enemy.name, cur, max);
+
+        if (cur <= 0)
+        {
+            Destroy(ui.gameObject);
+            enemyUIMap.Remove(enemy);
+        }
+    }
 }

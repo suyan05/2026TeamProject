@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public class InventoryGrid
 {
     public InventorySlot[,] slots;
@@ -13,12 +11,11 @@ public class InventoryGrid
         slots = new InventorySlot[width, height];
     }
 
-    // 아이템이 여러 칸 차지 가능한지 검사
-    public bool CanPlaceItem(ItemData item, int startX, int startY)
+    public bool CanPlaceItem(ItemInstance item, int startX, int startY)
     {
-        for (int y = 0; y < item.height; y++)
+        for (int y = 0; y < item.data.height; y++)
         {
-            for (int x = 0; x < item.width; x++)
+            for (int x = 0; x < item.data.width; x++)
             {
                 int gx = startX + x;
                 int gy = startY + y;
@@ -33,45 +30,26 @@ public class InventoryGrid
         return true;
     }
 
-    // 아이템을 여러 칸에 배치
-    public void PlaceItem(ItemData item, int startX, int startY)
+    public void PlaceItem(ItemInstance item, int startX, int startY)
     {
-        for (int y = 0; y < item.height; y++)
+        for (int y = 0; y < item.data.height; y++)
         {
-            for (int x = 0; x < item.width; x++)
+            for (int x = 0; x < item.data.width; x++)
             {
                 slots[startX + x, startY + y] = new InventorySlot(item);
             }
         }
     }
 
-    // 아이템 제거
-    public void RemoveItem(ItemData item)
+    public void RemoveItem(ItemInstance item)
     {
         for (int y = 0; y < gridHeight; y++)
         {
             for (int x = 0; x < gridWidth; x++)
             {
-                if (slots[x, y] != null && slots[x, y].item == item)
+                if (slots[x, y] != null && slots[x, y].item.uniqueID == item.uniqueID)
                     slots[x, y] = null;
             }
         }
     }
-
-    public void DebugPrintGrid()
-    {
-        string result = "";
-
-        for (int y = 0; y < gridHeight; y++)
-        {
-            for (int x = 0; x < gridWidth; x++)
-            {
-                result += slots[x, y] == null ? "[ ]" : "[X]";
-            }
-            result += "\n";
-        }
-
-        Debug.Log(result);
-    }
-
 }

@@ -14,18 +14,12 @@ public class InventorySlotUI : MonoBehaviour, IDropHandler
         InventoryItemUI dragged = eventData.pointerDrag.GetComponent<InventoryItemUI>();
         if (dragged == null) return;
 
-        ItemData item = dragged.itemData;
+        ItemInstance instance = dragged.itemInstance;
 
-        // 새 위치에 배치 가능한지 먼저 검사
-        if (inventory.grid.CanPlaceItem(item, x, y))
+        if (inventory.grid.CanPlaceItem(instance, x, y))
         {
-            inventory.RemoveItem(item);
-            inventory.grid.PlaceItem(item, x, y);
-        }
-        else
-        {
-            // 배치 불가 -> 원래 자리로 복구
-            inventory.grid.PlaceItem(item, dragged.originalX, dragged.originalY);
+            inventory.grid.RemoveItem(instance);
+            inventory.grid.PlaceItem(instance, x, y);
         }
 
         inventoryUI.RefreshItems();

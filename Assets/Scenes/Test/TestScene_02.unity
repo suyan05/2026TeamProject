@@ -1826,6 +1826,7 @@ MonoBehaviour:
   jumpForce: 11
   acceleration: 20
   deceleration: 50
+  animator: {fileID: 0}
   groundLayerMask:
     serializedVersion: 2
     m_Bits: 1024
@@ -1844,7 +1845,6 @@ MonoBehaviour:
   weapon1Key: 49
   weapon2Key: 50
   skill1Key: 101
-  skill2Key: 113
   skill3Key: 102
   inventory: 9
   isRolling: 0

@@ -6,14 +6,22 @@ public class PlayerMovement : MonoBehaviour
 {
     public static PlayerMovement Instance { get; private set; }
 
+    [Header("플레이어 움직임 제한")]
+    public bool controlLocked = false;
+
     [Header("플레이어 최대 체력")]
     [SerializeField] public readonly float maxHp = 100.0f;
+    
     [Header("플레이어 이동")]
     public float maxSpeed = 5f;   // 이동 속도
     public float jumpForce = 7f;   // 점프 힘
+    
     [Header("가속/감속")]
     public float acceleration = 10f;    // 가속도
     public float deceleration = 10f;    // 감속도
+
+    [Header("애니메이션")]
+    public Animator animator;   // 플레이어 애니메이터
 
     [Header("레이어 마스크")]
     public LayerMask groundLayerMask;    // 지면 레이어
@@ -38,8 +46,8 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode weapon1Key = KeyCode.Alpha1;
     public KeyCode weapon2Key = KeyCode.Alpha2;
     public KeyCode skill1Key = KeyCode.E;
-    public KeyCode skill2Key = KeyCode.Q;
-    public KeyCode skill3Key = KeyCode.F;
+    //public KeyCode skill2Key = KeyCode.Q;
+    public KeyCode skill3Key = KeyCode.Q;
     public KeyCode inventory = KeyCode.Tab;
 
     const KeyCode LeftKey = KeyCode.A;
@@ -47,7 +55,7 @@ public class PlayerMovement : MonoBehaviour
     const KeyCode JumpKey = KeyCode.Space;
     sbyte lastInputDirection = 1; // 마지막 입력 방향 (-1: 왼쪽, 1: 오른쪽)
     float currentSpeed;   // 현재 이동 속도
-    float currentHp;      // 현재 체력
+    public float currentHp;      // 현재 체력
     float maxArrowPower = 20f;   // 최대 화살 발사 힘
     float arrowPower = 0f;   // 화살 발사 힘
     bool isGrounded;    // 지면에 있는지 여부
@@ -59,10 +67,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+        }
         else
         {
             Destroy(gameObject);
+            return;
         }
 
         rb = GetComponent<Rigidbody2D>();
@@ -81,35 +93,68 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        // inventory 키로 인벤토리 열고 닫기
+        if (controlLocked)
+            return;
+
+        // 머지 스테이션 열려 있으면 모든 조작 금지
+        if (GameStateManager.Current == GameState.MergeOpen)
+            return;
+
+        // 인벤토리 열려 있으면 공격만 금지
+        bool inventoryOpen = GameStateManager.Current == GameState.InventoryOpen;
+
+        // 공격 금지
+        if (!inventoryOpen)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                animator.SetTrigger("Attack");
+                MeleeAttack();
+            }
+        }
+
+        // 인벤토리 토글
         if (Input.GetKeyDown(inventory))
         {
-            if (UIManager.Instance != null) UIManager.Instance.ToggleInventory();
+            UIManager.Instance.ToggleInventory();
         }
 
-        if (Input.GetKey(skill1Key))
+        // 활 충전/발사도 공격이므로 인벤토리 열렸을 때 금지
+        if (!inventoryOpen)
         {
-            arrowPower += Time.deltaTime * 30f;
-            arrowPower = Mathf.Min(arrowPower, maxArrowPower);
+            if (Input.GetMouseButton(1))
+            {
+                arrowPower += Time.deltaTime * 30f;
+                arrowPower = Mathf.Min(arrowPower, maxArrowPower);
 
-            if (UIManager.Instance != null) UIManager.Instance.UpdateChargeGauge(arrowPower, maxArrowPower);
+                UIManager.Instance.UpdateChargeGauge(arrowPower, maxArrowPower);
+            }
+            else if (Input.GetMouseButtonUp(1))
+            {
+                LaunchArrow();
+                arrowPower = 0f;
+                UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
+            }
         }
-        else if (Input.GetKeyUp(skill1Key))
+
+        // 구르기
+        if (!inventoryOpen && Input.GetKeyDown(skill3Key))
         {
-            LaunchArrow();
-            arrowPower = 0f;
-
-            if (UIManager.Instance != null) UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
+            animator.SetTrigger("Roll");
+            Roll();
         }
 
-        if (Input.GetKeyDown(skill2Key)) MeleeAttack();
-
-        if (Input.GetKeyDown(skill3Key)) Roll();
+        // 애니메이션 갱신 등 기존 로직 유지
+        float speed = Mathf.Abs(rb.linearVelocity.x);
+        animator.SetBool("Walk", speed > 0.05f);
     }
+
 
     public void GetDamage(float damageAmount, Transform damageSource)
     {
         if (isRolling) return;
+
+        UIManager.Instance.UpdatePlayerHP();
 
         currentHp -= damageAmount;
         Debug.Log("Player Get Damage: " + damageAmount + ", Current HP: " + currentHp);
@@ -205,6 +250,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (controlLocked)
+            return;
+
         UpdateStates();
 
         if (!isRolling) MoveHandler();

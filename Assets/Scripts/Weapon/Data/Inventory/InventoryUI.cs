@@ -20,7 +20,6 @@ public class InventoryUI : MonoBehaviour
         RefreshItems();
     }
 
-    // 그리드 재생성
     public void RebuildGrid()
     {
         foreach (Transform child in gridParent)
@@ -29,7 +28,6 @@ public class InventoryUI : MonoBehaviour
         GenerateGrid();
     }
 
-    // 슬롯 배경 생성 (0,0 중심 기준)
     void GenerateGrid()
     {
         slotUIs = new InventorySlotUI[inventory.gridWidth, inventory.gridHeight];
@@ -60,62 +58,51 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    // 아이템 UI 생성
     public void RefreshItems()
     {
-        // 기존 UI 제거
         foreach (Transform child in itemParent)
             Destroy(child.gameObject);
 
-        // 인벤토리에 있는 모든 아이템 UI 생성
-        foreach (var item in inventory.items)
+        foreach (var instance in inventory.items)
         {
             int foundX = -1;
             int foundY = -1;
 
-            // 아이템이 차지한 칸 중 "가장 왼쪽 위 칸" 찾기
             for (int y = 0; y < inventory.grid.gridHeight; y++)
             {
                 for (int x = 0; x < inventory.grid.gridWidth; x++)
                 {
                     var slot = inventory.grid.slots[x, y];
-                    if (slot != null && slot.item == item)
+                    if (slot != null && slot.item.uniqueID == instance.uniqueID)
                     {
                         foundX = x;
                         foundY = y;
-                        goto Found; // 첫 번째 발견된 칸이 곧 아이템의 기준 위치
+                        goto Found;
                     }
                 }
             }
         Found:
 
-            // 아이템이 실제로 차지한 칸이 없다면 스킵
             if (foundX == -1)
                 continue;
 
-            // UI 생성
             GameObject itemObj = Instantiate(itemPrefab, itemParent);
             InventoryItemUI itemUI = itemObj.GetComponent<InventoryItemUI>();
 
             itemUI.inventory = inventory;
             itemUI.inventoryUI = this;
-            itemUI.SetItem(item);
+            itemUI.SetItem(instance);
 
             RectTransform rt = itemObj.GetComponent<RectTransform>();
             RectTransform slotRT = slotUIs[foundX, foundY].GetComponent<RectTransform>();
 
-            // 아이템 크기 계산
-            float w = item.width * slotSize;
-            float h = item.height * slotSize;
+            float w = instance.data.width * slotSize;
+            float h = instance.data.height * slotSize;
 
-            // 슬롯 중심과 아이템 중심 차이 보정
             float offsetX = (w - slotSize) / 2f;
             float offsetY = (h - slotSize) / 2f;
 
-            // 최종 위치 적용
             rt.anchoredPosition = slotRT.anchoredPosition + new Vector2(offsetX, -offsetY);
-
-            // 크기 적용
             rt.sizeDelta = new Vector2(w, h);
         }
     }

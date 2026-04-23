@@ -12,5 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebd86d5e6c26a5c46970f667f6941438, type: 3}
   m_Name: Merge_2
   m_EditorClassIdentifier: Assembly-CSharp::MergeRecipe
-  ingredientIDs: 020000000200000002000000
-  resultItemID: 3
+  ingredients:
+  - {fileID: 11400000, guid: eb51c549425410c44b6e05ce71e082d3, type: 2}
+  - {fileID: 11400000, guid: eb51c549425410c44b6e05ce71e082d3, type: 2}
+  - {fileID: 11400000, guid: eb51c549425410c44b6e05ce71e082d3, type: 2}
+  result: {fileID: 11400000, guid: 466cac7f84626da46bb7daafb199ec84, type: 2}

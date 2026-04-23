@@ -16,7 +16,7 @@ MonoBehaviour:
   itemName: C
   description: "\uD14C\uC2A4\uD2B8\uC6A9_03"
   itemType: 1
-  worldPrefab: {fileID: 919132149155446097, guid: 626214db8fb81e34f8bc567d16c44574, type: 3}
-  icon: {fileID: -9060800696144813460, guid: 8ee6214746a2057439a4b2d89a1af167, type: 3}
+  worldPrefab: {fileID: 2370371044658360546, guid: 6aef8997616224c419a35be525f603e0, type: 3}
+  icon: {fileID: 2638941185247632982, guid: 846b8ff310dabea429fd6c8b8987985b, type: 3}
   width: 2
   height: 2

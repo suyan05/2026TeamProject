@@ -90,3 +90,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeSlotUI
   item: {fileID: 0}
   icon: {fileID: 258736559304112332}
+  itemPrefab: {fileID: 3639052437571593073, guid: 6d3efa91fba975748a0388a415d84dca, type: 3}
