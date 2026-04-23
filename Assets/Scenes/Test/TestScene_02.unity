@@ -742,7 +742,6 @@ GameObject:
   - component: {fileID: 664433564}
   - component: {fileID: 664433567}
   - component: {fileID: 664433566}
-  - component: {fileID: 664433565}
   m_Layer: 9
   m_Name: Sphere
   m_TagString: Untagged
@@ -765,27 +764,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 555145669}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &664433565
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 664433563}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &664433566
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1722,6 +1700,7 @@ MonoBehaviour:
   skill1Key: 101
   skill2Key: 113
   skull3Key: 102
+  inventory: 9
 --- !u!1 &1561252419
 GameObject:
   m_ObjectHideFlags: 0
@@ -2617,7 +2596,6 @@ MonoBehaviour:
   shootInterval: 3
   laserPrefab: {fileID: 5214820954764278970, guid: d5a38f611009bf64fbfcaf5b6b516c22, type: 3}
   target: {fileID: 1538652517}
-  laserFireInterval: 3.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
