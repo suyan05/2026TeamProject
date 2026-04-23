@@ -2521,8 +2521,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6978154decae64f45acf4fc6713ce758, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriggerBox
-  rangeType: 1
-  hitboxOffset: {x: 0, y: 0}
+  rangeType: 2
+  hitboxOffset: {x: -3.01, y: 0}
   hitboxSize: {x: 1, y: 1}
   playerLayer:
     serializedVersion: 2

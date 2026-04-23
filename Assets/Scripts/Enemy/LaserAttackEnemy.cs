@@ -85,6 +85,8 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
         isFacingRight = true;
         currentHp = maxHp;
         SetState(state.idle);
+
+        if (EnemyCounter.Instance != null) EnemyCounter.Instance.AddEnemy();
     }
 
     void Update()
@@ -381,6 +383,7 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
 
     void Dead()
     {
+        if (EnemyCounter.Instance != null) EnemyCounter.Instance.EnemyDefeated();
         Destroy(gameObject);
     }
 
