@@ -108,7 +108,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                animator.SetTrigger("Attack");
+                if (animator != null) animator.SetTrigger("Attack");
                 MeleeAttack();
             }
         }
@@ -140,13 +140,13 @@ public class PlayerMovement : MonoBehaviour
         // 구르기
         if (!inventoryOpen && Input.GetKeyDown(skill3Key))
         {
-            animator.SetTrigger("Roll");
+            if (animator != null) animator.SetTrigger("Roll");
             Roll();
         }
 
         // 애니메이션 갱신 등 기존 로직 유지
         float speed = Mathf.Abs(rb.linearVelocity.x);
-        animator.SetBool("Walk", speed > 0.05f);
+        if (animator != null) animator.SetBool("Walk", speed > 0.05f);
     }
 
 
