@@ -293,10 +293,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyManager
   globalPattern:
-    profileName: Default Pattern
-    readyToAttackTime: 0.5
-    attackChargeTime: 0.42
-    attackCooldown: 1
+    profileName: Plantellia_v1.0
+    meleeRunner:
+      readyTime: 0.3
+      chargeDuration: 0.8
+      chargeSpeed: 8
+      cooldown: 2
+    meleeStriker:
+      readyTime: 0.25
+      attackActiveTime: 0.4
+      cooldown: 1.8
+    rangedShooter:
+      readyTime: 0.4
+      projectileSpeed: 12
+      cooldown: 2.5
+    laser:
+      chargeTime: 1
+      laserDuration: 0.8
+      cooldown: 3
+    rotatingLaser:
+      readyTime: 0.7
+      laserDuration: 2
+      cooldown: 4
+  hpBarPrefab: {fileID: 0}
   enemiesToSpawn: []
 --- !u!65 &190487065
 BoxCollider:
@@ -3190,6 +3209,8 @@ MonoBehaviour:
     m_Bits: 512
   hpBarPrefab: {fileID: 0}
   currentHp: 0
+  dashTime: 0
+  dashSpeed: 0
 --- !u!1 &1995383767
 GameObject:
   m_ObjectHideFlags: 0

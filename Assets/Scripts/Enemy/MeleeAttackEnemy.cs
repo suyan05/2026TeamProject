@@ -63,6 +63,8 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
     private Rigidbody2D rb;
     GameObject playerObject;    // 플레이어 오브젝트
+    public float dashTime;
+    public float dashSpeed;
 
     private void Awake()
     {
