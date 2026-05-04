@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class PlayerMovement : MonoBehaviour
@@ -168,21 +167,7 @@ public class PlayerMovement : MonoBehaviour
     void Die()
     {
         // 사망 처리
-        controlLocked = true; // 조작 금지
-        StartCoroutine(DieRoutine());
         Debug.Log("Player has died.");
-    }
-
-    IEnumerator DieRoutine()
-    {
-        // 1) 페이드 인 (1초 동안)
-        UIManager.Instance.SetCurtainToggle(true, 1f);
-
-        // 2) 페이드가 끝날 때까지 기다림
-        yield return new WaitForSeconds(4f);
-
-        // 3) 씬 이동
-        SceneManager.LoadScene("StartScene_Test");
     }
 
     void LaunchArrow()

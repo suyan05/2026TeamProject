@@ -1980,7 +1980,7 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
-  hpBarPrefab: {fileID: 0}
+  hpBarPrefab: {fileID: 2861111084226884299, guid: e8ee8ba460c4c124f9f53af1f5029b85, type: 3}
   currentHp: 0
 --- !u!1 &1112525116
 GameObject:
@@ -3104,7 +3104,7 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
-  hpBarPrefab: {fileID: 0}
+  hpBarPrefab: {fileID: 2861111084226884299, guid: e8ee8ba460c4c124f9f53af1f5029b85, type: 3}
   currentHp: 0
 --- !u!1 &1888864553
 GameObject:
@@ -3513,7 +3513,7 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
-  hpBarPrefab: {fileID: 0}
+  hpBarPrefab: {fileID: 2861111084226884299, guid: e8ee8ba460c4c124f9f53af1f5029b85, type: 3}
   currentHp: 0
   dashTime: 0
   dashSpeed: 0
