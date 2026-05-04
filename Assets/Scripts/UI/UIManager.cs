@@ -8,7 +8,7 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance { get; private set; }
 
     [Header("World Canvas (적 HP바 등 표시용)")]
-    public Canvas worldCanvas;
+    public GameObject worldCanvas;
 
     [Header("인벤토리 UI")]
     public GameObject inventoryUI;
@@ -41,7 +41,7 @@ public class UIManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            //DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -95,7 +95,7 @@ public class UIManager : MonoBehaviour
 
         fadeCurtain.gameObject.SetActive(true);
         float targetAlpha = isActive ? 1f : 0f;
-        
+
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
         fadeCoroutine = StartCoroutine(SetCurtainAlphaCoroutine(targetAlpha, duration, isActive, waitingTime));
     }
@@ -135,12 +135,26 @@ public class UIManager : MonoBehaviour
 
     public void UpdatePlayerHP()
     {
+        // 1. 플레이어 데이터가 있는지 확인 (이미 잘 넣으셨습니다!)
         if (PlayerMovement.Instance == null) return;
+
+        // 2. [추가] 슬라이더 UI가 연결되어 있는지 확인 (오류 방지의 핵심)
+        // 인스펙터에서 드래그를 깜빡해도 이 줄 덕분에 오류로 게임이 멈추지 않습니다.
+        if (playerHpBar == null)
+        {
+            // Debug.LogWarning("UIManager: Player HP Bar 슬라이더가 연결되지 않았습니다.");
+            return;
+        }
 
         float cur = PlayerMovement.Instance.currentHp;
         float max = PlayerMovement.Instance.maxHp;
 
-        playerHpBar.value = cur / max;
+        // 3. 계산 및 적용
+        // 만약 max가 0이면 나누기 오류가 날 수 있으므로 체크해주면 더 좋습니다.
+        if (max > 0)
+        {
+            playerHpBar.value = cur / max;
+        }
     }
 
     public void UpdateNearbyEnemiesHP()

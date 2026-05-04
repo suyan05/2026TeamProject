@@ -86,15 +86,21 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         currentHp = maxHp;
         SetState(state.idle);
 
-        // HP바 생성
-        GameObject ui = Instantiate(
-            hpBarPrefab,
-            UIManager.Instance.worldCanvas.transform
-        );
+        if (hpBarPrefab != null && UIManager.Instance != null && UIManager.Instance.worldCanvas != null)
+        {
+            GameObject ui = Instantiate(hpBarPrefab, UIManager.Instance.worldCanvas.transform);
+            hpBar = ui.GetComponent<EnemyHPBarFollow>();
+            hpBar.target = transform;
+            hpBar.offset = new Vector3(0, 1.2f, 0);
+        }
+        else
+        {
+            // 여기서 어떤 게 문제인지 바로 알 수 있습니다.
+            if (hpBarPrefab == null) Debug.LogError("HP Bar 프리팹이 연결되지 않았습니다!");
+            if (UIManager.Instance == null) Debug.LogError("씬에 UIManager가 없습니다!");
+        }
 
-        hpBar = ui.GetComponent<EnemyHPBarFollow>();
-        hpBar.target = transform;
-        hpBar.offset = new Vector3(0, 1.2f, 0); // 머리 위 위치
+
     }
 
     void Update()

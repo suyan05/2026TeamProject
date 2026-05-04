@@ -31,15 +31,17 @@ public class EnemyManager : MonoBehaviour
     [Header("[공통 UI 프리팹]")]
     public GameObject hpBarPrefab;
 
-    [Header("[스폰 데이터]")]
-    public List<EnemySpawnData> enemiesToSpawn;
+    [Header("[스폰 데이터 - 그룹화 버전]")]
+    public List<EnemySpawnGroup> enemySpawnGroups;
 
     [System.Serializable]
-    public class EnemySpawnData
+    public class EnemySpawnGroup
     {
-        public string enemyName;
-        public GameObject enemyPrefab;
-        public Transform spawnPoint;
+        public string groupName;           // 관리용 그룹 이름 (예: 근거리_A구역)
+        public GameObject enemyPrefab;    // 소환할 적 프리팹
+        public Color gizmoColor = Color.red; // 씬 뷰에서 보일 원의 색상
+        public float gizmoRadius = 0.5f;   // 씬 뷰에서 보일 원의 반지름
+        public List<Transform> spawnPoints; // 이 프리팹이 생성될 여러 위치들
     }
 
     private void Awake()
@@ -52,30 +54,32 @@ public class EnemyManager : MonoBehaviour
 
     public void SpawnAllEnemies()
     {
-        foreach (var data in enemiesToSpawn)
-        {
-            if (data.enemyPrefab == null) continue;
+        if (enemySpawnGroups == null) return;
 
-            GameObject enemyObj = Instantiate(data.enemyPrefab, data.spawnPoint.position, data.spawnPoint.rotation);
-            ApplyDetailedPattern(enemyObj, data.enemyName);
+        foreach (var group in enemySpawnGroups)
+        {
+            if (group.enemyPrefab == null || group.spawnPoints == null) continue;
+
+            foreach (Transform point in group.spawnPoints)
+            {
+                if (point == null) continue;
+
+                // 그룹에 설정된 프리팹을 각 스폰 포인트 위치에 생성
+                GameObject enemyObj = Instantiate(group.enemyPrefab, point.position, point.rotation);
+                ApplyDetailedPattern(enemyObj, group.groupName);
+            }
         }
         Debug.Log($"<color=#00FF00><b>[EnemyManager]</b> 모든 적 스폰 및 {globalPattern.profileName} 프로필 주입 완료</color>");
     }
 
     private void ApplyDetailedPattern(GameObject enemy, string name)
     {
-        // 1. 컴포넌트를 한 번만 가져오기 위한 로직
         Component targetAI = (Component)enemy.GetComponent<MeleeAttackEnemy>() ??
                              (Component)enemy.GetComponent<ArrowAttackEnemy>() ??
                              (Component)enemy.GetComponent<LaserAttackEnemy>();
 
-        if (targetAI == null)
-        {
-            Debug.LogWarning($"<color=yellow>[Apply Skip]</color> {name}에게서 등록된 AI 스크립트를 찾을 수 없습니다.");
-            return;
-        }
+        if (targetAI == null) return;
 
-        // 2. 타입에 따른 데이터 주입 (패턴 매칭 사용)
         switch (targetAI)
         {
             case MeleeAttackEnemy runner:
@@ -103,7 +107,33 @@ public class EnemyManager : MonoBehaviour
                 laser.hpBarPrefab = hpBarPrefab;
                 break;
         }
+    }
 
-        Debug.Log($"<color=cyan>[Apply Success]</color> {name} 수치 주입 완료.");
+
+    private void OnDrawGizmos()
+    {
+        if (enemySpawnGroups == null) return;
+
+        foreach (var group in enemySpawnGroups)
+        {
+            if (group.spawnPoints == null) continue;
+
+            // 기즈모 색상 설정
+            Gizmos.color = group.gizmoColor;
+
+            foreach (Transform point in group.spawnPoints)
+            {
+                if (point == null) continue;
+
+                //  바닥에 원형 표시 (와이어 구체)
+                Gizmos.DrawWireSphere(point.position, group.gizmoRadius);
+
+                // 위치를 더 잘 보이게 하기 위해 중심에 작은 점 표시
+                Gizmos.DrawSphere(point.position, 0.1f);
+
+                // (선택) 해당 포인트에서 적이 바라볼 방향 표시 (앞쪽 방향 실선)
+                Gizmos.DrawRay(point.position, point.forward * 1f);
+            }
+        }
     }
 }
