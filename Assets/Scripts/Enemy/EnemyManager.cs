@@ -118,21 +118,23 @@ public class EnemyManager : MonoBehaviour
         {
             if (group.spawnPoints == null) continue;
 
-            // 기즈모 색상 설정
             Gizmos.color = group.gizmoColor;
 
             foreach (Transform point in group.spawnPoints)
             {
                 if (point == null) continue;
 
-                //  바닥에 원형 표시 (와이어 구체)
-                Gizmos.DrawWireSphere(point.position, group.gizmoRadius);
+                // 바닥과 겹쳐서 안 보이는 현상을 방지하기 위해 0.1f만큼 위로 띄워 계산
+                Vector3 gizmoPos = point.position + Vector3.up * 0.1f;
 
-                // 위치를 더 잘 보이게 하기 위해 중심에 작은 점 표시
-                Gizmos.DrawSphere(point.position, 0.1f);
+                // 1. 원형 테두리 표시
+                Gizmos.DrawWireSphere(gizmoPos, group.gizmoRadius);
 
-                // (선택) 해당 포인트에서 적이 바라볼 방향 표시 (앞쪽 방향 실선)
-                Gizmos.DrawRay(point.position, point.forward * 1f);
+                // 2. 중심점 표시
+                Gizmos.DrawSphere(gizmoPos, 0.1f);
+
+                // 3. 바라보는 방향 표시 (앞쪽으로 1m 길이의 선)
+                Gizmos.DrawRay(gizmoPos, point.forward * 1f);
             }
         }
     }

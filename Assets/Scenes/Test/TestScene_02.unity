@@ -319,8 +319,8 @@ MonoBehaviour:
   enemySpawnGroups:
   - groupName: 
     enemyPrefab: {fileID: 6421750869638747386, guid: 6d9873b87b4d13443b901f1133f2f5e1, type: 3}
-    gizmoColor: {r: 0, g: 0, b: 0, a: 0}
-    gizmoRadius: 0
+    gizmoColor: {r: 1, g: 0.10693307, b: 0.10693307, a: 0}
+    gizmoRadius: 8
     spawnPoints:
     - {fileID: 1112525117}
     - {fileID: 389643201}
