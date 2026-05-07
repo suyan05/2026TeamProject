@@ -32,6 +32,12 @@ public class UIManager : MonoBehaviour
     public float enemyDetectRadius = 10f;   // 플레이어 주변 감지 범위
     public LayerMask enemyLayer;
 
+    [Header("현재 장착 무기")]
+    public Text equippedWeaponText;
+
+    [Header("플레이어 스텟 택스처")]
+    public Text statText;
+
     private Dictionary<GameObject, EnemyHPItem> enemyUIMap = new Dictionary<GameObject, EnemyHPItem>();
 
     Coroutine fadeCoroutine;
@@ -147,7 +153,7 @@ public class UIManager : MonoBehaviour
         }
 
         float cur = PlayerMovement.Instance.currentHp;
-        float max = PlayerMovement.Instance.maxHp;
+        float max = PlayerMovement.Instance.MaxHp;
 
         // 3. 계산 및 적용
         // 만약 max가 0이면 나누기 오류가 날 수 있으므로 체크해주면 더 좋습니다.
@@ -222,5 +228,24 @@ public class UIManager : MonoBehaviour
             Destroy(ui.gameObject);
             enemyUIMap.Remove(enemy);
         }
+    }
+
+    public void UpdateEquippedWeaponUI(string weaponName)
+    {
+        if (equippedWeaponText != null)
+            equippedWeaponText.text = $"현재 무기: {weaponName}";
+    }
+
+    public void UpdatePlayerStatsUI(float maxHp, float baseDamage, float baseAttackSpeed,
+                                float weaponDamage, float weaponSpeed)
+    {
+        string dmgText = weaponDamage != 0 ? $"{baseDamage} <color=yellow>(+{weaponDamage})</color>" : $"{baseDamage}";
+        string spdText = weaponSpeed != 0 ? $"{baseAttackSpeed} <color=yellow>(+{weaponSpeed})</color>" : $"{baseAttackSpeed}";
+
+        statText.text =
+            $"<b>플레이어 스탯</b>\n" +
+            $"최대 체력: {maxHp}\n" +
+            $"공격력: {dmgText}\n" +
+            $"공격 속도: {spdText}";
     }
 }
