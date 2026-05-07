@@ -292,33 +292,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e17e91d9ef44c748b6cda9939047338, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyManager
-  globalPattern:
-    profileName: Plantellia_v1.0
-    meleeRunner:
-      readyTime: 0.3
-      chargeDuration: 0.8
-      chargeSpeed: 8
-      cooldown: 2
-    meleeStriker:
-      readyTime: 0.25
-      attackActiveTime: 0.4
-      cooldown: 1.8
-    rangedShooter:
-      readyTime: 0.4
-      projectileSpeed: 12
-      cooldown: 2.5
-    laser:
-      chargeTime: 1
-      laserDuration: 0.8
-      cooldown: 3
-    rotatingLaser:
-      readyTime: 0.7
-      laserDuration: 2
-      cooldown: 4
   hpBarPrefab: {fileID: 2861111084226884299, guid: e8ee8ba460c4c124f9f53af1f5029b85, type: 3}
   enemySpawnGroups:
   - groupName: 
-    enemyPrefab: {fileID: 6421750869638747386, guid: 6d9873b87b4d13443b901f1133f2f5e1, type: 3}
+    enemyData: {fileID: 11400000, guid: caef1898ed2c39c48a381420ce1c2d95, type: 2}
     gizmoColor: {r: 1, g: 0.10693307, b: 0.10693307, a: 0}
     gizmoRadius: 8
     spawnPoints:
