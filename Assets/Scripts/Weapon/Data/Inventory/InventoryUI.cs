@@ -14,6 +14,8 @@ public class InventoryUI : MonoBehaviour
 
     public InventorySlotUI[,] slotUIs;
 
+    public RectTransform inventoryArea; // 인벤토리 전체 영역
+
     void Start()
     {
         RebuildGrid();

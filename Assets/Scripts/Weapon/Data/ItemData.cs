@@ -7,20 +7,38 @@ public enum ItemType
     Item
 }
 
+public enum WeaponType
+{
+    None,
+    OneHandSword,
+    TwoHandSword,
+    Bow,
+    Dagger,
+    Spear,
+    Staff
+}
+
+public enum ElementType
+{
+    None,
+    Fire,
+    Ice,
+    Lightning,
+    Poison
+}
+
 [CreateAssetMenu(fileName = "NewItem", menuName = "Item/ItemData")]
 public class ItemData : ScriptableObject
 {
     [Header("아이템 고유 ID")]
-    [SerializeField]
-    public int itemID;
+    [SerializeField] public int itemID;
     public int ItemID => itemID;
 
     [Header("아이템 이름")]
     public string itemName;
 
     [Header("아이템 설명")]
-    [TextArea]
-    public string description;
+    [TextArea] public string description;
 
     [Header("아이템 타입")]
     public ItemType itemType = ItemType.None;
@@ -28,21 +46,36 @@ public class ItemData : ScriptableObject
     [Header("3D 월드에 떨어질 프리팹")]
     public GameObject worldPrefab;
 
+    [Header("플레이어 장착용 프리팹 (손에 들 무기)")]
+    public GameObject equipPrefab;
+
     [Header("UI 아이콘")]
     public Sprite icon;
 
-    [Header("아이템 크기")] //인벤토리 내부 아이템 슬롯에서 차지하는 크기 (1x1, 1x2, 2x2 등)
+    [Header("아이템 크기 (인벤토리 슬롯 차지 크기)")]
     public int width = 1;
     public int height = 1;
+
+    // 무기 전용 스탯
+    [Header("무기 전용 스탯")]
+    public WeaponType weaponType = WeaponType.None;
+
+    public float weaponAttackPower = 0f;
+    public float weaponAttackSpeed = 1f;
+    public ElementType elementType = ElementType.None;
+
+    // 아이템 전용 스탯 보너스
+    [Header("아이템 전용 스탯 보너스")]
+    public float bonusMaxHp = 0f;
+    public float bonusBaseDamage = 0f;
+    public float bonusAttackSpeed = 0f;
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        // ID가 비어있으면 자동 생성 (직접 입력한 값이 0일 때만 자동 할당)
         if (itemID == 0)
             itemID = GetInstanceID();
 
-        // 필수 필드 누락 시 경고
         if (string.IsNullOrWhiteSpace(itemName))
             Debug.LogWarning($"{name} : 아이템 이름이 비어 있습니다.", this);
         if (icon == null)
@@ -52,7 +85,6 @@ public class ItemData : ScriptableObject
 
     private void OnEnable()
     {
-        // 런타임에서도 ID가 보장되도록 처리
         if (itemID == 0)
             itemID = GetInstanceID();
     }

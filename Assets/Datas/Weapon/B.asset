@@ -16,7 +16,15 @@ MonoBehaviour:
   itemName: B
   description: "\uD14C\uC2A4\uD2B8\uC6A9_02"
   itemType: 1
-  worldPrefab: {fileID: 2370371044658360546, guid: 6aef8997616224c419a35be525f603e0, type: 3}
+  worldPrefab: {fileID: 5776851579096771038, guid: bf0850ebc3e48b84dbbcc48db51d63db, type: 3}
+  equipPrefab: {fileID: 2370371044658360546, guid: 6aef8997616224c419a35be525f603e0, type: 3}
   icon: {fileID: 4078718677027941478, guid: 0beed86915854494791a69f9588a069c, type: 3}
   width: 1
   height: 2
+  weaponType: 1
+  weaponAttackPower: 10
+  weaponAttackSpeed: 1
+  elementType: 0
+  bonusMaxHp: 0
+  bonusBaseDamage: 0
+  bonusAttackSpeed: 0
