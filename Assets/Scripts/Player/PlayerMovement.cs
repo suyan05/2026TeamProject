@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
@@ -6,89 +7,113 @@ public class PlayerMovement : MonoBehaviour
 {
     public static PlayerMovement Instance { get; private set; }
 
+    [Header("플레이어 기본 스탯")]
+    public float baseMaxHp = 100f;
+    public float baseDamage = 20f;
+    public float baseAttackSpeed = 1f;
+
+    // 아이템에서 얻는 보너스 스탯
+    float bonusMaxHp = 0f;
+    float bonusDamage = 0f;
+    float bonusAttackSpeed = 0f;
+
+    float weaponAttackPower = 0f;
+    float weaponAttackSpeed = 0f;
+
+    // 최종 스탯
+    public float MaxHp => baseMaxHp + bonusMaxHp;
+    public float Damage => baseDamage + bonusDamage + weaponAttackPower;
+    public float AttackSpeed => baseAttackSpeed + bonusAttackSpeed + weaponAttackSpeed;
+
+    public float currentHp;
+
     [Header("플레이어 움직임 제한")]
     public bool controlLocked = false;
 
-    [Header("플레이어 최대 체력")]
-    [SerializeField] public readonly float maxHp = 100.0f;
-    
     [Header("플레이어 이동")]
-    public float maxSpeed = 5f;   // 이동 속도
-    public float jumpForce = 7f;   // 점프 힘
-    
+    public float maxSpeed = 5f;
+    public float jumpForce = 7f;
+
     [Header("가속/감속")]
-    public float acceleration = 10f;    // 가속도
-    public float deceleration = 10f;    // 감속도
+    public float acceleration = 10f;
+    public float deceleration = 10f;
 
     [Header("애니메이션")]
-    public Animator animator;   // 플레이어 애니메이터
+    public Animator animator;
 
     [Header("레이어 마스크")]
-    public LayerMask groundLayerMask;    // 지면 레이어
+    public LayerMask groundLayerMask;
 
     [Header("임시용 (화살)")]
     public ArrowController arrowPrefab;
-    public float maxArrowAngle = 30f;   // 최대 발사 각도 (수평 기준)
+    public float maxArrowAngle = 30f;
     public Transform firePoint;
 
     [Header("근접")]
-    public float damage = 20f;   // 근접 공격 대미지
-    public Vector2 hitboxOffset = Vector2.zero;    // 히트박스 오프셋
-    public Vector2 hitboxSize = new Vector2(1.0f, 1.0f); // 크기 (width, height)
-    public LayerMask enemyLayer;    // 적 레이어
+    public float damage = 20f;
+    public Vector2 hitboxOffset = Vector2.zero;
+    public Vector2 hitboxSize = new Vector2(1.0f, 1.0f);
+    public LayerMask enemyLayer;
 
     [Header("구르기")]
-    public float rollDuration = 0.5f; // 구르기 지속 시간
-    public float rollSpeedMultiplier = 1.5f; // 구르기 속도 배율
+    public float rollDuration = 0.5f;
+    public float rollSpeedMultiplier = 1.5f;
     public float rollCoolDown = 0.4f;
 
     [Header("키")]
     public KeyCode weapon1Key = KeyCode.Alpha1;
     public KeyCode weapon2Key = KeyCode.Alpha2;
     public KeyCode skill1Key = KeyCode.E;
-    //public KeyCode skill2Key = KeyCode.Q;
     public KeyCode skill3Key = KeyCode.Q;
     public KeyCode inventory = KeyCode.Tab;
 
     const KeyCode LeftKey = KeyCode.A;
     const KeyCode RightKey = KeyCode.D;
     const KeyCode JumpKey = KeyCode.Space;
-    sbyte lastInputDirection = 1; // 마지막 입력 방향 (-1: 왼쪽, 1: 오른쪽)
-    float currentSpeed;   // 현재 이동 속도
-    public float currentHp;      // 현재 체력
-    float maxArrowPower = 20f;   // 최대 화살 발사 힘
-    float arrowPower = 0f;   // 화살 발사 힘
-    bool isGrounded;    // 지면에 있는지 여부
-    bool canRoll = true;
-    [HideInInspector] public bool isRolling;    // 구르기 중인지 여부
 
-    Rigidbody2D rb; // 플레이어의 Rigidbody2D 컴포넌트
-    Collider2D col; // 플레이어의 Collider2D 컴포넌트
+    sbyte lastInputDirection = 1;
+    float currentSpeed;
+    float maxArrowPower = 20f;
+    float arrowPower = 0f;
+    bool isGrounded;
+    bool canRoll = true;
+    public bool isRolling;
+
+    Rigidbody2D rb;
+    Collider2D col;
+
+    [Header("플레이어 장착용 프리팹")]
+    public GameObject equipPrefab;
+    public string currentWeaponName = "None";
+
+    [Header("장비 장착 위치")]
+    public Transform weaponHolder;
+    private GameObject equippedWeaponObject;
+
+
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance == null) Instance = this;
+        else { Destroy(gameObject); return; }
 
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
+
+
+    }
+
+    private void Start()
+    {
+        currentHp = MaxHp;
+
+        UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
+        UIManager.Instance.UpdatePlayerHP();
     }
 
     private void OnMouseDown()
     {
         print("Player Clicked");
-    }
-
-    private void Start()
-    {
-        currentHp = maxHp;
     }
 
     private void Update()
@@ -149,6 +174,72 @@ public class PlayerMovement : MonoBehaviour
         if (animator != null) animator.SetBool("Walk", speed > 0.05f);
     }
 
+    public void RecalculateStats(List<ItemInstance> items)
+    {
+        float oldMaxHp = MaxHp;
+
+        bonusMaxHp = 0;
+        bonusDamage = 0;
+        bonusAttackSpeed = 0;
+
+        foreach (var item in items)
+        {
+            if (item.data.itemType != ItemType.Item)
+                continue;
+
+            bonusMaxHp += item.data.bonusMaxHp;
+            bonusDamage += item.data.bonusBaseDamage;
+            bonusAttackSpeed += item.data.bonusAttackSpeed;
+        }
+
+        // 최대 체력 증가량 계산
+        float newMaxHp = MaxHp;
+        float addedHp = newMaxHp - oldMaxHp;
+
+        if (addedHp > 0)
+            currentHp = Mathf.Min(currentHp + addedHp, newMaxHp);
+        else
+            currentHp = Mathf.Min(currentHp, newMaxHp);
+
+        UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
+        UIManager.Instance.UpdatePlayerHP();
+    }
+
+    // 무기 장착
+    public void EquipWeapon(ItemData data)
+    {
+        if (equippedWeaponObject != null)
+            Destroy(equippedWeaponObject);
+
+        if (data == null || data.itemType != ItemType.Weapon)
+        {
+            currentWeaponName = "None";
+            Debug.Log("플레이어가 무기를 해제했습니다.");
+            UIManager.Instance.UpdateEquippedWeaponUI(currentWeaponName);
+
+            weaponAttackPower = 0f;
+            weaponAttackSpeed = 0f;
+
+            UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, 0, 0);
+
+            return;
+        }
+
+        GameObject prefab = data.equipPrefab != null ? data.equipPrefab : data.worldPrefab;
+        if (prefab == null) return;
+
+        equippedWeaponObject = Instantiate(prefab, weaponHolder);
+        equippedWeaponObject.transform.localPosition = Vector3.zero;
+        equippedWeaponObject.transform.localRotation = Quaternion.identity;
+
+        weaponAttackPower = data.weaponAttackPower;
+        weaponAttackSpeed = data.weaponAttackSpeed;
+        currentWeaponName = data.weaponType.ToString();
+        Debug.Log($"플레이어가 [{currentWeaponName}] 무기를 장착했습니다.");
+
+        UIManager.Instance.UpdateEquippedWeaponUI(currentWeaponName);
+        UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
+    }
 
     public void GetDamage(float damageAmount, Transform damageSource)
     {
@@ -218,7 +309,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
                 {
-                    enemyCombat.GetDamage(damage, transform);
+                    enemyCombat.GetDamage(Damage, transform);
                 }
             }
         }
