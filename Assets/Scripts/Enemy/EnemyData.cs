@@ -27,19 +27,30 @@ public class EnemyData : ScriptableObject
     [Header("기본 능력치")]
     public float maxHP = 100f;
     public float moveSpeed = 3f;
+    public float defense = 5f;            // [추가] 적 방어력
+
+    [Header("내성 시스템 (데미지 배율)")]
+    [Tooltip("1.0이면 100% 데미지, 0.5면 50% 데미지만 받음 (내성)")]
+    public float fireResistance = 1.0f;   // 불 속성 내성
+    public float iceResistance = 1.0f;    // 얼음 속성 내성
+    public float lightResistance = 1.0f;  // 빛 속성 내성
+
+    [Header("드랍 재화")]
+    public int dropGold = 50;             // [추가] 일반 인게임 재화 (사망 시 초기화)
+    public int dropGem = 1;               // [추가] 업그레이드 재화 (영구 유지)
 
     [Header("상세 패턴 수치 (타입에 맞는 값만 입력)")]
     public float readyTime = 0.3f;        // 선딜레이/준비시간
-    public float chargeSpeed = 8f;       // 돌진 속도
-    public float chargeDuration = 0.8f;  // 돌진 지속 시간
-    public float attackCooldown = 2.0f;  // 공격 쿨타임
-    public float projectileSpeed = 12f;  // 투사체 속도
+    public float chargeSpeed = 8f;        // 돌진 속도
+    public float chargeDuration = 0.8f;   // 돌진 지속 시간
+    public float attackCooldown = 2.0f;   // 공격 쿨타임
+    public float projectileSpeed = 12f;   // 투사체 속도
 
     [Header("프리팹 설정")]
     public GameObject enemyPrefab;
 
     [Header("UI 및 시각화")]
-    public Sprite icon; // 필요 시 사용 (도감 등)
+    public Sprite icon;
 
 #if UNITY_EDITOR
     private void OnValidate()
