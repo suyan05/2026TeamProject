@@ -1383,6 +1383,8 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 0
+  equippedWeaponText: {fileID: 0}
+  statText: {fileID: 0}
 --- !u!4 &777524957
 Transform:
   m_ObjectHideFlags: 0
@@ -1932,6 +1934,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArrowAttackEnemy
   maxHp: 30
+  enemyData: {fileID: 0}
   maxSpeed: 8
   moveRadius: 10
   trunDuration: 0.5
@@ -2051,6 +2054,52 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1074761830}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1444993375
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1444993377}
+  - component: {fileID: 1444993376}
+  m_Layer: 0
+  m_Name: currency
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1444993376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1444993375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b7a5872ecb7b3b49b00630c6295d30e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
+  currentGold: 0
+  currentGem: 0
+--- !u!4 &1444993377
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1444993375}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1495303018
 GameObject:
@@ -2482,6 +2531,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e1177416c4ed434aa70b20d0eb2b6db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
+  baseMaxHp: 100
+  baseDamage: 20
+  baseAttackSpeed: 1
+  currentHp: 0
   controlLocked: 0
   maxSpeed: 10
   jumpForce: 11
@@ -2508,8 +2561,10 @@ MonoBehaviour:
   skill1Key: 101
   skill3Key: 102
   inventory: 9
-  currentHp: 0
   isRolling: 0
+  equipPrefab: {fileID: 0}
+  currentWeaponName: None
+  weaponHolder: {fileID: 0}
 --- !u!1 &1546372022
 GameObject:
   m_ObjectHideFlags: 0
@@ -3049,6 +3104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LaserAttackEnemy
   maxHp: 30
+  enemyData: {fileID: 0}
   maxSpeed: 8
   moveRadius: 0
   trunDuration: 0.5
@@ -3468,6 +3524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeAttackEnemy
   maxHp: 30
+  enemyData: {fileID: 0}
   maxSpeed: 8
   moveRadius: 3
   trunDuration: 0.5
@@ -3915,6 +3972,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6380932267569944505, guid: 6d9873b87b4d13443b901f1133f2f5e1, type: 3}
+      propertyPath: enemyData
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 6421750869638747386, guid: 6d9873b87b4d13443b901f1133f2f5e1, type: 3}
       propertyPath: m_Name
       value: Melee attack enemy (1)
@@ -3957,3 +4018,4 @@ SceneRoots:
   - {fileID: 467634271}
   - {fileID: 1112525117}
   - {fileID: 389643201}
+  - {fileID: 1444993377}
