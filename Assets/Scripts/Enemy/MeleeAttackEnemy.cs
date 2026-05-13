@@ -7,6 +7,9 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     [Header("체력")]
     public float maxHp = 30f;   // 최대 체력
 
+    [Header("적 데이터")]
+    public EnemyData enemyData; //EnemyData 에셋을 드래그 앤 드롭
+
     [Header("움직임")]
     public float maxSpeed = 8; // 최대 움직임 속도
     public float moveRadius; // 대기 상태에 들어간 위치로부터 최대 탐색 범위. 이 범위는 지형에 따라 조절될 수 있음.
@@ -402,7 +405,24 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
     void Dead()
     {
+        // 1. [추가] 중복 실행 방지 
+        if (isDead) return;
+        isDead = true;
+
+        // 2. [추가] 재화 획득 로직
+        if (enemyData != null && CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.AddGold(enemyData.dropGold);
+            CurrencyManager.Instance.AddGem(enemyData.dropGem);
+        }
+
+        // 3. (기존 내용) 카운터 감소
         if (EnemyCounter.Instance != null) EnemyCounter.Instance.EnemyDefeated();
+
+        // 4. [추가] HP바가 떠 있다면 제거 (깔끔하게!)
+        if (hpBar != null) Destroy(hpBar.gameObject);
+
+        // 5. (기존 내용) 오브젝트 파괴
         Destroy(gameObject);
     }
 
