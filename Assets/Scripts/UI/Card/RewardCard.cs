@@ -14,10 +14,15 @@ public class RewardCard : MonoBehaviour
     // 보상 정보를 카드 UI에 세팅하는 함수
     public void Setup(ItemData data)
     {
-        itemData = data;
-        nameText.text = data.itemName;
-        descText.text = data.description;
-        iconImage.sprite = data.icon;
+        // 이 if문을 추가해서 "글자 상자가 있을 때만" 이름을 쓰게 만듭니다.
+        if (nameText != null)
+        {
+            nameText.text = data.itemName;
+        }
+
+        // 설명이나 아이콘도 마찬가지로 if 처리를 해두면 좋습니다.
+        if (descText != null) descText.text = data.description;
+        if (iconImage != null) iconImage.sprite = data.icon;
     }
 
     // 카드(버튼)를 클릭했을 때 실행될 함수

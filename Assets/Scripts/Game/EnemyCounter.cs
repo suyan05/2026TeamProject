@@ -20,6 +20,9 @@ public class EnemyCounter : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        // 게임 시작 시 카운트 초기화 (안전장치)
+        totalEnemieCounts = 0;
     }
 
     private void Start()
@@ -30,7 +33,7 @@ public class EnemyCounter : MonoBehaviour
             {
                 foreach (GameObject obj in info.gameObjects)
                 {
-                    obj.SetActive(false);
+                    if (obj != null) obj.SetActive(false);
                 }
             }
         }
@@ -41,6 +44,18 @@ public class EnemyCounter : MonoBehaviour
     public void EnemyDefeated()
     {
         totalEnemieCounts--;
+        Debug.Log($"적 처치! 남은 적: {totalEnemieCounts}");
+
+        // --- 추가된 보상창 트리거 로직 ---
+        if (totalEnemieCounts <= 0)
+        {
+            Debug.Log("<color=cyan>모든 적 처치 완료! 보상 시스템을 호출합니다.</color>");
+            if (RewardManager.Instance != null)
+            {
+                RewardManager.Instance.ShowRewardSelection();
+            }
+        }
+        // ------------------------------
 
         foreach (EnemyInfo info in enemyInfos)
         {
@@ -52,7 +67,7 @@ public class EnemyCounter : MonoBehaviour
             {
                 foreach (GameObject obj in info.gameObjects)
                 {
-                    obj.SetActive(true);
+                    if (obj != null) obj.SetActive(true);
                 }
             }
         }
