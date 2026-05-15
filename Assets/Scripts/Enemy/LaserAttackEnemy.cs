@@ -410,24 +410,24 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
 
     void Dead()
     {
-        // 1. [추가] 중복 실행 방지 
+        //  중복 실행 방지 
         if (isDead) return;
         isDead = true;
 
-        // 2. [추가] 재화 획득 로직
+        //  재화 획득 로직
         if (enemyData != null && CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.AddGold(enemyData.dropGold);
             CurrencyManager.Instance.AddGem(enemyData.dropGem);
         }
 
-        // 3. (기존 내용) 카운터 감소
+        //  카운터 감소
         if (EnemyCounter.Instance != null) EnemyCounter.Instance.EnemyDefeated();
 
-        // 4. [추가] HP바가 떠 있다면 제거 (깔끔하게!)
+        //   HP바가 떠 있다면 제거 
         if (hpBar != null) Destroy(hpBar.gameObject);
 
-        // 5. (기존 내용) 오브젝트 파괴
+        //  오브젝트 파괴
         Destroy(gameObject);
     }
 
