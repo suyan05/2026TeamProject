@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 3f5e2eb2579ddbd419184eee4d2d31c7
+guid: 0ef489a4cb96853499ab357097471624
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -680529143327463601
-    second: Ghost_Albedo_0
+      213: -9072561634796520931
+    second: "\uD654\uBA74 \uCEA1\uCC98 2026-05-20 160116_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -96,17 +96,43 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Ghost_Albedo_0
+      name: "\uD654\uBA74 \uCEA1\uCC98 2026-05-20 160116_0"
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1024
-        height: 1024
+        width: 1022
+        height: 547
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f476aa889564e86f0800000000000000
-      internalID: -680529143327463601
+      spriteID: d1abd1bf249c71280800000000000000
+      internalID: -9072561634796520931
       vertices: []
       indices: 
       edges: []
@@ -135,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Ghost_Albedo_0: -680529143327463601
+      "\uD654\uBA74 \uCEA1\uCC98 2026-05-20 160116_0": -9072561634796520931
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
