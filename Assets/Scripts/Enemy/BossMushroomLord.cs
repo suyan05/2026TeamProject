@@ -41,7 +41,7 @@ public class BossMushroomLord : BossBase
 
             if (isPhaseTransitioning || isGroggy) continue;
 
-            // 기획서 내용: 특정 패턴 이후 잠시 그로기 상태에 빠진다
+            // 특정 패턴 이후 잠시 그로기 상태에 빠진다
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
             {
@@ -59,7 +59,7 @@ public class BossMushroomLord : BossBase
             }
             else
             {
-                // 기획서 내용: 2페이즈 전용 패턴 연계 콤보 시스템
+                //  2페이즈 전용 패턴 연계 콤보 시스템
                 int randomCombo = Random.Range(0, 2);
                 if (randomCombo == 0)
                 {
@@ -80,7 +80,7 @@ public class BossMushroomLord : BossBase
     // [기본 패턴 1] 잡옵 소환 기믹
     private void Pattern_SummonMinions()
     {
-        // 기획서 내용: 작은 버섯 몬스터 2~4마리를 소환한다.
+        //  작은 버섯 몬스터 2~4마리를 소환한다.
         int spawnCount = Random.Range(2, 5);
         Debug.Log($"버섯군주 패턴: 작은 버섯 몬스터 {spawnCount}마리 소환 (독성 공격 압박)");
 
@@ -99,7 +99,7 @@ public class BossMushroomLord : BossBase
 
         Vector3 targetLandPos = playerTransform.position;
 
-        // UI 경고 연출: 착지 지점에 붉은 원과 충격파 방향 표시가 나타난다.
+        // UI 경고 연출 착지 지점에 붉은 원과 충격파 방향 표시가 나타난다.
         if (jumpSmashIndicator != null)
         {
             jumpSmashIndicator.transform.position = targetLandPos;
@@ -111,11 +111,11 @@ public class BossMushroomLord : BossBase
 
         if (jumpSmashIndicator != null) jumpSmashIndicator.SetActive(false);
 
-        // 기획서 내용: 착지하며 원형 충격파를 발생시킨다.
+        //  착지하며 원형 충격파를 발생시킨다.
         transform.position = targetLandPos;
         Debug.Log("?? 쿵! 보스 착지 - 1차 원형 충격파 발산");
 
-        // 기획서 내용: 충격파는 1~2회 연속으로 퍼질 수 있어 회피 타이밍을 흔든다.
+        // 충격파는 1~2회 연속으로 퍼질 수 있어 회피 타이밍을 흔든다.
         int extraWaves = Random.Range(1, 3); // 1~2회 연속 보너스 타격
         for (int i = 1; i < extraWaves; i++)
         {
@@ -132,7 +132,7 @@ public class BossMushroomLord : BossBase
         Vector3 minePos = playerTransform.position + Random.insideUnitSphere * 2f;
         minePos.y = transform.position.y;
 
-        // UI 경고 연출: 바닥에 초록색 점멸 원이 표시된다.
+        // UI 경고 연출 바닥에 초록색 점멸 원이 표시된다.
         if (sporeMineIndicator != null)
         {
             sporeMineIndicator.transform.position = minePos;
@@ -141,7 +141,7 @@ public class BossMushroomLord : BossBase
         yield return new WaitForSeconds(1.0f);
         if (sporeMineIndicator != null) sporeMineIndicator.SetActive(false);
 
-        // 기획서 내용: 바닥에 포자 덩어리를 생성해 지뢰처럼 배치한다.
+        //  바닥에 포자 덩어리를 생성해 지뢰처럼 배치한다.
         GameObject mine = Instantiate(landmineSporePrefab, minePos, Quaternion.identity);
 
         // 동적 컴포넌트 추가로 파일 누락 에러 원천 차단
@@ -192,16 +192,16 @@ public class BossMushroomLord : BossBase
 
         Debug.Log("<color=green><b>?? [페이즈 전환] 버섯군주 체력 50% 이하! 2페이즈 광폭화 연출 시작</b></color>");
 
-        // 기획서 내용: 주변 공기가 뿌옇게 변하며 전장 전체에 포자 피해 구역이 형성된다.
-        // 기획서 내용: UI 연동 - 화면 전반에 녹색 포자 필터가 적용되고 지속 피해 아이콘이 표시된다.
+        //  주변 공기가 뿌옇게 변하며 전장 전체에 포자 피해 구역이 형성된다.
+        //  UI 연동 - 화면 전반에 녹색 포자 필터가 적용되고 지속 피해 아이콘이 표시된다.
         if (greenSporeFilterUI != null) greenSporeFilterUI.SetActive(true);
         if (dotDamageIconUI != null) dotDamageIconUI.SetActive(true);
         Debug.Log("UI 출력: 녹색 포자 화면 필터 활성화 및 플레이어 도트 데미지 디버프 아이콘 표기");
 
-        // 기획서 내용: 이후 보스의 공격 속도가 빨라지고 (쿨타임 및 연계 속도 내부 보정)
+        //  이후 보스의 공격 속도가 빨라지고 (쿨타임 및 연계 속도 내부 보정)
         moveSpeed *= 1.3f;
 
-        // 기획서 내용: 낙하 장애물 패턴이 해금된다. (상시 낙하 루틴 가동)
+        // 낙하 장애물 패턴이 해금된다. (상시 낙하 루틴 가동)
         if (passiveFallingRoutine == null)
         {
             passiveFallingRoutine = StartCoroutine(PassiveFallingObstacleRoutine());
@@ -256,14 +256,15 @@ public class BossMushroomLord : BossBase
 }
 
 
-
+// 2. [서브 클래스 1] 포자 폭발 지뢰 스크립트
+// ====================================================================
 public class MushroomLandmine : MonoBehaviour
 {
     private bool isTriggered = false;
 
     public void Setup()
     {
-        // 기획서 내용: 포자는 일정 시간이 지나도 폭발하며, 플레이어가 가까이 가면 즉시 터질 수도 있다.
+        //  포자는 일정 시간이 지나도 폭발하며, 플레이어가 가까이 가면 즉시 터질 수도 있다.
         Destroy(gameObject, 5.0f); // 5초 뒤에 밟지 않아도 타임아웃 자동 폭발
     }
 
@@ -290,12 +291,14 @@ public class MushroomLandmine : MonoBehaviour
 
     private void LeavePoisonCloud()
     {
-        // 기획서 내용: 폭발 후에는 독성 구름이 남아 추가 위협을 만든다. (지속 장판 영역)
+        //  폭발 후에는 독성 구름이 남아 추가 위협을 만든다. (지속 장판 영역)
         Debug.Log("지뢰 기믹 연출: 폭발 자리에 잔류 독성 구름 형성 (밟으면 지속 대미지)");
     }
 }
 
 
+// 3. [서브 클래스 2] 2페이즈 전용 천장 낙하 장애물 스크립트
+// ====================================================================
 public class MushroomFallingObstacle : MonoBehaviour
 {
     private Vector3 targetFloorPos;
@@ -326,7 +329,7 @@ public class MushroomFallingObstacle : MonoBehaviour
 
     private void OnHitFloor()
     {
-        // 기획서 내용: 천장에서 버섯 덩어리와 균사체 조각이 떨어진다. 낙하 지점에는 즉발 피해 또는 지속 피해가 발생한다.
+        //  천장에서 버섯 덩어리와 균사체 조각이 떨어진다. 낙하 지점에는 즉발 피해 또는 지속 피해가 발생한다.
         Collider[] hitPlayers = Physics.OverlapSphere(transform.position, 2.0f);
         foreach (var player in hitPlayers)
         {

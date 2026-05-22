@@ -150,7 +150,7 @@ public class BossGuardian : BossBase
     {
         isGroggy = true;
         attackPatternCounter = 0;
-        Debug.Log("<color=cyan><b>? [이벤트] 보스가 그로기 상태에 빠졌습니다! (받는 피해 30% 증가)</b></color>");
+        Debug.Log("<color=cyan><b> [이벤트] 보스가 그로기 상태에 빠졌습니다! (받는 피해 30% 증가)</b></color>");
         yield return new WaitForSeconds(4.0f);
         isGroggy = false;
         Debug.Log("보스가 그로기 상태에서 깨어났습니다.");
@@ -162,7 +162,7 @@ public class BossGuardian : BossBase
         attackPatternCounter = 0;
         currentPhase = 2;
 
-        Debug.Log("<color=yellow><b>?? [페이즈 전환] 덩굴의 수호자 2페이즈 연출 시작</b></color>");
+        Debug.Log("<color=yellow><b> [페이즈 전환] 덩굴의 수호자 2페이즈 연출 시작</b></color>");
         defenseModifier = 0.7f;
         remainingWeaknessVines = 3;
 
