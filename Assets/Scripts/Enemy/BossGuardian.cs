@@ -15,7 +15,7 @@ public class BossGuardian : BossBase
         // 여기에 패턴 타이머 및 플레이어 추적 로직 추가
     }
 
-    // 패턴 1: 덩굴 도약 (Leap)
+    // 패턴  덩굴 도약 
     public IEnumerator LeapAttack(Vector3 targetPos)
     {
         Debug.Log("패턴: 덩굴 도약 시작");
@@ -24,7 +24,7 @@ public class BossGuardian : BossBase
         transform.position = targetPos; // 실제로는 포물선 이동 연출 필요
     }
 
-    // 패턴 2: 내리찍기 (Smash)
+    // 패턴  내리찍기 (Smash)
     public IEnumerator SmashAttack()
     {
         smashIndicator.SetActive(true); // 경고 표시
