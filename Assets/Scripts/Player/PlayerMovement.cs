@@ -90,8 +90,6 @@ public class PlayerMovement : MonoBehaviour
     public Transform weaponHolder;
     private GameObject equippedWeaponObject;
 
-
-
     private void Awake()
     {
         if (Instance == null) Instance = this;
