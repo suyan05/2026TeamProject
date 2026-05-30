@@ -39,6 +39,7 @@ public class ShopManager : MonoBehaviour
         RefreshShopProducts();
     }
 
+    
     public void RefreshShopProducts()
     {
         if (allShopItems.Count < 4)
@@ -61,7 +62,7 @@ public class ShopManager : MonoBehaviour
         HideTooltip();
     }
 
-    // 아이템 구매 로직 (컴파일러의 KeyCode 우회 수색 기법 적용)
+    
     public void TryPurchaseItem(ShopCardUI clickedCard)
     {
         ShopItemData targetItem = clickedCard.itemData;
@@ -70,70 +71,37 @@ public class ShopManager : MonoBehaviour
         if (playerGold >= cost)
         {
             
-            GameObject playerObj = GameObject.FindWithTag("Player");
+            InventoryUI invUI = FindObjectOfType<InventoryUI>();
 
-            if (playerObj != null)
+            if (invUI != null && invUI.inventory != null)
             {
-               
-                Component playerScript = playerObj.GetComponent("PlayerMovement");
-
-                if (playerScript != null)
+                
+                if (invUI.inventory.TryAddItem(targetItem.actualItemData))
                 {
+                    playerGold -= cost;
+                    UpdateMoneyUI();
+
                     
-                    var inventoryField = playerScript.GetType().GetField("inventory");
-                    var inventoryUIField = playerScript.GetType().GetField("inventoryUI");
+                    invUI.RefreshItems();
 
-                    if (inventoryField != null)
-                    {
-                        var inventory = inventoryField.GetValue(playerScript);
-                        var inventoryUI = inventoryUIField != null ? inventoryUIField.GetValue(playerScript) : null;
-
-                        if (inventory != null)
-                        {
-                            
-                            var tryAddItemMethod = inventory.GetType().GetMethod("TryAddItem");
-
-                            if (tryAddItemMethod != null)
-                            {
-                                bool success = (bool)tryAddItemMethod.Invoke(inventory, new object[] { targetItem.actualItemData });
-
-                                if (success)
-                                {
-                                    // 구매 성공 시 재화 차감 및 UI 갱신
-                                    playerGold -= cost;
-                                    UpdateMoneyUI();
-
-                                   
-                                    if (inventoryUI != null)
-                                    {
-                                        var refreshMethod = inventoryUI.GetType().GetMethod("RefreshItems");
-                                        if (refreshMethod != null)
-                                        {
-                                            refreshMethod.Invoke(inventoryUI, null);
-                                        }
-                                    }
-
-                                    
-                                    clickedCard.gameObject.SetActive(false);
-                                    HideTooltip();
-                                    Debug.Log($"<{targetItem.itemName}> 구매 성공! 잔액: {playerGold}원");
-                                    return;
-                                }
-                                else
-                                {
-                                    Debug.LogWarning("인벤토리에 빈 공간이 없습니다!");
-                                    return;
-                                }
-                            }
-                        }
-                    }
+                   
+                    clickedCard.gameObject.SetActive(false);
+                    HideTooltip();
+                    Debug.Log($"<{targetItem.itemName}> 구매 성공! 잔액: {playerGold}원");
+                    return;
+                }
+                else
+                {
+                    Debug.LogWarning("인벤토리 가방에 빈 공간이 부족합니다!");
+                    return;
                 }
             }
-            Debug.LogError("씬에서 플레이어('Player' 태그 설정 확인) 또는 인벤토리 시스템을 찾을 수 없습니다.");
+
+            Debug.LogError("씬에서 인벤토리 시스템(InventoryUI)을 찾을 수 없습니다! 하이어라키 창을 확인해 주세요.");
         }
         else
         {
-            Debug.LogWarning("보유한 재화가 부족합니다.");
+            Debug.LogWarning("보유한 재화(골드)가 부족합니다.");
         }
     }
 
@@ -157,7 +125,7 @@ public class ShopManager : MonoBehaviour
         tooltipNameText.text = data.itemName;
         tooltipDescText.text = data.itemDescription;
 
-        // 마우스 오버한 카드 슬롯 살짝 위쪽에 툴팁 배치
+        
         tooltipPanel.transform.position = cardPosition + new Vector3(0, 150f, 0);
     }
 
