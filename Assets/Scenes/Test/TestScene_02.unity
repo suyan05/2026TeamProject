@@ -4489,10 +4489,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopManager
   allShopItems:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 0c1feebd23228524a803101413f0cbaa, type: 2}
+  - {fileID: 11400000, guid: 99a022673a207b641b9f4bf714b41b3e, type: 2}
+  - {fileID: 11400000, guid: bc0dde491dfa506468ce4b16752d6914, type: 2}
+  - {fileID: 11400000, guid: cc973df66b549524e9c88c68653ae8ab, type: 2}
   shopCards:
   - {fileID: 1589902362}
   - {fileID: 1454915552}
@@ -4835,8 +4835,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88364c69133ab5042a3f7edb110a3602, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopCardUI
-  itemIconImage: {fileID: 0}
-  itemNameText: {fileID: 0}
+  itemIconImage: {fileID: 1415562043}
+  itemNameText: {fileID: 2029950837}
   itemPriceText: {fileID: 1924774420}
   itemRarityText: {fileID: 792107876}
   buyButton: {fileID: 542293169}
@@ -4861,7 +4861,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4847533388796964009, guid: a9949eea788cc504fb8c87ee5086b026, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5221,8 +5221,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88364c69133ab5042a3f7edb110a3602, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopCardUI
-  itemIconImage: {fileID: 0}
-  itemNameText: {fileID: 0}
+  itemIconImage: {fileID: 1454915553}
+  itemNameText: {fileID: 1083250020}
   itemPriceText: {fileID: 1501347306}
   itemRarityText: {fileID: 265384454}
   buyButton: {fileID: 1848555629}
@@ -5247,7 +5247,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4847533388796964009, guid: a9949eea788cc504fb8c87ee5086b026, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6014,8 +6014,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88364c69133ab5042a3f7edb110a3602, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopCardUI
-  itemIconImage: {fileID: 0}
-  itemNameText: {fileID: 0}
+  itemIconImage: {fileID: 1589902363}
+  itemNameText: {fileID: 564016266}
   itemPriceText: {fileID: 1651884782}
   itemRarityText: {fileID: 1965311323}
   buyButton: {fileID: 1233855103}
@@ -6040,7 +6040,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4847533388796964009, guid: a9949eea788cc504fb8c87ee5086b026, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6449,8 +6449,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88364c69133ab5042a3f7edb110a3602, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopCardUI
-  itemIconImage: {fileID: 0}
-  itemNameText: {fileID: 0}
+  itemIconImage: {fileID: 1662430630}
+  itemNameText: {fileID: 1305790383}
   itemPriceText: {fileID: 1871823349}
   itemRarityText: {fileID: 1165855849}
   buyButton: {fileID: 2058080268}
@@ -6475,7 +6475,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4847533388796964009, guid: a9949eea788cc504fb8c87ee5086b026, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
