@@ -6,6 +6,9 @@ public class ShopManager : MonoBehaviour
 {
     public static ShopManager Instance { get; private set; }
 
+    [Header("상점 전체 패널 오브젝트 (껐다 켜기용)")]
+    public GameObject shopPanelObject;
+
     [Header("전체 아이템 데이터베이스 Pool")]
     public List<ShopItemData> allShopItems = new List<ShopItemData>();
 
@@ -40,6 +43,26 @@ public class ShopManager : MonoBehaviour
     }
 
     
+    public void OpenShop()
+    {
+        if (shopPanelObject != null)
+        {
+            shopPanelObject.SetActive(true); 
+            RefreshShopProducts();          
+        }
+    }
+
+   
+    public void CloseShop()
+    {
+        if (shopPanelObject != null)
+        {
+            shopPanelObject.SetActive(false); 
+            HideTooltip();                   
+        }
+    }
+
+    
     public void RefreshShopProducts()
     {
         if (allShopItems.Count < 4)
@@ -70,21 +93,21 @@ public class ShopManager : MonoBehaviour
 
         if (playerGold >= cost)
         {
-            
-            InventoryUI invUI = FindObjectOfType<InventoryUI>();
+            // 비활성화된(꺼져있는) 인벤토리 UI까지 모조리 추적하도록 (true) 옵션을 추가했습니다.
+            InventoryUI invUI = FindObjectOfType<InventoryUI>(true);
 
             if (invUI != null && invUI.inventory != null)
             {
-                
+                // 진짜 가방 데이터(inventory)에 아이템 추가 시도
                 if (invUI.inventory.TryAddItem(targetItem.actualItemData))
                 {
                     playerGold -= cost;
                     UpdateMoneyUI();
 
-                    
+                    // 아이템 획득 성공 후 인벤토리 UI 실시간 새로고침
                     invUI.RefreshItems();
 
-                   
+                    // 구매 완료된 카드 슬롯 화면에서 숨김 및 툴팁 종료
                     clickedCard.gameObject.SetActive(false);
                     HideTooltip();
                     Debug.Log($"<{targetItem.itemName}> 구매 성공! 잔액: {playerGold}원");
@@ -125,7 +148,7 @@ public class ShopManager : MonoBehaviour
         tooltipNameText.text = data.itemName;
         tooltipDescText.text = data.itemDescription;
 
-        
+        // 카드 위치 기준 살짝 위쪽에 툴팁 배치
         tooltipPanel.transform.position = cardPosition + new Vector3(0, 150f, 0);
     }
 
