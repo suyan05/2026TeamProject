@@ -32,12 +32,12 @@ public class BossMushroomLord : BossBase
 
     private void Start()
     {
-        // 🌟 자식 오브젝트인 'Mushroom Monster'에 붙은 Animator를 안전하게 가져옵니다.
+        
         anim = GetComponentInChildren<Animator>();
 
         StartCoroutine(BossAIRoutine());
 
-        // 🌟 플레이어가 곁에 있을 때 무한 연속 공격을 돌릴 평타 루틴을 별도로 가동합니다.
+       
         StartCoroutine(NormalAttackRoutine());
     }
 
@@ -94,9 +94,9 @@ public class BossMushroomLord : BossBase
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
             {
-                isExecutingPattern = true; // 패턴 상태 ON
+                isExecutingPattern = true; 
                 yield return StartCoroutine(GroggyStateRoutine());
-                isExecutingPattern = false; // 패턴 상태 OFF
+                isExecutingPattern = false; 
                 continue;
             }
 
@@ -150,12 +150,12 @@ public class BossMushroomLord : BossBase
         }
     }
 
-    // [기본 패턴 2] 점프 후 내리찍기 기믹
+    
     private IEnumerator Pattern_JumpSmash()
     {
         if (playerTransform == null) yield break;
 
-        // 특수 패턴 도중에는 평타 애니메이션이 씹히도록 확실히 강제 지정
+        
         if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f);
 
         Vector3 targetLandPos = playerTransform.position;
@@ -207,7 +207,7 @@ public class BossMushroomLord : BossBase
         Debug.Log("패턴 시전: 전장에 독성 구름 포자 지뢰 배치 완료");
     }
 
-    // [2페이즈 콤보] 흡입 ? 광역 포자 폭발
+    // [2페이즈 콤보] 광역 포자 폭발
     private IEnumerator Combo_SuckAndExplode()
     {
         Debug.Log("기믹 시전: 보스가 주변의 모든 플레이어를 중심부로 강하게 자석처럼 끌어당김 (흡입)");
@@ -303,7 +303,7 @@ public class BossMushroomLord : BossBase
 }
 
 // 2. [서브 클래스 1] 포자 폭발 지뢰 스크립트
-// ====================================================================
+
 public class MushroomLandmine : MonoBehaviour
 {
     private bool isTriggered = false;
@@ -344,7 +344,7 @@ public class MushroomLandmine : MonoBehaviour
 
 
 // 3. [서브 클래스 2] 2페이즈 전용 천장 낙하 장애물 스크립트
-// ====================================================================
+
 public class MushroomFallingObstacle : MonoBehaviour
 {
     private Vector3 targetFloorPos;
