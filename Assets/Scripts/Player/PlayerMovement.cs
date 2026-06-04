@@ -7,7 +7,7 @@ public class PlayerMovement : MonoBehaviour
 {
     public static PlayerMovement Instance { get; private set; }
 
-    [Header("플레이어 기본 스탯")]
+    [Header("기본 스탯")]
     public float baseMaxHp = 100f;
     public float baseDamage = 20f;
     public float baseAttackSpeed = 1f;
@@ -25,10 +25,10 @@ public class PlayerMovement : MonoBehaviour
 
     public float currentHp;
 
-    [Header("플레이어 움직임 제한")]
+    [Header("움직임 제한")]
     public bool controlLocked = false;
 
-    [Header("플레이어 이동")]
+    [Header("이동")]
     public float maxSpeed = 5f;
     public float jumpForce = 7f;
 
@@ -42,7 +42,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("레이어 마스크")]
     public LayerMask groundLayerMask;
 
-    [Header("임시용 (화살)")]
+    [Header("활")]
     public ArrowController arrowPrefab;
     public float maxArrowAngle = 30f;
     public Transform firePoint;
@@ -69,15 +69,28 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody2D rb;
     Collider2D col;
 
-    [Header("플레이어 장착용 프리팹")]
+    [Header("장비")]
     public GameObject equipPrefab;
     public string currentWeaponName = "None";
-
-    [Header("장비 장착 위치")]
     public Transform weaponHolder;
     private GameObject equippedWeaponObject;
 
     KeyBindingManager kb;
+
+    // 점프
+    int jumpCount = 0;
+    public int maxJumpCount = 2;
+
+    // 공격 상태
+    bool isMeleeAttacking = false;
+    bool isBowCharging = false;
+
+    // 활 차징 방향
+    sbyte bowChargeDirection = 1;
+
+    // 피격
+    bool isHit = false;
+    public float hitStunDuration = 0.3f;
 
     private void Awake()
     {
@@ -91,7 +104,6 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         kb = KeyBindingManager.Instance;
-
         currentHp = MaxHp;
 
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
@@ -100,7 +112,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        if (controlLocked)
+        if (controlLocked || isHit)
             return;
 
         if (GameStateManager.Current == GameState.MergeOpen)
@@ -108,32 +120,43 @@ public class PlayerMovement : MonoBehaviour
 
         bool inventoryOpen = GameStateManager.Current == GameState.InventoryOpen;
 
-        // 공격 입력
-        if (!inventoryOpen && Weapon1Pressed())
+        // 근접 공격
+        if (!inventoryOpen && Weapon1Pressed() && !isBowCharging)
         {
-            if (animator != null) animator.SetTrigger("Attack");
+            animator?.SetTrigger("Attack");
+            isMeleeAttacking = true;
             MeleeAttack();
+            StartCoroutine(EndMeleeAttack());
         }
 
-        // 인벤토리
-        if (Input.GetKeyDown(kb.inventory))
-        {
-            UIManager.Instance.ToggleInventory();
-        }
-
-        // 활 충전/발사
+        // 활 차징
         if (!inventoryOpen)
         {
-            if (Weapon2Hold())
+            if (Weapon2Hold() && !isMeleeAttacking)
             {
+                if (!isBowCharging)
+                    bowChargeDirection = lastInputDirection;
+
+                isBowCharging = true;
+                animator?.SetBool("BowCharge", true);
+
                 arrowPower += Time.deltaTime * 30f;
                 arrowPower = Mathf.Min(arrowPower, maxArrowPower);
                 UIManager.Instance.UpdateChargeGauge(arrowPower, maxArrowPower);
             }
-            else if (Weapon2Release())
+            else if (Weapon2Release() && isBowCharging)
             {
+                animator?.SetTrigger("BowShoot");
+                animator?.SetBool("BowCharge", false);
+                animator?.SetBool("BowMoveForward", false);
+                animator?.SetBool("BowMoveBackward", false);
+
                 LaunchArrow();
                 arrowPower = 0f;
+                isBowCharging = false;
+
+                lastInputDirection = bowChargeDirection;
+
                 UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
             }
         }
@@ -141,38 +164,34 @@ public class PlayerMovement : MonoBehaviour
         // 구르기
         if (!inventoryOpen && Input.GetKeyDown(kb.rollKey))
         {
-            if (animator != null) animator.SetTrigger("Roll");
+            animator?.SetTrigger("Roll");
             Roll();
         }
 
         float speed = Mathf.Abs(rb.linearVelocity.x);
-        if (animator != null) animator.SetBool("Walk", speed > 0.05f);
+        if (!isBowCharging)
+            animator?.SetBool("Walk", speed > 0.05f);
     }
 
-    // 무기 1 입력 (근접)
     bool Weapon1Pressed()
     {
-        if (kb.weapon1IsMouse)
-            return Input.GetMouseButtonDown((int)kb.weapon1Mouse);
-        else
-            return Input.GetKeyDown(kb.weapon1Key);
+        return kb.weapon1IsMouse ?
+            Input.GetMouseButtonDown((int)kb.weapon1Mouse) :
+            Input.GetKeyDown(kb.weapon1Key);
     }
 
-    // 무기 2 입력 (활 충전)
     bool Weapon2Hold()
     {
-        if (kb.weapon2IsMouse)
-            return Input.GetMouseButton((int)kb.weapon2Mouse);
-        else
-            return Input.GetKey(kb.weapon2Key);
+        return kb.weapon2IsMouse ?
+            Input.GetMouseButton((int)kb.weapon2Mouse) :
+            Input.GetKey(kb.weapon2Key);
     }
 
     bool Weapon2Release()
     {
-        if (kb.weapon2IsMouse)
-            return Input.GetMouseButtonUp((int)kb.weapon2Mouse);
-        else
-            return Input.GetKeyUp(kb.weapon2Key);
+        return kb.weapon2IsMouse ?
+            Input.GetMouseButtonUp((int)kb.weapon2Mouse) :
+            Input.GetKeyUp(kb.weapon2Key);
     }
 
     public void RecalculateStats(List<ItemInstance> items)
@@ -196,10 +215,9 @@ public class PlayerMovement : MonoBehaviour
         float newMaxHp = MaxHp;
         float addedHp = newMaxHp - oldMaxHp;
 
-        if (addedHp > 0)
-            currentHp = Mathf.Min(currentHp + addedHp, newMaxHp);
-        else
-            currentHp = Mathf.Min(currentHp, newMaxHp);
+        currentHp = addedHp > 0 ?
+            Mathf.Min(currentHp + addedHp, newMaxHp) :
+            Mathf.Min(currentHp, newMaxHp);
 
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
         UIManager.Instance.UpdatePlayerHP();
@@ -239,13 +257,32 @@ public class PlayerMovement : MonoBehaviour
 
     public void GetDamage(float damageAmount, Transform damageSource)
     {
-        if (isRolling) return;
+        if (isRolling || isHit) return;
 
         currentHp -= damageAmount;
         UIManager.Instance.UpdatePlayerHP();
 
+        StartCoroutine(HitStun());
+
         if (currentHp <= 0f)
             Die();
+    }
+
+    IEnumerator HitStun()
+    {
+        isHit = true;
+
+        isMeleeAttacking = false;
+        isBowCharging = false;
+
+        animator?.SetTrigger("Hit");
+        animator?.SetBool("BowCharge", false);
+        animator?.SetBool("BowMoveForward", false);
+        animator?.SetBool("BowMoveBackward", false);
+
+        yield return new WaitForSeconds(hitStunDuration);
+
+        isHit = false;
     }
 
     void Die()
@@ -259,12 +296,12 @@ public class PlayerMovement : MonoBehaviour
 
         arrowPower = Mathf.Max(arrowPower, 3f);
 
-        Vector2 arrowFireDirection = (Vector3.right * lastInputDirection) + (Vector3)rb.linearVelocity;
+        Vector2 arrowFireDirection = (Vector3.right * bowChargeDirection) + (Vector3)rb.linearVelocity;
 
         float currentAngle = Mathf.Atan2(arrowFireDirection.y, arrowFireDirection.x) * Mathf.Rad2Deg;
         float minAngle, maxAngle;
 
-        if (lastInputDirection > 0)
+        if (bowChargeDirection > 0)
         {
             minAngle = -maxArrowAngle;
             maxAngle = maxArrowAngle;
@@ -300,6 +337,12 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    IEnumerator EndMeleeAttack()
+    {
+        yield return new WaitForSeconds(0.3f);
+        isMeleeAttacking = false;
+    }
+
     void Roll()
     {
         if (!canRoll || !isGrounded) return;
@@ -326,20 +369,67 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (controlLocked)
+        if (controlLocked || isHit)
             return;
 
         UpdateStates();
 
-        if (!isRolling) MoveHandler();
+        if (isBowCharging)
+            BowMoveHandler();
+        else if (!isRolling)
+            MoveHandler();
+
+        if (!isBowCharging)
+            RotationHandler();
+
         JumpHandler();
-        RotationHandler();
     }
+
+    void BowMoveHandler()
+    {
+        sbyte horizontal = 0;
+
+        if (TryGetHorizontalInput(out horizontal))
+        {
+            currentSpeed += acceleration * Time.fixedDeltaTime;
+            currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+
+            if (horizontal == bowChargeDirection)
+            {
+                animator?.SetBool("BowMoveForward", true);
+                animator?.SetBool("BowMoveBackward", false);
+            }
+            else if (horizontal == -bowChargeDirection)
+            {
+                animator?.SetBool("BowMoveForward", false);
+                animator?.SetBool("BowMoveBackward", true);
+            }
+        }
+        else
+        {
+            currentSpeed -= deceleration * Time.fixedDeltaTime;
+            currentSpeed = Mathf.Max(currentSpeed, 0f);
+
+            animator?.SetBool("BowMoveForward", false);
+            animator?.SetBool("BowMoveBackward", false);
+        }
+
+        rb.linearVelocity = new Vector2(currentSpeed * horizontal, rb.linearVelocity.y);
+    }
+
 
     void MoveHandler()
     {
         if (TryGetHorizontalInput(out sbyte horizontal))
         {
+            if (horizontal != 0 && horizontal != lastInputDirection)
+            {
+                if (horizontal == 1)
+                    animator?.SetTrigger("TurnLeftToRight");
+                else
+                    animator?.SetTrigger("TurnRightToLeft");
+            }
+
             if (!(lastInputDirection != horizontal && currentSpeed > maxSpeed * 0.1f))
             {
                 lastInputDirection = horizontal;
@@ -363,11 +453,21 @@ public class PlayerMovement : MonoBehaviour
 
     void JumpHandler()
     {
-        if (isGrounded && Input.GetKey(kb.jumpKey))
+        if (Input.GetKeyDown(kb.jumpKey))
         {
-            Vector2 jumpVector = Vector2.up * jumpForce;
-            jumpVector.x = rb.linearVelocity.x;
-            rb.linearVelocity = jumpVector;
+            if (jumpCount < maxJumpCount)
+            {
+                Vector2 jumpVector = Vector2.up * jumpForce;
+                jumpVector.x = rb.linearVelocity.x;
+                rb.linearVelocity = jumpVector;
+
+                jumpCount++;
+
+                if (jumpCount == 1)
+                    animator?.SetTrigger("Jump");
+                else
+                    animator?.SetTrigger("DoubleJump");
+            }
         }
     }
 
@@ -422,13 +522,22 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateStates()
     {
+        bool wasGrounded = isGrounded;
         isGrounded = CheckIsGrounded();
+
+        if (!wasGrounded && isGrounded)
+        {
+            jumpCount = 0;
+            animator?.SetTrigger("Land");
+        }
     }
 
     bool CheckIsGrounded()
     {
-        Vector2 rayStart = new Vector2(col.bounds.center.x, col.bounds.min.y);
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, 0.05f, groundLayerMask);
+        Vector2 boxCenter = new Vector2(col.bounds.center.x, col.bounds.min.y - 0.05f);
+        Vector2 boxSize = new Vector2(col.bounds.size.x * 0.9f, 0.1f);
+
+        RaycastHit2D hit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.01f, groundLayerMask);
         return hit.collider != null;
     }
 

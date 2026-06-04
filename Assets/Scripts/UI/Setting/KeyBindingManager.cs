@@ -48,7 +48,9 @@ public class KeyBindingManager : MonoBehaviour
     {
         if (waitingKey != KeyCode.None)
         {
-            // 키보드 입력
+            // ============================
+            // 키보드 입력 체크
+            // ============================
             foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
             {
                 if (Input.GetKeyDown(key))
@@ -60,7 +62,20 @@ public class KeyBindingManager : MonoBehaviour
                 }
             }
 
-            // 마우스 입력
+            // ============================
+            // Tab 직접 체크 (Unity가 Enum 순회에서 놓치는 경우 방지)
+            // ============================
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                onKeySet?.Invoke(KeyCode.Tab, false, MouseKey.None);
+                waitingKey = KeyCode.None;
+                SaveKeyBindings();
+                return;
+            }
+
+            // ============================
+            // 마우스 입력 체크
+            // ============================
             if (Input.GetMouseButtonDown(0))
             {
                 onKeySet?.Invoke(KeyCode.None, true, MouseKey.Left);
