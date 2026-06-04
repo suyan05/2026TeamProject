@@ -1,130 +1,188 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
 
-// 1. ¸ŞÀÎ º¸½º AI Å¬·¡½º
+// 1. ë©”ì¸ ë³´ìŠ¤ AI í´ë˜ìŠ¤
 public class BossMushroomLord : BossBase
 {
     [Header("Player Target")]
-    public Transform playerTransform; // ÇÃ·¹ÀÌ¾î À§Ä¡ ÃßÀû¿ë
+    public Transform playerTransform; // í”Œë ˆì´ì–´ ìœ„ì¹˜ ì¶”ì ìš©
 
     [Header("Pattern Prefabs")]
-    public GameObject minionMushroomPrefab;   // µ¶¼º °ø°İÀ» ÇÏ´Â ÀÛÀº ¹ö¼¸ ¸ó½ºÅÍ ÇÁ¸®ÆÕ
-    public GameObject landmineSporePrefab;    // ¹Ù´Ú¿¡ ¹èÄ¡ÇÒ Æ÷ÀÚ Áö·Ú ÇÁ¸®ÆÕ
-    public GameObject fallingMushroomPrefab;  // 2ÆäÀÌÁî ÃµÀå ³«ÇÏ Àå¾Ö¹° ÇÁ¸®ÆÕ
+    public GameObject minionMushroomPrefab;   // ë…ì„± ê³µê²©ì„ í•˜ëŠ” ì‘ì€ ë²„ì„¯ ëª¬ìŠ¤í„° í”„ë¦¬íŒ¹
+    public GameObject landmineSporePrefab;    // ë°”ë‹¥ì— ë°°ì¹˜í•  í¬ì ì§€ë¢° í”„ë¦¬íŒ¹
+    public GameObject fallingMushroomPrefab;  // 2í˜ì´ì¦ˆ ì²œì¥ ë‚™í•˜ ì¥ì• ë¬¼ í”„ë¦¬íŒ¹
 
-    [Header("ÀüÅõ UI ¹× °æ°í ¿¬Ãâ")]
-    public GameObject sporeMineIndicator;     // Æ÷ÀÚ Áö·Ú: ¹Ù´Ú¿¡ ÃÊ·Ï»ö Á¡¸ê ¿ø UI
-    public GameObject jumpSmashIndicator;     // Á¡ÇÁ ÂøÁö: ÂøÁö ÁöÁ¡¿¡ ºÓÀº ¿ø°ú Ãæ°İÆÄ ¹æÇâ Ç¥½Ã UI
-    public GameObject fallingIndicatorPrefab; // ³«ÇÏ Àå¾Ö¹°: ³«ÇÏ ¿¹Á¤ À§Ä¡¿¡ ³ë¶õ ½ÊÀÚ ¸¶Ä¿ ÇÁ¸®ÆÕ
+    [Header("ì „íˆ¬ UI ë° ê²½ê³  ì—°ì¶œ")]
+    public GameObject sporeMineIndicator;     // í¬ì ì§€ë¢°: ë°”ë‹¥ì— ì´ˆë¡ìƒ‰ ì ë©¸ ì› UI
+    public GameObject jumpSmashIndicator;     // ì í”„ ì°©ì§€: ì°©ì§€ ì§€ì ì— ë¶‰ì€ ì›ê³¼ ì¶©ê²©íŒŒ ë°©í–¥ í‘œì‹œ UI
+    public GameObject fallingIndicatorPrefab; // ë‚™í•˜ ì¥ì• ë¬¼: ë‚™í•˜ ì˜ˆì • ìœ„ì¹˜ì— ë…¸ë€ ì‹­ì ë§ˆì»¤ í”„ë¦¬íŒ¹
 
-    [Header("2ÆäÀÌÁî È­¸é È¿°ú UI")]
-    public GameObject greenSporeFilterUI;     // È­¸é Àü¹İ¿¡ Àû¿ëµÇ´Â ³ì»ö Æ÷ÀÚ ÇÊÅÍ ¿À¹ö·¹ÀÌ
-    public GameObject dotDamageIconUI;        // ÇÃ·¹ÀÌ¾î È­¸é¿¡ Ç¥½ÃµÉ Áö¼Ó ÇÇÇØ ¾ÆÀÌÄÜ UI
+    [Header("2í˜ì´ì¦ˆ í™”ë©´ íš¨ê³¼ UI")]
+    public GameObject greenSporeFilterUI;     // í™”ë©´ ì „ë°˜ì— ì ìš©ë˜ëŠ” ë…¹ìƒ‰ í¬ì í•„í„° ì˜¤ë²„ë ˆì´
+    public GameObject dotDamageIconUI;        // í”Œë ˆì´ì–´ í™”ë©´ì— í‘œì‹œë  ì§€ì† í”¼í•´ ì•„ì´ì½˜ UI
 
-    private int attackPatternCounter = 0;      // ±×·Î±â »óÅÂ ÁøÀÔ¿ë ÆĞÅÏ Ä«¿îÅÍ
-    private Coroutine passiveFallingRoutine;   // 2ÆäÀÌÁî ÃµÀå ³«ÇÏ »ó½Ã ·çÆ¾ Á¦¾î¿ë
+    [Header("ê¸°ë³¸ í‰íƒ€ ê³µê²© ì„¸íŒ… (ì¶”ê°€ ğŸŒŸ)")]
+    public float attackRange = 3.0f;          // í”Œë ˆì´ì–´ê°€ ì´ ê±°ë¦¬ ì•ˆì— ë“¤ì–´ì˜¤ë©´ í‰íƒ€ ë°œë™
+    public float attackCooldown = 1.5f;       // í‰íƒ€ ê³µê²© ì• ë‹ˆë©”ì´ì…˜ ë°˜ë³µ ì£¼ê¸° (ì¿¨íƒ€ì„)
+    private Animator anim;                    // ìì‹ì—ê²Œì„œ ê°€ì ¸ì˜¬ ì• ë‹ˆë©”ì´í„° ì»´í¬ë„ŒíŠ¸
+    private bool isExecutingPattern = false;  // íŠ¹ìˆ˜ íŒ¨í„´(ì í”„, ì§€ë¢° ë“±)ì„ ì“°ëŠ” ì¤‘ì¸ì§€ ì²´í¬í•˜ëŠ” í”Œë˜ê·¸
+
+    private int attackPatternCounter = 0;      // ê·¸ë¡œê¸° ìƒíƒœ ì§„ì…ìš© íŒ¨í„´ ì¹´ìš´í„°
+    private Coroutine passiveFallingRoutine;   // 2í˜ì´ì¦ˆ ì²œì¥ ë‚™í•˜ ìƒì‹œ ë£¨í‹´ ì œì–´ìš©
 
     private void Start()
     {
+        // ğŸŒŸ ìì‹ ì˜¤ë¸Œì íŠ¸ì¸ 'Mushroom Monster'ì— ë¶™ì€ Animatorë¥¼ ì•ˆì „í•˜ê²Œ ê°€ì ¸ì˜µë‹ˆë‹¤.
+        anim = GetComponentInChildren<Animator>();
+
         StartCoroutine(BossAIRoutine());
+
+        // ğŸŒŸ í”Œë ˆì´ì–´ê°€ ê³ì— ìˆì„ ë•Œ ë¬´í•œ ì—°ì† ê³µê²©ì„ ëŒë¦´ í‰íƒ€ ë£¨í‹´ì„ ë³„ë„ë¡œ ê°€ë™í•©ë‹ˆë‹¤.
+        StartCoroutine(NormalAttackRoutine());
     }
 
-    private IEnumerator BossAIRoutine()
+
+    private IEnumerator NormalAttackRoutine()
     {
-        // º¸½º°¡ °Å´ëÇÏ°Ô º¯ÀÌÇÏ´Â µîÀå ¿¬Ãâ ½Ã°£ ´ë±â
         yield return new WaitForSeconds(3.5f);
 
         while (!isDead)
         {
-            // ÆĞÅÏ °£ ±âº» ´ë±â ÄğÅ¸ÀÓ
+            if (isGroggy || isPhaseTransitioning || isExecutingPattern || playerTransform == null)
+            {
+                yield return null;
+                continue;
+            }
+
+            float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+
+            if (distanceToPlayer <= attackRange)
+            {
+                if (anim != null)
+                {
+                    
+                    anim.Play("Attack", 0, 0f);
+                }
+
+                Debug.Log("ë³´ìŠ¤ í‰íƒ€: í”Œë ˆì´ì–´ê°€ ê°€ê¹Œì´ ìˆì–´ ì—°ì† ê³µê²© ì• ë‹ˆë©”ì´ì…˜ ë°œë™!");
+                yield return new WaitForSeconds(attackCooldown);
+            }
+            else
+            {
+                if (anim != null && !anim.GetCurrentAnimatorStateInfo(0).IsName("Armature|Armature|Idle"))
+                {
+                    anim.Play("Armature|Armature|Idle", 0, 0f);
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+    }
+
+    private IEnumerator BossAIRoutine()
+    {
+        // ë³´ìŠ¤ê°€ ê±°ëŒ€í•˜ê²Œ ë³€ì´í•˜ëŠ” ë“±ì¥ ì—°ì¶œ ì‹œê°„ ëŒ€ê¸°
+        yield return new WaitForSeconds(3.5f);
+
+        while (!isDead)
+        {
+            // íŒ¨í„´ ê°„ ê¸°ë³¸ ëŒ€ê¸° ì¿¨íƒ€ì„
             yield return new WaitForSeconds(4.0f);
 
             if (isPhaseTransitioning || isGroggy) continue;
 
-            // Æ¯Á¤ ÆĞÅÏ ÀÌÈÄ Àá½Ã ±×·Î±â »óÅÂ¿¡ ºüÁø´Ù
+            // íŠ¹ì • íŒ¨í„´ ì´í›„ ì ì‹œ ê·¸ë¡œê¸° ìƒíƒœì— ë¹ ì§„ë‹¤
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
             {
+                isExecutingPattern = true; // íŒ¨í„´ ìƒíƒœ ON
                 yield return StartCoroutine(GroggyStateRoutine());
+                isExecutingPattern = false; // íŒ¨í„´ ìƒíƒœ OFF
                 continue;
             }
 
             if (currentPhase == 1)
             {
-                // 1ÆäÀÌÁî ±âº» °ø°İ ÆĞÅÏ 3Á¾ ¹«ÀÛÀ§ ½ÇÇà
+                isExecutingPattern = true; // íŠ¹ìˆ˜ íŒ¨í„´ ì‹œì‘í•˜ë¯€ë¡œ í‰íƒ€ ì ì‹œ ì ê¸ˆ
+
+                // 1í˜ì´ì¦ˆ ê¸°ë³¸ ê³µê²© íŒ¨í„´ 3ì¢… ë¬´ì‘ìœ„ ì‹¤í–‰
                 int randomPattern = Random.Range(0, 3);
                 if (randomPattern == 0) Pattern_SummonMinions();
                 else if (randomPattern == 1) yield return StartCoroutine(Pattern_JumpSmash());
                 else yield return StartCoroutine(Pattern_PlantSporeMines());
+
+                isExecutingPattern = false; // íŠ¹ìˆ˜ íŒ¨í„´ ëë‚¬ìœ¼ë¯€ë¡œ ë‹¤ì‹œ í‰íƒ€ í—ˆìš©
             }
             else
             {
-                //  2ÆäÀÌÁî Àü¿ë ÆĞÅÏ ¿¬°è ÄŞº¸ ½Ã½ºÅÛ
+                isExecutingPattern = true; // 2í˜ì´ì¦ˆ íŠ¹ìˆ˜ íŒ¨í„´ ì‹œì‘
+
+                //  2í˜ì´ì¦ˆ ì „ìš© íŒ¨í„´ ì—°ê³„ ì½¤ë³´ ì‹œìŠ¤í…œ
                 int randomCombo = Random.Range(0, 2);
                 if (randomCombo == 0)
                 {
-                    // ÄŞº¸ 1: ÈíÀÔ ? ±¤¿ª Æ÷ÀÚ Æø¹ß
-                    Debug.Log("<color=magenta>[2ÆäÀÌÁî ¿¬°è ÄŞº¸] ÈíÀÔ ? ±¤¿ª Æ÷ÀÚ Æø¹ß ½ÃÀÛ!</color>");
+                    // ì½¤ë³´ 1: í¡ì… ? ê´‘ì—­ í¬ì í­ë°œ
+                    Debug.Log("<color=magenta>[2í˜ì´ì¦ˆ ì—°ê³„ ì½¤ë³´] í¡ì… ? ê´‘ì—­ í¬ì í­ë°œ ì‹œì‘!</color>");
                     yield return StartCoroutine(Combo_SuckAndExplode());
                 }
                 else
                 {
-                    // ÄŞº¸ 2: Á¡ÇÁ ÂøÁö ? ¿¬¼Ó Ãæ°İÆÄ
-                    Debug.Log("<color=magenta>[2ÆäÀÌÁî ¿¬°è ÄŞº¸] Á¡ÇÁ ÂøÁö ? ¿¬¼Ó Ãæ°İÆÄ È®Á¤ ¿¬°è ½ÃÀÛ!</color>");
+                    // ì½¤ë³´ 2: ì í”„ ì°©ì§€ ? ì—°ì† ì¶©ê²©íŒŒ
+                    Debug.Log("<color=magenta>[2í˜ì´ì¦ˆ ì—°ê³„ ì½¤ë³´] ì í”„ ì°©ì§€ ? ì—°ì† ì¶©ê²©íŒŒ í™•ì • ì—°ê³„ ì‹œì‘!</color>");
                     yield return StartCoroutine(Pattern_JumpSmash());
                 }
+
+                isExecutingPattern = false; // 2í˜ì´ì¦ˆ íŠ¹ìˆ˜ íŒ¨í„´ ì¢…ë£Œ
             }
         }
     }
 
-    // [±âº» ÆĞÅÏ 1] Àâ¿É ¼ÒÈ¯ ±â¹Í
+    // [ê¸°ë³¸ íŒ¨í„´ 1] ì¡ì˜µ ì†Œí™˜ ê¸°ë¯¹
     private void Pattern_SummonMinions()
     {
-        //  ÀÛÀº ¹ö¼¸ ¸ó½ºÅÍ 2~4¸¶¸®¸¦ ¼ÒÈ¯ÇÑ´Ù.
         int spawnCount = Random.Range(2, 5);
-        Debug.Log($"¹ö¼¸±ºÁÖ ÆĞÅÏ: ÀÛÀº ¹ö¼¸ ¸ó½ºÅÍ {spawnCount}¸¶¸® ¼ÒÈ¯ (µ¶¼º °ø°İ ¾Ğ¹Ú)");
+        Debug.Log($"ë²„ì„¯êµ°ì£¼ íŒ¨í„´: ì‘ì€ ë²„ì„¯ ëª¬ìŠ¤í„° {spawnCount}ë§ˆë¦¬ ì†Œí™˜ (ë…ì„± ê³µê²© ì••ë°•)");
 
         for (int i = 0; i < spawnCount; i++)
         {
             Vector3 spawnPos = transform.position + Random.insideUnitSphere * 3.5f;
-            spawnPos.y = transform.position.y; // º¸½º¿Í °°Àº ¹Ù´Ú ³ôÀÌ
+            spawnPos.y = transform.position.y; // ë³´ìŠ¤ì™€ ê°™ì€ ë°”ë‹¥ ë†’ì´
             Instantiate(minionMushroomPrefab, spawnPos, Quaternion.identity);
         }
     }
 
-    // [±âº» ÆĞÅÏ 2] Á¡ÇÁ ÈÄ ³»¸®Âï±â ±â¹Í
+    // [ê¸°ë³¸ íŒ¨í„´ 2] ì í”„ í›„ ë‚´ë¦¬ì°ê¸° ê¸°ë¯¹
     private IEnumerator Pattern_JumpSmash()
     {
         if (playerTransform == null) yield break;
 
+        // íŠ¹ìˆ˜ íŒ¨í„´ ë„ì¤‘ì—ëŠ” í‰íƒ€ ì• ë‹ˆë©”ì´ì…˜ì´ ì”¹íˆë„ë¡ í™•ì‹¤íˆ ê°•ì œ ì§€ì •
+        if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f);
+
         Vector3 targetLandPos = playerTransform.position;
 
-        // UI °æ°í ¿¬Ãâ ÂøÁö ÁöÁ¡¿¡ ºÓÀº ¿ø°ú Ãæ°İÆÄ ¹æÇâ Ç¥½Ã°¡ ³ªÅ¸³­´Ù.
         if (jumpSmashIndicator != null)
         {
             jumpSmashIndicator.transform.position = targetLandPos;
             jumpSmashIndicator.SetActive(true);
         }
 
-        Debug.Log("º¸½º ¾×¼Ç: º¸½º°¡ Å©°Ô µµ¾àÇÏ¿© °øÁßÀ¸·Î »ó½Â!");
-        yield return new WaitForSeconds(1.2f); // µµ¾à ÈÄ Ã¼°ø ½Ã°£
+        Debug.Log("ë³´ìŠ¤ ì•¡ì…˜: ë³´ìŠ¤ê°€ í¬ê²Œ ë„ì•½í•˜ì—¬ ê³µì¤‘ìœ¼ë¡œ ìƒìŠ¹!");
+        yield return new WaitForSeconds(1.2f); // ë„ì•½ í›„ ì²´ê³µ ì‹œê°„
 
         if (jumpSmashIndicator != null) jumpSmashIndicator.SetActive(false);
 
-        //  ÂøÁöÇÏ¸ç ¿øÇü Ãæ°İÆÄ¸¦ ¹ß»ı½ÃÅ²´Ù.
         transform.position = targetLandPos;
-        Debug.Log("?? Äô! º¸½º ÂøÁö - 1Â÷ ¿øÇü Ãæ°İÆÄ ¹ß»ê");
+        Debug.Log("?? ì¿µ! ë³´ìŠ¤ ì°©ì§€ - 1ì°¨ ì›í˜• ì¶©ê²©íŒŒ ë°œì‚°");
 
-        // Ãæ°İÆÄ´Â 1~2È¸ ¿¬¼ÓÀ¸·Î ÆÛÁú ¼ö ÀÖ¾î È¸ÇÇ Å¸ÀÌ¹ÖÀ» Èçµç´Ù.
-        int extraWaves = Random.Range(1, 3); // 1~2È¸ ¿¬¼Ó º¸³Ê½º Å¸°İ
+        int extraWaves = Random.Range(1, 3); // 1~2íšŒ ì—°ì† ë³´ë„ˆìŠ¤ íƒ€ê²©
         for (int i = 1; i < extraWaves; i++)
         {
-            yield return new WaitForSeconds(0.7f); // Å¸ÀÌ¹Ö Èçµé±â¿ë ¹ÚÀÚ µô·¹ÀÌ
-            Debug.Log($"?? Äô! {i + 1}Â÷ ¿¬¼Ó Ãæ°İÆÄ ¹ß»ê (È¸ÇÇ Å¸ÀÌ¹Ö ±³¶õ)");
+            yield return new WaitForSeconds(0.7f); // íƒ€ì´ë° í”ë“¤ê¸°ìš© ë°•ì ë”œë ˆì´
+            Debug.Log($"?? ì¿µ! {i + 1}ì°¨ ì—°ì† ì¶©ê²©íŒŒ ë°œì‚° (íšŒí”¼ íƒ€ì´ë° êµë€)");
         }
     }
 
-    // [±âº» ÆĞÅÏ 3] Æ÷ÀÚ Æø¹ß Áö·Ú ±â¹Í
+    // [ê¸°ë³¸ íŒ¨í„´ 3] í¬ì í­ë°œ ì§€ë¢° ê¸°ë¯¹
     private IEnumerator Pattern_PlantSporeMines()
     {
         if (playerTransform == null) yield break;
@@ -132,7 +190,6 @@ public class BossMushroomLord : BossBase
         Vector3 minePos = playerTransform.position + Random.insideUnitSphere * 2f;
         minePos.y = transform.position.y;
 
-        // UI °æ°í ¿¬Ãâ ¹Ù´Ú¿¡ ÃÊ·Ï»ö Á¡¸ê ¿øÀÌ Ç¥½ÃµÈ´Ù.
         if (sporeMineIndicator != null)
         {
             sporeMineIndicator.transform.position = minePos;
@@ -141,67 +198,61 @@ public class BossMushroomLord : BossBase
         yield return new WaitForSeconds(1.0f);
         if (sporeMineIndicator != null) sporeMineIndicator.SetActive(false);
 
-        //  ¹Ù´Ú¿¡ Æ÷ÀÚ µ¢¾î¸®¸¦ »ı¼ºÇØ Áö·ÚÃ³·³ ¹èÄ¡ÇÑ´Ù.
         GameObject mine = Instantiate(landmineSporePrefab, minePos, Quaternion.identity);
 
-        // µ¿Àû ÄÄÆ÷³ÍÆ® Ãß°¡·Î ÆÄÀÏ ´©¶ô ¿¡·¯ ¿øÃµ Â÷´Ü
         MushroomLandmine mineScript = mine.GetComponent<MushroomLandmine>();
         if (mineScript == null) mineScript = mine.AddComponent<MushroomLandmine>();
         mineScript.Setup();
 
-        Debug.Log("ÆĞÅÏ ½ÃÀü: ÀüÀå¿¡ µ¶¼º ±¸¸§ Æ÷ÀÚ Áö·Ú ¹èÄ¡ ¿Ï·á");
+        Debug.Log("íŒ¨í„´ ì‹œì „: ì „ì¥ì— ë…ì„± êµ¬ë¦„ í¬ì ì§€ë¢° ë°°ì¹˜ ì™„ë£Œ");
     }
 
-    // [2ÆäÀÌÁî ÄŞº¸] ÈíÀÔ ? ±¤¿ª Æ÷ÀÚ Æø¹ß
+    // [2í˜ì´ì¦ˆ ì½¤ë³´] í¡ì… ? ê´‘ì—­ í¬ì í­ë°œ
     private IEnumerator Combo_SuckAndExplode()
     {
-        Debug.Log("±â¹Í ½ÃÀü: º¸½º°¡ ÁÖº¯ÀÇ ¸ğµç ÇÃ·¹ÀÌ¾î¸¦ Áß½ÉºÎ·Î °­ÇÏ°Ô ÀÚ¼®Ã³·³ ²ø¾î´ç±è (ÈíÀÔ)");
-        // ÇÃ·¹ÀÌ¾î¸¦ ²ø¾î´ç±â´Â ¹°¸® ·ÎÁ÷ÀÌ µé¾î°¡´Â ÀÚ¸®ÀÔ´Ï´Ù.
+        Debug.Log("ê¸°ë¯¹ ì‹œì „: ë³´ìŠ¤ê°€ ì£¼ë³€ì˜ ëª¨ë“  í”Œë ˆì´ì–´ë¥¼ ì¤‘ì‹¬ë¶€ë¡œ ê°•í•˜ê²Œ ìì„ì²˜ëŸ¼ ëŒì–´ë‹¹ê¹€ (í¡ì…)");
         yield return new WaitForSeconds(2.0f);
 
-        Debug.Log("<color=red>?? Äâ¾Ó!! º¸½º ÁÖº¯ ³ĞÀº ¹İ°æ¿¡ ±¤¿ª Æ÷ÀÚ Æø¹ß ÇÇÇØ ¹ß»ı!</color>");
+        Debug.Log("<color=red>?? ì½°ì•™!! ë³´ìŠ¤ ì£¼ë³€ ë„“ì€ ë°˜ê²½ì— ê´‘ì—­ í¬ì í­ë°œ í”¼í•´ ë°œìƒ!</color>");
         Collider[] hitPlayers = Physics.OverlapSphere(transform.position, 6.5f);
         foreach (var player in hitPlayers)
         {
             if (player.CompareTag("Player"))
             {
-                Debug.Log("ÇÃ·¹ÀÌ¾î°¡ ±¤¿ª Æ÷ÀÚ Æø¹ß¿¡ Á÷°İ´çÇß½À´Ï´Ù.");
+                Debug.Log("í”Œë ˆì´ì–´ê°€ ê´‘ì—­ í¬ì í­ë°œì— ì§ê²©ë‹¹í–ˆìŠµë‹ˆë‹¤.");
             }
         }
     }
 
-    // [Ãß°¡ ÆĞÅÏ] ±×·Î±â »óÅÂ ·çÆ¾
+    // [ì¶”ê°€ íŒ¨í„´] ê·¸ë¡œê¸° ìƒíƒœ ë£¨í‹´
     private IEnumerator GroggyStateRoutine()
     {
         isGroggy = true;
         attackPatternCounter = 0;
-        Debug.Log("<color=cyan><b>? [ÀÌº¥Æ®] ¹ö¼¸±ºÁÖ°¡ ¹«¸®ÇÏ°Ô ÆĞÅÏÀ» ½ÃÀüÇÑ ÈÄ Àá½Ã ±×·Î±â »óÅÂ¿¡ ºüÁı´Ï´Ù! (ÇÇÇØ 30% Áõ°¡)</b></color>");
+        if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f); // ê·¸ë¡œê¸° ì‹œ í‰íƒ€ ì •ì§€
+        Debug.Log("<color=cyan><b>? [ì´ë²¤íŠ¸] ë²„ì„¯êµ°ì£¼ê°€ ë¬´ë¦¬í•˜ê²Œ íŒ¨í„´ì„ ì‹œì „í•œ í›„ ì ì‹œ ê·¸ë¡œê¸° ìƒíƒœì— ë¹ ì§‘ë‹ˆë‹¤! (í”¼í•´ 30% ì¦ê°€)</b></color>");
 
-        yield return new WaitForSeconds(4.0f); // ¹«¹æºñ ÇÁ¸®µô Å¸ÀÓ Á¦°ø
+        yield return new WaitForSeconds(4.0f);
 
         isGroggy = false;
-        Debug.Log("¹ö¼¸±ºÁÖ°¡ ±×·Î±â »óÅÂ¿¡¼­ È¸º¹ÇØ ´Ù½Ã ÀÏ¾î¼·´Ï´Ù.");
+        Debug.Log("ë²„ì„¯êµ°ì£¼ê°€ ê·¸ë¡œê¸° ìƒíƒœì—ì„œ íšŒë³µí•´ ë‹¤ì‹œ ì¼ì–´ì„­ë‹ˆë‹¤.");
     }
 
-    // [ÆäÀÌÁî ÀüÈ¯] 2ÆäÀÌÁî ÁøÀÔ ¿¬Ãâ ·çÆ¾
+    // [í˜ì´ì¦ˆ ì „í™˜] 2í˜ì´ì¦ˆ ì§„ì… ì—°ì¶œ ë£¨í‹´
     protected override IEnumerator PhaseTransitionRoutine()
     {
         isPhaseTransitioning = true;
         attackPatternCounter = 0;
         currentPhase = 2;
 
-        Debug.Log("<color=green><b>?? [ÆäÀÌÁî ÀüÈ¯] ¹ö¼¸±ºÁÖ Ã¼·Â 50% ÀÌÇÏ! 2ÆäÀÌÁî ±¤ÆøÈ­ ¿¬Ãâ ½ÃÀÛ</b></color>");
+        Debug.Log("<color=green><b>?? [í˜ì´ì¦ˆ ì „í™˜] ë²„ì„¯êµ°ì£¼ ì²´ë ¥ 50% ì´í•˜! 2í˜ì´ì¦ˆ ê´‘í­í™” ì—°ì¶œ ì‹œì‘</b></color>");
 
-        //  ÁÖº¯ °ø±â°¡ »Ñ¿¸°Ô º¯ÇÏ¸ç ÀüÀå ÀüÃ¼¿¡ Æ÷ÀÚ ÇÇÇØ ±¸¿ªÀÌ Çü¼ºµÈ´Ù.
-        //  UI ¿¬µ¿ - È­¸é Àü¹İ¿¡ ³ì»ö Æ÷ÀÚ ÇÊÅÍ°¡ Àû¿ëµÇ°í Áö¼Ó ÇÇÇØ ¾ÆÀÌÄÜÀÌ Ç¥½ÃµÈ´Ù.
         if (greenSporeFilterUI != null) greenSporeFilterUI.SetActive(true);
         if (dotDamageIconUI != null) dotDamageIconUI.SetActive(true);
-        Debug.Log("UI Ãâ·Â: ³ì»ö Æ÷ÀÚ È­¸é ÇÊÅÍ È°¼ºÈ­ ¹× ÇÃ·¹ÀÌ¾î µµÆ® µ¥¹ÌÁö µğ¹öÇÁ ¾ÆÀÌÄÜ Ç¥±â");
+        Debug.Log("UI ì¶œë ¥: ë…¹ìƒ‰ í¬ì í™”ë©´ í•„í„° í™œì„±í™” ë° í”Œë ˆì´ì–´ ë„íŠ¸ ë°ë¯¸ì§€ ë””ë²„í”„ ì•„ì´ì½˜ í‘œê¸°");
 
-        //  ÀÌÈÄ º¸½ºÀÇ °ø°İ ¼Óµµ°¡ »¡¶óÁö°í (ÄğÅ¸ÀÓ ¹× ¿¬°è ¼Óµµ ³»ºÎ º¸Á¤)
         moveSpeed *= 1.3f;
 
-        // ³«ÇÏ Àå¾Ö¹° ÆĞÅÏÀÌ ÇØ±İµÈ´Ù. (»ó½Ã ³«ÇÏ ·çÆ¾ °¡µ¿)
         if (passiveFallingRoutine == null)
         {
             passiveFallingRoutine = StartCoroutine(PassiveFallingObstacleRoutine());
@@ -211,27 +262,24 @@ public class BossMushroomLord : BossBase
         isPhaseTransitioning = false;
     }
 
-    // 2ÆäÀÌÁî ÇØ±İ ±â¹Í: »ó½Ã ÃµÀå ³«ÇÏ Àå¾Ö¹° Á¦¾î ½ºÄÉÁÙ·¯
+    // 2í˜ì´ì¦ˆ í•´ê¸ˆ ê¸°ë¯¹: ìƒì‹œ ì²œì¥ ë‚™í•˜ ì¥ì• ë¬¼ ì œì–´ ìŠ¤ì¼€ì¤„ëŸ¬
     private IEnumerator PassiveFallingObstacleRoutine()
     {
         while (!isDead)
         {
-            yield return new WaitForSeconds(2.5f); // 2.5ÃÊ¸¶´Ù ÃµÀå¿¡¼­ ¹«ÀÛÀ§ µå·Ó
+            yield return new WaitForSeconds(2.5f);
 
             if (isPhaseTransitioning || playerTransform == null) continue;
 
-            // ÇÃ·¹ÀÌ¾î ÁÖº¯ ¹«ÀÛÀ§ ³«ÇÏ À§Ä¡ ¼±Á¤
             Vector3 dropPosition = playerTransform.position + Random.insideUnitSphere * 4f;
             dropPosition.y = transform.position.y;
 
-            // ±âÈ¹¼­ ³»¿ë: ³«ÇÏ ¿¹Á¤ À§Ä¡¿¡ ³ë¶õ ½ÊÀÚ ¸¶Ä¿°¡ »ı¼ºµÈ´Ù.
             if (fallingIndicatorPrefab != null)
             {
                 GameObject indicator = Instantiate(fallingIndicatorPrefab, dropPosition, Quaternion.identity);
-                Destroy(indicator, 1.5f); // Àå¾Ö¹° ÂøÁö Àü±îÁö Ç¥½Ã ÈÄ ÆÄ±«
+                Destroy(indicator, 1.5f);
             }
 
-            // ÃµÀå ³ôÀÌ(YÃà ³ô°Ô) ¼³Á¤ÇØ¼­ ³«ÇÏ ¿ÀºêÁ§Æ® ½ºÆù
             Vector3 spawnHeight = new Vector3(dropPosition.x, dropPosition.y + 10f, dropPosition.z);
             GameObject fallingObj = Instantiate(fallingMushroomPrefab, spawnHeight, Quaternion.identity);
 
@@ -247,16 +295,14 @@ public class BossMushroomLord : BossBase
         StopAllCoroutines();
         if (passiveFallingRoutine != null) StopCoroutine(passiveFallingRoutine);
 
-        // »ç¸Á ½Ã È­¸é ³ì»ö µ¶±¸¸§ ÇÊÅÍ ¹× Áö¼ÓÇÇÇØ µğ¹öÇÁ UI ÀÚµ¿ ÇØÁ¦
         if (greenSporeFilterUI != null) greenSporeFilterUI.SetActive(false);
         if (dotDamageIconUI != null) dotDamageIconUI.SetActive(false);
 
-        Debug.Log("µ¹¿¬º¯ÀÌ ¹ö¼¸±ºÁÖ°¡ ¿ÏÀüÈ÷ ½â¾î ¾ø¾îÁ³½À´Ï´Ù. Å¬¸®¾î!");
+        Debug.Log("ëŒì—°ë³€ì´ ë²„ì„¯êµ°ì£¼ê°€ ì™„ì „íˆ ì©ì–´ ì—†ì–´ì¡ŒìŠµë‹ˆë‹¤. í´ë¦¬ì–´!");
     }
 }
 
-
-// 2. [¼­ºê Å¬·¡½º 1] Æ÷ÀÚ Æø¹ß Áö·Ú ½ºÅ©¸³Æ®
+// 2. [ì„œë¸Œ í´ë˜ìŠ¤ 1] í¬ì í­ë°œ ì§€ë¢° ìŠ¤í¬ë¦½íŠ¸
 // ====================================================================
 public class MushroomLandmine : MonoBehaviour
 {
@@ -264,8 +310,8 @@ public class MushroomLandmine : MonoBehaviour
 
     public void Setup()
     {
-        //  Æ÷ÀÚ´Â ÀÏÁ¤ ½Ã°£ÀÌ Áö³ªµµ Æø¹ßÇÏ¸ç, ÇÃ·¹ÀÌ¾î°¡ °¡±îÀÌ °¡¸é Áï½Ã ÅÍÁú ¼öµµ ÀÖ´Ù.
-        Destroy(gameObject, 5.0f); // 5ÃÊ µÚ¿¡ ¹âÁö ¾Ê¾Æµµ Å¸ÀÓ¾Æ¿ô ÀÚµ¿ Æø¹ß
+        //  í¬ìëŠ” ì¼ì • ì‹œê°„ì´ ì§€ë‚˜ë„ í­ë°œí•˜ë©°, í”Œë ˆì´ì–´ê°€ ê°€ê¹Œì´ ê°€ë©´ ì¦‰ì‹œ í„°ì§ˆ ìˆ˜ë„ ìˆë‹¤.
+        Destroy(gameObject, 5.0f); // 5ì´ˆ ë’¤ì— ë°Ÿì§€ ì•Šì•„ë„ íƒ€ì„ì•„ì›ƒ ìë™ í­ë°œ
     }
 
     private void OnTriggerEnter(Collider other)
@@ -278,26 +324,26 @@ public class MushroomLandmine : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Å¸ÀÓ¾Æ¿ôÀÌµç, ÇÃ·¹ÀÌ¾î°¡ ¹â¾Òµç ÆÄ±«µÉ ¶§ ¹«Á¶°Ç µ¶¼º ±¸¸§À» ³²±è
+        // íƒ€ì„ì•„ì›ƒì´ë“ , í”Œë ˆì´ì–´ê°€ ë°Ÿì•˜ë“  íŒŒê´´ë  ë•Œ ë¬´ì¡°ê±´ ë…ì„± êµ¬ë¦„ì„ ë‚¨ê¹€
         LeavePoisonCloud();
     }
 
     private void TriggerExplosion()
     {
         isTriggered = true;
-        Debug.Log("Áö·Ú ±â¹Í: ÇÃ·¹ÀÌ¾î°¡ Æ÷ÀÚ¸¦ ¹â¾Æ Áï½Ã Æø¹ß ÇÇÇØ ¹ß»ı!");
+        Debug.Log("ì§€ë¢° ê¸°ë¯¹: í”Œë ˆì´ì–´ê°€ í¬ìë¥¼ ë°Ÿì•„ ì¦‰ì‹œ í­ë°œ í”¼í•´ ë°œìƒ!");
         Destroy(gameObject);
     }
 
     private void LeavePoisonCloud()
     {
-        //  Æø¹ß ÈÄ¿¡´Â µ¶¼º ±¸¸§ÀÌ ³²¾Æ Ãß°¡ À§ÇùÀ» ¸¸µç´Ù. (Áö¼Ó ÀåÆÇ ¿µ¿ª)
-        Debug.Log("Áö·Ú ±â¹Í ¿¬Ãâ: Æø¹ß ÀÚ¸®¿¡ ÀÜ·ù µ¶¼º ±¸¸§ Çü¼º (¹âÀ¸¸é Áö¼Ó ´ë¹ÌÁö)");
+        //  í­ë°œ í›„ì—ëŠ” ë…ì„± êµ¬ë¦„ì´ ë‚¨ì•„ ì¶”ê°€ ìœ„í˜‘ì„ ë§Œë“ ë‹¤. (ì§€ì† ì¥íŒ ì˜ì—­)
+        Debug.Log("ì§€ë¢° ê¸°ë¯¹ ì—°ì¶œ: í­ë°œ ìë¦¬ì— ì”ë¥˜ ë…ì„± êµ¬ë¦„ í˜•ì„± (ë°Ÿìœ¼ë©´ ì§€ì† ëŒ€ë¯¸ì§€)");
     }
 }
 
 
-// 3. [¼­ºê Å¬·¡½º 2] 2ÆäÀÌÁî Àü¿ë ÃµÀå ³«ÇÏ Àå¾Ö¹° ½ºÅ©¸³Æ®
+// 3. [ì„œë¸Œ í´ë˜ìŠ¤ 2] 2í˜ì´ì¦ˆ ì „ìš© ì²œì¥ ë‚™í•˜ ì¥ì• ë¬¼ ìŠ¤í¬ë¦½íŠ¸
 // ====================================================================
 public class MushroomFallingObstacle : MonoBehaviour
 {
@@ -313,7 +359,7 @@ public class MushroomFallingObstacle : MonoBehaviour
     private IEnumerator FallDownRoutine()
     {
         float speed = 8f;
-        // ¹Ù´Ú¿¡ µµ´ŞÇÒ ¶§±îÁö ¾Æ·¡·Î ÇÏ°­
+        // ë°”ë‹¥ì— ë„ë‹¬í•  ë•Œê¹Œì§€ ì•„ë˜ë¡œ í•˜ê°•
         while (transform.position.y > targetFloorPos.y)
         {
             transform.position = Vector3.MoveTowards(transform.position, targetFloorPos, speed * Time.deltaTime);
@@ -329,17 +375,17 @@ public class MushroomFallingObstacle : MonoBehaviour
 
     private void OnHitFloor()
     {
-        //  ÃµÀå¿¡¼­ ¹ö¼¸ µ¢¾î¸®¿Í ±Õ»çÃ¼ Á¶°¢ÀÌ ¶³¾îÁø´Ù. ³«ÇÏ ÁöÁ¡¿¡´Â Áï¹ß ÇÇÇØ ¶Ç´Â Áö¼Ó ÇÇÇØ°¡ ¹ß»ıÇÑ´Ù.
+        //  ì²œì¥ì—ì„œ ë²„ì„¯ ë©ì–´ë¦¬ì™€ ê· ì‚¬ì²´ ì¡°ê°ì´ ë–¨ì–´ì§„ë‹¤. ë‚™í•˜ ì§€ì ì—ëŠ” ì¦‰ë°œ í”¼í•´ ë˜ëŠ” ì§€ì† í”¼í•´ê°€ ë°œìƒí•œë‹¤.
         Collider[] hitPlayers = Physics.OverlapSphere(transform.position, 2.0f);
         foreach (var player in hitPlayers)
         {
             if (player.CompareTag("Player"))
             {
-                Debug.Log("³«ÇÏ ±â¹Í: ÇÃ·¹ÀÌ¾î°¡ ÃµÀå¿¡¼­ ¶³¾îÁø ±Õ»çÃ¼¿¡ ¸Â¾Æ Áï¹ß ÇÇÇØ¸¦ ÀÔ¾ú½À´Ï´Ù.");
+                Debug.Log("ë‚™í•˜ ê¸°ë¯¹: í”Œë ˆì´ì–´ê°€ ì²œì¥ì—ì„œ ë–¨ì–´ì§„ ê· ì‚¬ì²´ì— ë§ì•„ ì¦‰ë°œ í”¼í•´ë¥¼ ì…ì—ˆìŠµë‹ˆë‹¤.");
             }
         }
 
-        Debug.Log("³«ÇÏ ±â¹Í: ±Õ»çÃ¼ µ¢¾î¸®°¡ ±úÁö¸ç ¹Ù´Ú¿¡ 3ÃÊ°£ ¼Ò±Ô¸ğ µ¶ Áö¼Ó ÇÇÇØ ¿µ¿ª »ı¼º");
-        Destroy(gameObject, 3.0f); // Áö¼Ó ÀåÆÇ ¿¬Ãâ ÈÄ ¼Ò¸ê
+        Debug.Log("ë‚™í•˜ ê¸°ë¯¹: ê· ì‚¬ì²´ ë©ì–´ë¦¬ê°€ ê¹¨ì§€ë©° ë°”ë‹¥ì— 3ì´ˆê°„ ì†Œê·œëª¨ ë… ì§€ì† í”¼í•´ ì˜ì—­ ìƒì„±");
+        Destroy(gameObject, 3.0f); // ì§€ì† ì¥íŒ ì—°ì¶œ í›„ ì†Œë©¸
     }
 }

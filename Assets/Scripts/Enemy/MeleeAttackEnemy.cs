@@ -69,6 +69,9 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     public float dashTime;
     public float dashSpeed;
 
+    // 🌟 [추가] 자식 오브젝트에 붙은 3D 버섯 모델의 애니메이터를 제어할 리모컨 변수
+    private Animator anim;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -76,6 +79,9 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
     void Start()
     {
+        // 🌟 [추가] 자식 오브젝트에 숨어있는 Animator 컴포넌트를 자동으로 찾아서 등록합니다.
+        anim = GetComponentInChildren<Animator>();
+
         playerObject = PlayerMovement.Instance.gameObject;
 
         isFacingRight = true;
@@ -83,11 +89,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         SetState(state.idle);
 
         if (EnemyCounter.Instance != null) EnemyCounter.Instance.AddEnemy();
-
-        playerObject = PlayerMovement.Instance.gameObject;
-        isFacingRight = true;
-        currentHp = maxHp;
-        SetState(state.idle);
 
         if (hpBarPrefab != null && UIManager.Instance != null && UIManager.Instance.worldCanvas != null)
         {
@@ -98,12 +99,9 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         }
         else
         {
-            // 여기서 어떤 게 문제인지 바로 알 수 있습니다.
             if (hpBarPrefab == null) Debug.LogError("HP Bar 프리팹이 연결되지 않았습니다!");
             if (UIManager.Instance == null) Debug.LogError("씬에 UIManager가 없습니다!");
         }
-
-
     }
 
     void Update()
@@ -111,6 +109,13 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         if (isDead) return;
 
         UpdateStates();
+
+        // 🌟 [수정] 현재 상태가 '공격(attack)' 상태가 아닐 때만 속도 애니메이션을 작동시킵니다!
+        if (anim != null && currentState != state.attack)
+        {
+            anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
+        }
+
         if (playerObject != null)
         {
             switch (currentState)
@@ -120,12 +125,10 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
                     {
                         SetState(state.track);
                     }
-
                     break;
 
                 case state.track:
                     TrackHandler();
-
                     break;
             }
         }
@@ -134,7 +137,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
             SetState(state.idle);
         }
     }
-
     void SetState(state targetState)
     {
         StopAllCoroutines();
@@ -168,7 +170,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     void SwitchPos()
     {
         Flip();
-
         targetPos = isFacingRight ? movePosRight : movePosLeft;
     }
 
@@ -194,7 +195,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
             yield return null;
         }
     }
-
 
     bool HasArrived(Vector3 pos)
     {
@@ -266,17 +266,13 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         UpdateStates();
     }
 
-
     bool IsPlayerInRange()
     {
         Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * facingSign, hitboxOffset.y);
         Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
 
         Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter,            // 중심 위치
-            hitboxSize,             // 크기
-            0f,                     // 회전 각도
-            playerLayer             // 감지할 레이어
+            worldCenter, hitboxSize, 0f, playerLayer
         );
 
         if (hitTargets.Length > 0)
@@ -289,7 +285,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
                 }
             }
         }
-
         return false;
     }
 
@@ -297,26 +292,37 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     {
         while (true)
         {
+            
+            if (anim != null)
+            {
+              
+                anim.Play("Armature|Armature|Attack", 0, 0f);
+            }
+
+           
             yield return new WaitForSeconds(attackChargeTime);
+
+          
             Attack();
+
             yield return new WaitForSeconds(attackCooldown);
 
+         
             if (!IsPlayerInRange()) break;
         }
 
+        
+        if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f);
+
         SetState(state.track);
     }
-
     void Attack()
     {
         Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * facingSign, hitboxOffset.y);
         Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
 
         Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter,            // 중심 위치
-            hitboxSize,             // 크기
-            0f,                     // 회전 각도
-            playerLayer             // 감지할 레이어
+            worldCenter, hitboxSize, 0f, playerLayer
         );
 
         if (hitTargets.Length > 0)
@@ -335,7 +341,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     IEnumerator EndAttack()
     {
         yield return new WaitForSeconds(readyToAttackTime);
-
         SetState(state.idle);
     }
 
@@ -345,10 +350,7 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
 
         Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter,            // 중심 위치
-            viewSize,             // 크기
-            0f,                     // 회전 각도
-            playerLayer             // 감지할 레이어
+            worldCenter, viewSize, 0f, playerLayer
         );
 
         bool isPlayerInView = false;
@@ -405,25 +407,26 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
     void Dead()
     {
-        //  중복 실행 방지 
         if (isDead) return;
         isDead = true;
 
-        //  재화 획득 로직
+        // 🌟 [변경점 2] 즉시 파괴(Destroy)하면 죽는 모션이 안 보이므로, 애니메이션 시간을 벌어줍니다.
+        if (anim != null)
+        {
+            anim.SetTrigger("Die"); // 애니메이터 창에 만약 "Die" 트리거가 있다면 발동!
+        }
+
         if (enemyData != null && CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.AddGold(enemyData.dropGold);
             CurrencyManager.Instance.AddGem(enemyData.dropGem);
         }
 
-        // 카운터 감소
         if (EnemyCounter.Instance != null) EnemyCounter.Instance.EnemyDefeated();
-
-        //  HP바가 떠 있다면 제거 (깔끔하게!)
         if (hpBar != null) Destroy(hpBar.gameObject);
 
-        //  오브젝트 파괴
-        Destroy(gameObject);
+        // 🌟 [변경점 3] 죽는 모션 감상을 위해 오브젝트 파괴를 1초 뒤로 미룹니다.
+        Destroy(gameObject, 1.0f);
     }
 
     private void OnDrawGizmosSelected()

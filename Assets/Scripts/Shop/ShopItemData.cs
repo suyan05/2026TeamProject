@@ -11,7 +11,7 @@ public class ShopItemData : ScriptableObject
     public ItemRarity rarity;
     public ItemData actualItemData;
 
-    // 팀장님 요청 임시 가격 세팅
+    
     public int GetTierPrice()
     {
         switch (rarity)
