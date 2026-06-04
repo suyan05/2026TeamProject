@@ -75740,11 +75740,6 @@ MonoBehaviour:
   rollDuration: 0.5
   rollSpeedMultiplier: 1.5
   rollCoolDown: 0.4
-  weapon1Key: 49
-  weapon2Key: 50
-  skill1Key: 101
-  skill3Key: 113
-  inventory: 9
   isRolling: 0
   equipPrefab: {fileID: 0}
   currentWeaponName: None
