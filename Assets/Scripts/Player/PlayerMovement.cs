@@ -12,7 +12,6 @@ public class PlayerMovement : MonoBehaviour
     public float baseDamage = 20f;
     public float baseAttackSpeed = 1f;
 
-    // 아이템에서 얻는 보너스 스탯
     float bonusMaxHp = 0f;
     float bonusDamage = 0f;
     float bonusAttackSpeed = 0f;
@@ -20,7 +19,6 @@ public class PlayerMovement : MonoBehaviour
     float weaponAttackPower = 0f;
     float weaponAttackSpeed = 0f;
 
-    // 최종 스탯
     public float MaxHp => baseMaxHp + bonusMaxHp;
     public float Damage => baseDamage + bonusDamage + weaponAttackPower;
     public float AttackSpeed => baseAttackSpeed + bonusAttackSpeed + weaponAttackSpeed;
@@ -60,17 +58,6 @@ public class PlayerMovement : MonoBehaviour
     public float rollSpeedMultiplier = 1.5f;
     public float rollCoolDown = 0.4f;
 
-    [Header("키")]
-    public KeyCode weapon1Key = KeyCode.Alpha1;
-    public KeyCode weapon2Key = KeyCode.Alpha2;
-    public KeyCode skill1Key = KeyCode.E;
-    public KeyCode skill3Key = KeyCode.Q;
-    public KeyCode inventory = KeyCode.Tab;
-
-    const KeyCode LeftKey = KeyCode.A;
-    const KeyCode RightKey = KeyCode.D;
-    const KeyCode JumpKey = KeyCode.Space;
-
     sbyte lastInputDirection = 1;
     float currentSpeed;
     float maxArrowPower = 20f;
@@ -90,6 +77,8 @@ public class PlayerMovement : MonoBehaviour
     public Transform weaponHolder;
     private GameObject equippedWeaponObject;
 
+    KeyBindingManager kb;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -97,21 +86,16 @@ public class PlayerMovement : MonoBehaviour
 
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
-
-
     }
 
     private void Start()
     {
+        kb = KeyBindingManager.Instance;
+
         currentHp = MaxHp;
 
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
         UIManager.Instance.UpdatePlayerHP();
-    }
-
-    private void OnMouseDown()
-    {
-        print("Player Clicked");
     }
 
     private void Update()
@@ -119,40 +103,34 @@ public class PlayerMovement : MonoBehaviour
         if (controlLocked)
             return;
 
-        // 머지 스테이션 열려 있으면 모든 조작 금지
         if (GameStateManager.Current == GameState.MergeOpen)
             return;
 
-        // 인벤토리 열려 있으면 공격만 금지
         bool inventoryOpen = GameStateManager.Current == GameState.InventoryOpen;
 
-        // 공격 금지
-        if (!inventoryOpen)
+        // 공격 입력
+        if (!inventoryOpen && Weapon1Pressed())
         {
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (animator != null) animator.SetTrigger("Attack");
-                MeleeAttack();
-            }
+            if (animator != null) animator.SetTrigger("Attack");
+            MeleeAttack();
         }
 
-        // 인벤토리 토글
-        if (Input.GetKeyDown(inventory))
+        // 인벤토리
+        if (Input.GetKeyDown(kb.inventory))
         {
             UIManager.Instance.ToggleInventory();
         }
 
-        // 활 충전/발사도 공격이므로 인벤토리 열렸을 때 금지
+        // 활 충전/발사
         if (!inventoryOpen)
         {
-            if (Input.GetMouseButton(1))
+            if (Weapon2Hold())
             {
                 arrowPower += Time.deltaTime * 30f;
                 arrowPower = Mathf.Min(arrowPower, maxArrowPower);
-
                 UIManager.Instance.UpdateChargeGauge(arrowPower, maxArrowPower);
             }
-            else if (Input.GetMouseButtonUp(1))
+            else if (Weapon2Release())
             {
                 LaunchArrow();
                 arrowPower = 0f;
@@ -161,15 +139,40 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // 구르기
-        if (!inventoryOpen && Input.GetKeyDown(skill3Key))
+        if (!inventoryOpen && Input.GetKeyDown(kb.rollKey))
         {
             if (animator != null) animator.SetTrigger("Roll");
             Roll();
         }
 
-        // 애니메이션 갱신 등 기존 로직 유지
         float speed = Mathf.Abs(rb.linearVelocity.x);
         if (animator != null) animator.SetBool("Walk", speed > 0.05f);
+    }
+
+    // 무기 1 입력 (근접)
+    bool Weapon1Pressed()
+    {
+        if (kb.weapon1IsMouse)
+            return Input.GetMouseButtonDown((int)kb.weapon1Mouse);
+        else
+            return Input.GetKeyDown(kb.weapon1Key);
+    }
+
+    // 무기 2 입력 (활 충전)
+    bool Weapon2Hold()
+    {
+        if (kb.weapon2IsMouse)
+            return Input.GetMouseButton((int)kb.weapon2Mouse);
+        else
+            return Input.GetKey(kb.weapon2Key);
+    }
+
+    bool Weapon2Release()
+    {
+        if (kb.weapon2IsMouse)
+            return Input.GetMouseButtonUp((int)kb.weapon2Mouse);
+        else
+            return Input.GetKeyUp(kb.weapon2Key);
     }
 
     public void RecalculateStats(List<ItemInstance> items)
@@ -190,7 +193,6 @@ public class PlayerMovement : MonoBehaviour
             bonusAttackSpeed += item.data.bonusAttackSpeed;
         }
 
-        // 최대 체력 증가량 계산
         float newMaxHp = MaxHp;
         float addedHp = newMaxHp - oldMaxHp;
 
@@ -203,7 +205,6 @@ public class PlayerMovement : MonoBehaviour
         UIManager.Instance.UpdatePlayerHP();
     }
 
-    // 무기 장착
     public void EquipWeapon(ItemData data)
     {
         if (equippedWeaponObject != null)
@@ -212,14 +213,12 @@ public class PlayerMovement : MonoBehaviour
         if (data == null || data.itemType != ItemType.Weapon)
         {
             currentWeaponName = "None";
-            Debug.Log("플레이어가 무기를 해제했습니다.");
             UIManager.Instance.UpdateEquippedWeaponUI(currentWeaponName);
 
             weaponAttackPower = 0f;
             weaponAttackSpeed = 0f;
 
             UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, 0, 0);
-
             return;
         }
 
@@ -233,7 +232,6 @@ public class PlayerMovement : MonoBehaviour
         weaponAttackPower = data.weaponAttackPower;
         weaponAttackSpeed = data.weaponAttackSpeed;
         currentWeaponName = data.weaponType.ToString();
-        Debug.Log($"플레이어가 [{currentWeaponName}] 무기를 장착했습니다.");
 
         UIManager.Instance.UpdateEquippedWeaponUI(currentWeaponName);
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
@@ -243,19 +241,15 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isRolling) return;
 
+        currentHp -= damageAmount;
         UIManager.Instance.UpdatePlayerHP();
 
-        currentHp -= damageAmount;
-        Debug.Log("Player Get Damage: " + damageAmount + ", Current HP: " + currentHp);
         if (currentHp <= 0f)
-        {
             Die();
-        }
     }
 
     void Die()
     {
-        // 사망 처리
         Debug.Log("Player has died.");
     }
 
@@ -263,12 +257,13 @@ public class PlayerMovement : MonoBehaviour
     {
         ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
 
-        arrowPower = Mathf.Max(arrowPower, 3f); // 최소 발사 힘
+        arrowPower = Mathf.Max(arrowPower, 3f);
 
         Vector2 arrowFireDirection = (Vector3.right * lastInputDirection) + (Vector3)rb.linearVelocity;
 
         float currentAngle = Mathf.Atan2(arrowFireDirection.y, arrowFireDirection.x) * Mathf.Rad2Deg;
         float minAngle, maxAngle;
+
         if (lastInputDirection > 0)
         {
             minAngle = -maxArrowAngle;
@@ -294,21 +289,13 @@ public class PlayerMovement : MonoBehaviour
         Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * lastInputDirection, hitboxOffset.y);
         Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
 
-        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter,            // 중심 위치
-            hitboxSize,             // 크기
-            0f,                     // 회전 각도
-            enemyLayer             // 감지할 레이어
-        );
+        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(worldCenter, hitboxSize, 0f, enemyLayer);
 
-        if (hitTargets.Length > 0)
+        foreach (Collider2D targetCollider in hitTargets)
         {
-            foreach (Collider2D targetCollider in hitTargets)
+            if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
             {
-                if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
-                {
-                    enemyCombat.GetDamage(Damage, transform);
-                }
+                enemyCombat.GetDamage(Damage, transform);
             }
         }
     }
@@ -333,7 +320,7 @@ public class PlayerMovement : MonoBehaviour
         }
         isRolling = false;
 
-        yield return new WaitForSeconds(rollDuration);
+        yield return new WaitForSeconds(rollCoolDown);
         canRoll = true;
     }
 
@@ -376,7 +363,7 @@ public class PlayerMovement : MonoBehaviour
 
     void JumpHandler()
     {
-        if (isGrounded && Input.GetKey(JumpKey))
+        if (isGrounded && Input.GetKey(kb.jumpKey))
         {
             Vector2 jumpVector = Vector2.up * jumpForce;
             jumpVector.x = rb.linearVelocity.x;
@@ -386,8 +373,8 @@ public class PlayerMovement : MonoBehaviour
 
     bool TryGetHorizontalInput(out sbyte horizontal)
     {
-        bool left = Input.GetKey(LeftKey);
-        bool right = Input.GetKey(RightKey);
+        bool left = Input.GetKey(kb.leftKey);
+        bool right = Input.GetKey(kb.rightKey);
 
         if (left && right)
         {
@@ -414,12 +401,11 @@ public class PlayerMovement : MonoBehaviour
     void RotationHandler()
     {
         float targetYAngle = (lastInputDirection == 1) ? 0.01f : 179.99f;
-
         Quaternion targetRotation = Quaternion.Euler(0, targetYAngle, 0);
         transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
     }
 
-    private void OnCollisionStay2D(Collision2D collision)   // 벽 충돌 시 속도 초기화
+    private void OnCollisionStay2D(Collision2D collision)
     {
         foreach (ContactPoint2D contact in collision.contacts)
         {
@@ -443,7 +429,6 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector2 rayStart = new Vector2(col.bounds.center.x, col.bounds.min.y);
         RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, 0.05f, groundLayerMask);
-
         return hit.collider != null;
     }
 
