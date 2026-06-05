@@ -41,6 +41,24 @@ public class BossMushroomLord : BossBase
         StartCoroutine(NormalAttackRoutine());
     }
 
+    private void Update()
+    {
+        RotateTowardPlayer();
+    }
+
+    private void RotateTowardPlayer()
+    {
+        if (isDead || playerTransform == null || isExecutingPattern) return;
+
+        Vector3 dir = playerTransform.position - transform.position;
+        dir.y = 0f;
+
+        if (dir.sqrMagnitude > 0.01f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(dir);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 5f);
+        }
+    }
 
     private IEnumerator NormalAttackRoutine()
     {
