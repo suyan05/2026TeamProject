@@ -112,6 +112,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(kb.inventory))
+        {
+            UIManager.Instance.ToggleInventory();
+        }
+
         if (controlLocked || isHit)
             return;
 
