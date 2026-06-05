@@ -23,7 +23,7 @@ public class SettingsMenu : MonoBehaviour
 
     Resolution[] resolutions;
 
-    void Start()
+    private void Awake()
     {
         SetupVolume();
         SetupGraphics();
@@ -85,7 +85,7 @@ public class SettingsMenu : MonoBehaviour
     void SetupKeyBindingButtons()
     {
         rebindActions.Clear();
-
+        Debug.Log("버튼 생성 함수 실행됨");
         rebindActions.Add("Weapon1", RebindWeapon1);
         rebindActions.Add("Weapon2", RebindWeapon2);
         rebindActions.Add("Skill1", RebindSkill1);
