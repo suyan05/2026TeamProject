@@ -47550,6 +47550,8 @@ MonoBehaviour:
   equipPrefab: {fileID: 0}
   currentWeaponName: None
   weaponHolder: {fileID: 0}
+  maxJumpCount: 2
+  hitStunDuration: 0.3
 --- !u!4 &1969654894
 Transform:
   m_ObjectHideFlags: 0
