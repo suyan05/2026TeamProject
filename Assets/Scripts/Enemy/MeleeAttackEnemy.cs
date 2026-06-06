@@ -1,18 +1,19 @@
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
+
+[RequireComponent(typeof(Rigidbody))]
 public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 {
     [Header("체력")]
-    public float maxHp = 30f;   // 최대 체력
+    public float maxHp = 30f;   
 
     [Header("적 데이터")]
-    public EnemyData enemyData; //EnemyData 에셋을 드래그 앤 드롭
+    public EnemyData enemyData;
 
     [Header("움직임")]
     public float maxSpeed = 8; // 최대 움직임 속도
-    public float moveRadius; // 대기 상태에 들어간 위치로부터 최대 탐색 범위. 이 범위는 지형에 따라 조절될 수 있음.
+    public float moveRadius; // 대기 상태에 들어간 위치로부터 최대 탐색 범위.
     public float trunDuration = 0.5f;   // 회전 대기 시간
     public float acceleration = 2f; // 가속도
 
@@ -30,12 +31,12 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     public float damage = 0.4f;  // 공격 대미지
 
     [Header("히트박스")]
-    public Vector2 hitboxOffset = Vector2.zero;    // 히트박스 오프셋
-    public Vector2 hitboxSize = new Vector2(1.0f, 1.0f); // 크기 (width, height)
+    public Vector3 hitboxOffset = Vector3.zero;    //  3D 오프셋(Vector3)으로 변경
+    public Vector3 hitboxSize = new Vector3(1.0f, 1.0f, 1.0f); //  3D 크기(Vector3)로 변경
 
     [Header("시야 범위")]
-    public Vector2 viewOffset = new Vector2(0f, 0.5f); // 시야 중심의 오프셋
-    public Vector2 viewSize = new Vector2(5f, 3f);     // 시야 영역의 가로/세로 크기
+    public Vector3 viewOffset = new Vector3(0f, 0.5f, 0f); //  3D 시야 오프셋
+    public Vector3 viewSize = new Vector3(5f, 3f, 5f);     //  3D 시야 영역 크기
 
     [Header("감지, 레이어")]
     public float detectionDecayTime = 3f;   // 플레이어 감지 후 감지율이 0으로 떨어지는 시간
@@ -64,25 +65,29 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     public enum state { idle, track, attack, endAttack }
     state currentState;
 
-    private Rigidbody2D rb;
+    // 3D 리지드바디로 컴포넌트 타입을 바꿈
+    private Rigidbody rb;
     GameObject playerObject;    // 플레이어 오브젝트
     public float dashTime;
     public float dashSpeed;
 
-    // 🌟 [추가] 자식 오브젝트에 붙은 3D 버섯 모델의 애니메이터를 제어할 리모컨 변수
     private Animator anim;
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
+        //  Rigidbody를 가져옵니다.
+        rb = GetComponent<Rigidbody>();
     }
 
     void Start()
     {
-        // 🌟 [추가] 자식 오브젝트에 숨어있는 Animator 컴포넌트를 자동으로 찾아서 등록합니다.
         anim = GetComponentInChildren<Animator>();
 
-        playerObject = PlayerMovement.Instance.gameObject;
+        //  싱글톤이 안전하게 들어왔는지 체크 후 대입
+        if (PlayerMovement.Instance != null)
+        {
+            playerObject = PlayerMovement.Instance.gameObject;
+        }
 
         isFacingRight = true;
         currentHp = maxHp;
@@ -110,10 +115,10 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
         UpdateStates();
 
-        // 🌟 [수정] 현재 상태가 '공격(attack)' 상태가 아닐 때만 속도 애니메이션을 작동시킵니다!
         if (anim != null && currentState != state.attack)
         {
-            anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
+            // ] 3D 리지드바디의 X축 속도(velocity.x)를 반영합니다.
+            anim.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
         }
 
         if (playerObject != null)
@@ -137,14 +142,16 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
             SetState(state.idle);
         }
     }
+
     void SetState(state targetState)
     {
         StopAllCoroutines();
         currentState = targetState;
 
-        Vector2 originVelocity = rb.linearVelocity;
+        //  3D 속도 0 제어
+        Vector3 originVelocity = rb.velocity;
         originVelocity.x = 0;
-        rb.linearVelocity = originVelocity;
+        rb.velocity = originVelocity;
         currentNormalizedSpeed = 0;
 
         if (targetState == state.idle || playerObject == null)
@@ -182,12 +189,13 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
             while (!HasArrived(targetPos) && canGoStraight)
             {
                 currentNormalizedSpeed = Mathf.Min(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.5f);
-                rb.linearVelocity = new Vector2(sign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y);
+                //  3D Rigidbody 속도 반영 (Z축은 0으로 유지하여 라인 고정)
+                rb.velocity = new Vector3(sign * currentNormalizedSpeed * maxSpeed, rb.velocity.y, 0f);
                 yield return null;
             }
-            Vector2 originVelocity = rb.linearVelocity;
+            Vector3 originVelocity = rb.velocity;
             originVelocity.x = 0;
-            rb.linearVelocity = originVelocity;
+            rb.velocity = originVelocity;
             currentNormalizedSpeed = 0;
 
             yield return new WaitForSeconds(trunDuration);
@@ -207,19 +215,20 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         if (playerObject == null) return;
         LookPos(playerObject.transform.position);
 
-        Vector2 checkPos = playerObject.transform.position;
+        Vector3 checkPos = playerObject.transform.position;
         checkPos.y = transform.position.y;
 
         if (canGoStraight && !HasArrived(checkPos))
         {
             currentNormalizedSpeed = Mathf.Clamp(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.505f, 1f);
-            rb.linearVelocity = new Vector2(facingSign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y);
+            // 3D Rigidbody 속도 반영
+            rb.velocity = new Vector3(facingSign * currentNormalizedSpeed * maxSpeed, rb.velocity.y, 0f);
         }
         else
         {
-            Vector2 originVelocity = rb.linearVelocity;
+            Vector3 originVelocity = rb.velocity;
             originVelocity.x = 0;
-            rb.linearVelocity = originVelocity;
+            rb.velocity = originVelocity;
             currentNormalizedSpeed = 0;
         }
 
@@ -266,18 +275,18 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         UpdateStates();
     }
 
+    //  3D 사정거리 감지 (Physics.OverlapBox)
     bool IsPlayerInRange()
     {
-        Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * facingSign, hitboxOffset.y);
-        Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
+        Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
+        Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter, hitboxSize, 0f, playerLayer
-        );
+        // 💥 Physics2D.OverlapBoxAll를 3D용 Physics.OverlapBox로 변경!
+        Collider[] hitTargets = Physics.OverlapBox(worldCenter, hitboxSize / 2f, Quaternion.identity, playerLayer);
 
         if (hitTargets.Length > 0)
         {
-            foreach (Collider2D targetCollider in hitTargets)
+            foreach (Collider targetCollider in hitTargets)
             {
                 if (targetCollider.gameObject == playerObject)
                 {
@@ -292,42 +301,37 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     {
         while (true)
         {
-            
             if (anim != null)
             {
-              
                 anim.Play("Armature|Armature|Attack", 0, 0f);
             }
 
-           
             yield return new WaitForSeconds(attackChargeTime);
 
-          
             Attack();
 
             yield return new WaitForSeconds(attackCooldown);
 
-         
             if (!IsPlayerInRange()) break;
         }
 
-        
         if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f);
 
         SetState(state.track);
     }
+
+    //  3D 진짜 데미지 처리 (Physics.OverlapBox)
     void Attack()
     {
-        Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * facingSign, hitboxOffset.y);
-        Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
+        Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
+        Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter, hitboxSize, 0f, playerLayer
-        );
+        // 💥 3D 공간의 플레이어 캡슐/박스 콜라이더를 정확히 탐색합니다.
+        Collider[] hitTargets = Physics.OverlapBox(worldCenter, hitboxSize / 2f, Quaternion.identity, playerLayer);
 
         if (hitTargets.Length > 0)
         {
-            foreach (Collider2D targetCollider in hitTargets)
+            foreach (Collider targetCollider in hitTargets)
             {
                 if (targetCollider.gameObject == playerObject)
                 {
@@ -344,20 +348,20 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         SetState(state.idle);
     }
 
+    //  3D 시야 감지 (Physics.OverlapBox + 3D Raycast)
     bool IsPlayerInView()
     {
-        Vector2 localAdjustedOffset = new Vector2(viewOffset.x * facingSign, viewOffset.y);
-        Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
+        Vector3 localAdjustedOffset = new Vector3(viewOffset.x * facingSign, viewOffset.y, 0f);
+        Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter, viewSize, 0f, playerLayer
-        );
+        // 💥 시야 감지 영역 역시 3D로 바꿉니다.
+        Collider[] hitTargets = Physics.OverlapBox(worldCenter, viewSize / 2f, Quaternion.identity, playerLayer);
 
         bool isPlayerInView = false;
 
         if (hitTargets.Length > 0)
         {
-            foreach (Collider2D targetCollider in hitTargets)
+            foreach (Collider targetCollider in hitTargets)
             {
                 if (targetCollider.gameObject == playerObject)
                 {
@@ -369,25 +373,31 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
         if (!isPlayerInView) return false;
 
-        Vector2 startPos = transform.position;
-        Vector2 endPos = playerObject.transform.position;
-        Vector2 direction = (endPos - startPos).normalized;
+        Vector3 startPos = transform.position;
+        Vector3 endPos = playerObject.transform.position;
+        Vector3 direction = (endPos - startPos).normalized;
         float distance = Vector3.Distance(startPos, endPos);
 
-        RaycastHit2D hit = Physics2D.Raycast(startPos, direction, distance, obstacleMask);
-        if (hit.collider != null) return false;
+        //  3D 물리(Physics.Raycast)를 쓰도록 변경합니다.
+        RaycastHit hit;
+        if (Physics.Raycast(startPos, direction, out hit, distance, obstacleMask))
+        {
+            if (hit.collider != null) return false;
+        }
         return true;
     }
 
+    //  지형 체크 레이캐스트 (Physics.OverlapSphere)
     void UpdateStates()
     {
         movePosRight.y = movePosLeft.y = targetPos.y = transform.position.y;
 
-        bool upperGroundDetect = Physics2D.OverlapCircle(upperGroundCheckPos.position, layerCheckRadius, obstacleMask);
-        bool lowerGroundDetect = Physics2D.OverlapCircle(lowerGroundCheckPos.position, layerCheckRadius, obstacleMask);
+        // 💥 바닥 감지 및 벽 감지 센서 레이더들을 전부 3D(Physics.OverlapSphere)로 교체합니다.
+        bool upperGroundDetect = Physics.CheckSphere(upperGroundCheckPos.position, layerCheckRadius, obstacleMask);
+        bool lowerGroundDetect = Physics.CheckSphere(lowerGroundCheckPos.position, layerCheckRadius, obstacleMask);
 
         bool isGrounded = upperGroundDetect || lowerGroundDetect;
-        bool isTouchingAnyWall = Physics2D.OverlapCircle(wallCheckPos.position, layerCheckRadius, obstacleMask);
+        bool isTouchingAnyWall = Physics.CheckSphere(wallCheckPos.position, layerCheckRadius, obstacleMask);
 
         canGoStraight = isGrounded && !isTouchingAnyWall;
     }
@@ -410,10 +420,9 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         if (isDead) return;
         isDead = true;
 
-        // 🌟 [변경점 2] 즉시 파괴(Destroy)하면 죽는 모션이 안 보이므로, 애니메이션 시간을 벌어줍니다.
         if (anim != null)
         {
-            anim.SetTrigger("Die"); // 애니메이터 창에 만약 "Die" 트리거가 있다면 발동!
+            anim.SetTrigger("Die");
         }
 
         if (enemyData != null && CurrencyManager.Instance != null)
@@ -425,28 +434,23 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         if (EnemyCounter.Instance != null) EnemyCounter.Instance.EnemyDefeated();
         if (hpBar != null) Destroy(hpBar.gameObject);
 
-        // 🌟 [변경점 3] 죽는 모션 감상을 위해 오브젝트 파괴를 1초 뒤로 미룹니다.
         Destroy(gameObject, 1.0f);
     }
 
+    
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-
-        Vector2 hitboxLocalAdjustedOffset = new Vector2(hitboxOffset.x * facingSign, hitboxOffset.y);
-        Vector2 hitboxGizmoCenter = (Vector2)transform.position + hitboxLocalAdjustedOffset;
-
-        Gizmos.DrawWireCube(hitboxGizmoCenter, new Vector3(hitboxSize.x, hitboxSize.y, 0f));
+        Vector3 hitboxLocalAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
+        Vector3 hitboxGizmoCenter = transform.position + hitboxLocalAdjustedOffset;
+        Gizmos.DrawWireCube(hitboxGizmoCenter, hitboxSize);
 
         Gizmos.color = Color.blue;
-
-        Vector2 viewLocalAdjustedOffset = new Vector2(viewOffset.x * facingSign, viewOffset.y);
-        Vector2 viewGizmoCenter = (Vector2)transform.position + viewLocalAdjustedOffset;
-
-        Gizmos.DrawWireCube(viewGizmoCenter, new Vector3(viewSize.x, viewSize.y, 0f));
+        Vector3 viewLocalAdjustedOffset = new Vector3(viewOffset.x * facingSign, viewOffset.y, 0f);
+        Vector3 viewGizmoCenter = transform.position + viewLocalAdjustedOffset;
+        Gizmos.DrawWireCube(viewGizmoCenter, viewSize);
 
         Gizmos.color = Color.cyan;
-
         if (Application.isPlaying)
         {
             if (currentState == state.idle)
