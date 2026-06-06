@@ -1204,7 +1204,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &215446679
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7148,7 +7148,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1538652517
 Transform:
   m_ObjectHideFlags: 0
@@ -7253,7 +7253,7 @@ MonoBehaviour:
   jumpForce: 11
   acceleration: 20
   deceleration: 50
-  animator: {fileID: 0}
+  animator: {fileID: 1777326143}
   groundLayerMask:
     serializedVersion: 2
     m_Bits: 1024
@@ -10255,10 +10255,10 @@ MonoBehaviour:
   attackChargeTime: 0.42
   attackCooldown: 0.35
   damage: 0.4
-  hitboxOffset: {x: 1.5, y: 0}
-  hitboxSize: {x: 1, y: 1}
-  viewOffset: {x: 0, y: 0.5}
-  viewSize: {x: 8, y: 3}
+  hitboxOffset: {x: 1.5, y: 0, z: 0}
+  hitboxSize: {x: 1, y: 1, z: 1}
+  viewOffset: {x: 0, y: 0.5, z: 0}
+  viewSize: {x: 8, y: 3, z: 5}
   detectionDecayTime: 3
   obstacleMask:
     serializedVersion: 2
