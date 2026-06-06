@@ -1,18 +1,19 @@
 using System.Collections;
 using UnityEngine;
 
+
+[RequireComponent(typeof(Rigidbody))]
 public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
 {
     [Header("체력")]
     public float maxHp = 30f;   // 최대 체력
 
-
     [Header("적 데이터")]
-    public EnemyData enemyData; //EnemyData 에셋을 드래그 앤 드롭
+    public EnemyData enemyData; // EnemyData 에셋을 드래그 앤 드롭
 
     [Header("움직임")]
     public float maxSpeed = 8; // 최대 움직임 속도
-    public float moveRadius; // 대기 상태에 들어간 위치로부터 최대 탐색 범위. 이 범위는 지형에 따라 조절될 수 있음.
+    public float moveRadius; // 대기 상태에 들어간 위치로부터 최대 탐색 범위.
     public float trunDuration = 0.5f;   // 회전 대기 시간
     public float acceleration = 2f; // 가속도
 
@@ -44,12 +45,12 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
     public Color endColor = Color.white;    // 레이저가 사라질 때 색상
 
     [Header("공격 범위")]
-    public Vector2 hitboxOffset = Vector2.zero;    // 히트박스 오프셋
-    public Vector2 hitboxSize = new Vector2(1.0f, 1.0f); // 크기 (width, height)
+    public Vector3 hitboxOffset = Vector3.zero;    
+    public Vector3 hitboxSize = new Vector3(1.0f, 1.0f, 1.0f); 
 
     [Header("시야 범위")]
-    public Vector2 viewOffset = new Vector2(0f, 0.5f); // 시야 중심의 오프셋
-    public Vector2 viewSize = new Vector2(5f, 3f);     // 시야 영역의 가로/세로 크기
+    public Vector3 viewOffset = new Vector3(0f, 0.5f, 0f); 
+    public Vector3 viewSize = new Vector3(5f, 3f, 5f);     
 
     [Header("감지, 레이어")]
     public float detectionDecayTime = 3f;   // 플레이어 감지 후 감지율이 0으로 떨어지는 시간
@@ -78,17 +79,22 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
     public enum state { idle, track, attack, endAttack }
     state currentState;
 
-    private Rigidbody2D rb;
+    
+    private Rigidbody rb;
     GameObject playerObject;    // 플레이어 오브젝트
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
+        
+        rb = GetComponent<Rigidbody>();
     }
 
     void Start()
     {
-        playerObject = PlayerMovement.Instance.gameObject;
+        if (PlayerMovement.Instance != null)
+        {
+            playerObject = PlayerMovement.Instance.gameObject;
+        }
 
         isFacingRight = true;
         currentHp = maxHp;
@@ -96,20 +102,14 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
 
         if (EnemyCounter.Instance != null) EnemyCounter.Instance.AddEnemy();
 
-        playerObject = PlayerMovement.Instance.gameObject;
-        isFacingRight = true;
-        currentHp = maxHp;
-        SetState(state.idle);
-
-        // HP바 생성
-        GameObject ui = Instantiate(
-            hpBarPrefab,
-            UIManager.Instance.worldCanvas.transform
-        );
-
-        hpBar = ui.GetComponent<EnemyHPBarFollow>();
-        hpBar.target = transform;
-        hpBar.offset = new Vector3(0, 1.2f, 0); // 머리 위 위치
+        // 중복 가입 방지를 위해 중복 코드는 하나만 유지하고 정상화했습니다.
+        if (hpBarPrefab != null && UIManager.Instance != null && UIManager.Instance.worldCanvas != null)
+        {
+            GameObject ui = Instantiate(hpBarPrefab, UIManager.Instance.worldCanvas.transform);
+            hpBar = ui.GetComponent<EnemyHPBarFollow>();
+            hpBar.target = transform;
+            hpBar.offset = new Vector3(0, 1.2f, 0);
+        }
     }
 
     void Update()
@@ -126,12 +126,10 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
                     {
                         SetState(state.track);
                     }
-
                     break;
 
                 case state.track:
                     TrackHandler();
-
                     break;
             }
         }
@@ -146,9 +144,10 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
         StopAllCoroutines();
         currentState = targetState;
 
-        Vector2 originVelocity = rb.linearVelocity;
+        
+        Vector3 originVelocity = rb.velocity;
         originVelocity.x = 0;
-        rb.linearVelocity = originVelocity;
+        rb.velocity = originVelocity;
         currentNormalizedSpeed = 0;
 
         if (targetState == state.idle || playerObject == null)
@@ -174,7 +173,6 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
     void SwitchPos()
     {
         Flip();
-
         targetPos = isFacingRight ? movePosRight : movePosLeft;
     }
 
@@ -187,12 +185,13 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
             while (!HasArrived(targetPos) && canGoStraight)
             {
                 currentNormalizedSpeed = Mathf.Min(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.5f);
-                rb.linearVelocity = new Vector2(sign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y);
+              
+                rb.velocity = new Vector3(sign * currentNormalizedSpeed * maxSpeed, rb.velocity.y, 0f);
                 yield return null;
             }
-            Vector2 originVelocity = rb.linearVelocity;
+            Vector3 originVelocity = rb.velocity;
             originVelocity.x = 0;
-            rb.linearVelocity = originVelocity;
+            rb.velocity = originVelocity;
             currentNormalizedSpeed = 0;
 
             yield return new WaitForSeconds(trunDuration);
@@ -200,7 +199,6 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
             yield return null;
         }
     }
-
 
     bool HasArrived(Vector3 pos)
     {
@@ -213,19 +211,20 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
         if (playerObject == null) return;
         LookPos(playerObject.transform.position);
 
-        Vector2 checkPos = playerObject.transform.position;
+        Vector3 checkPos = playerObject.transform.position;
         checkPos.y = transform.position.y;
 
         if (canGoStraight && !HasArrived(checkPos))
         {
             currentNormalizedSpeed = Mathf.Clamp(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.505f, 1f);
-            rb.linearVelocity = new Vector2(facingSign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y);
+            
+            rb.velocity = new Vector3(facingSign * currentNormalizedSpeed * maxSpeed, rb.velocity.y, 0f);
         }
         else
         {
-            Vector2 originVelocity = rb.linearVelocity;
+            Vector3 originVelocity = rb.velocity;
             originVelocity.x = 0;
-            rb.linearVelocity = originVelocity;
+            rb.velocity = originVelocity;
             currentNormalizedSpeed = 0;
         }
 
@@ -272,22 +271,18 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
         UpdateStates();
     }
 
-
+    
     bool IsPlayerInRange()
     {
-        Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * facingSign, hitboxOffset.y);
-        Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
+        Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
+        Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter,            // 중심 위치
-            hitboxSize,             // 크기
-            0f,                     // 회전 각도
-            playerLayer             // 감지할 레이어
-        );
+
+        Collider[] hitTargets = Physics.OverlapBox(worldCenter, hitboxSize / 2f, Quaternion.identity, playerLayer);
 
         if (hitTargets.Length > 0)
         {
-            foreach (Collider2D targetCollider in hitTargets)
+            foreach (Collider targetCollider in hitTargets)
             {
                 if (targetCollider.gameObject == playerObject)
                 {
@@ -295,7 +290,6 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
                 }
             }
         }
-
         return false;
     }
 
@@ -305,11 +299,11 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
         {
             yield return new WaitForSeconds(attackChargeTime);
             Attack();
-            
+
             float elapsedTime = 0f;
             while (elapsedTime < attackCooldown)
             {
-                LookPos(playerObject.transform.position);
+                if (playerObject != null) LookPos(playerObject.transform.position);
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
@@ -322,6 +316,7 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
 
     void Attack()
     {
+        
         EnemyLaser laser = Instantiate(laserPrefab, transform.position, Quaternion.identity);
         laser.SetOrigin(firePoint);
         laser.SetTarget(playerObject.transform);
@@ -340,27 +335,23 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
     IEnumerator EndAttack()
     {
         yield return new WaitForSeconds(readyToAttackTime);
-
         SetState(state.idle);
     }
 
+   
     bool IsPlayerInView()
     {
-        Vector2 localAdjustedOffset = new Vector2(viewOffset.x * facingSign, viewOffset.y);
-        Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
+        Vector3 localAdjustedOffset = new Vector3(viewOffset.x * facingSign, viewOffset.y, 0f);
+        Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(
-            worldCenter,            // 중심 위치
-            viewSize,             // 크기
-            0f,                     // 회전 각도
-            playerLayer             // 감지할 레이어
-        );
+        
+        Collider[] hitTargets = Physics.OverlapBox(worldCenter, viewSize / 2f, Quaternion.identity, playerLayer);
 
         bool isPlayerInView = false;
 
         if (hitTargets.Length > 0)
         {
-            foreach (Collider2D targetCollider in hitTargets)
+            foreach (Collider targetCollider in hitTargets)
             {
                 if (targetCollider.gameObject == playerObject)
                 {
@@ -372,25 +363,31 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
 
         if (!isPlayerInView) return false;
 
-        Vector2 startPos = transform.position;
-        Vector2 endPos = playerObject.transform.position;
-        Vector2 direction = (endPos - startPos).normalized;
+        Vector3 startPos = transform.position;
+        Vector3 endPos = playerObject.transform.position;
+        Vector3 direction = (endPos - startPos).normalized;
         float distance = Vector3.Distance(startPos, endPos);
 
-        RaycastHit2D hit = Physics2D.Raycast(startPos, direction, distance, obstacleMask);
-        if (hit.collider != null) return false;
+        
+        RaycastHit hit;
+        if (Physics.Raycast(startPos, direction, out hit, distance, obstacleMask))
+        {
+            if (hit.collider != null) return false;
+        }
         return true;
     }
 
+    
     void UpdateStates()
     {
         movePosRight.y = movePosLeft.y = targetPos.y = transform.position.y;
 
-        bool upperGroundDetect = Physics2D.OverlapCircle(upperGroundCheckPos.position, layerCheckRadius, obstacleMask);
-        bool lowerGroundDetect = Physics2D.OverlapCircle(lowerGroundCheckPos.position, layerCheckRadius, obstacleMask);
+        
+        bool upperGroundDetect = Physics.CheckSphere(upperGroundCheckPos.position, layerCheckRadius, obstacleMask);
+        bool lowerGroundDetect = Physics.CheckSphere(lowerGroundCheckPos.position, layerCheckRadius, obstacleMask);
 
         bool isGrounded = upperGroundDetect || lowerGroundDetect;
-        bool isTouchingAnyWall = Physics2D.OverlapCircle(wallCheckPos.position, layerCheckRadius, obstacleMask);
+        bool isTouchingAnyWall = Physics.CheckSphere(wallCheckPos.position, layerCheckRadius, obstacleMask);
 
         canGoStraight = isGrounded && !isTouchingAnyWall;
     }
@@ -410,44 +407,37 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
 
     void Dead()
     {
-        //  중복 실행 방지 
         if (isDead) return;
         isDead = true;
 
-        //  재화 획득 로직
         if (enemyData != null && CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.AddGold(enemyData.dropGold);
             CurrencyManager.Instance.AddGem(enemyData.dropGem);
         }
 
-        //  카운터 감소
         if (EnemyCounter.Instance != null) EnemyCounter.Instance.EnemyDefeated();
-
-        //   HP바가 떠 있다면 제거 
         if (hpBar != null) Destroy(hpBar.gameObject);
 
-        //  오브젝트 파괴
         Destroy(gameObject);
     }
 
+   
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
 
-        Vector2 hitboxLocalAdjustedOffset = new Vector2(hitboxOffset.x * facingSign, hitboxOffset.y);
-        Vector2 hitboxGizmoCenter = (Vector2)transform.position + hitboxLocalAdjustedOffset;
+        Vector3 hitboxLocalAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
+        Vector3 hitboxGizmoCenter = transform.position + hitboxLocalAdjustedOffset;
+        Gizmos.DrawWireCube(hitboxGizmoCenter, hitboxSize);
 
-        Gizmos.DrawWireCube(hitboxGizmoCenter, new Vector3(hitboxSize.x, hitboxSize.y, 0f));
-
-        Gizmos.DrawWireSphere(firePoint.position, 0.1f);
+        if (firePoint != null) Gizmos.DrawWireSphere(firePoint.position, 0.1f);
 
         Gizmos.color = Color.blue;
 
-        Vector2 viewLocalAdjustedOffset = new Vector2(viewOffset.x * facingSign, viewOffset.y);
-        Vector2 viewGizmoCenter = (Vector2)transform.position + viewLocalAdjustedOffset;
-
-        Gizmos.DrawWireCube(viewGizmoCenter, new Vector3(viewSize.x, viewSize.y, 0f));
+        Vector3 viewLocalAdjustedOffset = new Vector3(viewOffset.x * facingSign, viewOffset.y, 0f);
+        Vector3 viewGizmoCenter = transform.position + viewLocalAdjustedOffset;
+        Gizmos.DrawWireCube(viewGizmoCenter, viewSize);
 
         Gizmos.color = Color.cyan;
 
@@ -472,10 +462,19 @@ public class LaserAttackEnemy : MonoBehaviour, IEnemyCombat
             Gizmos.DrawLine(gizmosMovePosRight, gizmosMovePosLeft);
         }
 
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(upperGroundCheckPos.position, 0.05f);
-        Gizmos.DrawWireSphere(lowerGroundCheckPos.position, 0.05f);
-        Gizmos.color = Color.magenta;
-        Gizmos.DrawWireSphere(wallCheckPos.position, 0.05f);
+        if (upperGroundCheckPos != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(upperGroundCheckPos.position, 0.05f);
+        }
+        if (lowerGroundCheckPos != null)
+        {
+            Gizmos.DrawWireSphere(lowerGroundCheckPos.position, 0.05f);
+        }
+        if (wallCheckPos != null)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(wallCheckPos.position, 0.05f);
+        }
     }
 }
