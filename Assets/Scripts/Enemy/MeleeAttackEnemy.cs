@@ -118,7 +118,7 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         if (anim != null && currentState != state.attack)
         {
             // ] 3D 리지드바디의 X축 속도(velocity.x)를 반영합니다.
-            anim.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
+            anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
         }
 
         if (playerObject != null)
@@ -149,9 +149,9 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         currentState = targetState;
 
         //  3D 속도 0 제어
-        Vector3 originVelocity = rb.velocity;
+        Vector3 originVelocity = rb.linearVelocity;
         originVelocity.x = 0;
-        rb.velocity = originVelocity;
+        rb.linearVelocity = originVelocity;
         currentNormalizedSpeed = 0;
 
         if (targetState == state.idle || playerObject == null)
@@ -190,12 +190,12 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
             {
                 currentNormalizedSpeed = Mathf.Min(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.5f);
                 //  3D Rigidbody 속도 반영 (Z축은 0으로 유지하여 라인 고정)
-                rb.velocity = new Vector3(sign * currentNormalizedSpeed * maxSpeed, rb.velocity.y, 0f);
+                rb.linearVelocity = new Vector3(sign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y, 0f);
                 yield return null;
             }
-            Vector3 originVelocity = rb.velocity;
+            Vector3 originVelocity = rb.linearVelocity;
             originVelocity.x = 0;
-            rb.velocity = originVelocity;
+            rb.linearVelocity = originVelocity;
             currentNormalizedSpeed = 0;
 
             yield return new WaitForSeconds(trunDuration);
@@ -222,13 +222,13 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         {
             currentNormalizedSpeed = Mathf.Clamp(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.505f, 1f);
             // 3D Rigidbody 속도 반영
-            rb.velocity = new Vector3(facingSign * currentNormalizedSpeed * maxSpeed, rb.velocity.y, 0f);
+            rb.linearVelocity = new Vector3(facingSign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y, 0f);
         }
         else
         {
-            Vector3 originVelocity = rb.velocity;
+            Vector3 originVelocity = rb.linearVelocity;
             originVelocity.x = 0;
-            rb.velocity = originVelocity;
+            rb.linearVelocity = originVelocity;
             currentNormalizedSpeed = 0;
         }
 
