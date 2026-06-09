@@ -510,6 +510,11 @@ public class PlayerMovement_3D : MonoBehaviour
         transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
     }
 
+    public void TakeDamage(int damageAmount)
+    {
+        GetDamage((float)damageAmount, transform);
+    }
+
     private void OnCollisionStay2D(Collision2D collision)
     {
         foreach (ContactPoint2D contact in collision.contacts)
