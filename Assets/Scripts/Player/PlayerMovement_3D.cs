@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody), typeof(Collider))]
-public class PlayerMovement : MonoBehaviour
+[RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
+public class PlayerMovement_3D : MonoBehaviour
 {
-    public static PlayerMovement Instance { get; private set; }
+    public static PlayerMovement_3D Instance { get; private set; }
 
     [Header("기본 스탯")]
     public float baseMaxHp = 100f;
@@ -49,8 +49,8 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("근접")]
     public float damage = 20f;
-    public Vector3 hitboxOffset = Vector3.zero;
-    public Vector3 hitboxSize = new Vector3(1.0f, 1.0f, 1.0f);
+    public Vector2 hitboxOffset = Vector2.zero;
+    public Vector2 hitboxSize = new Vector2(1.0f, 1.0f);
     public LayerMask enemyLayer;
 
     [Header("구르기")]
@@ -66,8 +66,8 @@ public class PlayerMovement : MonoBehaviour
     bool canRoll = true;
     public bool isRolling;
 
-    Rigidbody rb;
-    Collider col;
+    Rigidbody2D rb;
+    Collider2D col;
 
     [Header("장비")]
     public GameObject equipPrefab;
@@ -77,14 +77,18 @@ public class PlayerMovement : MonoBehaviour
 
     KeyBindingManager kb;
 
+    // 점프
     int jumpCount = 0;
     public int maxJumpCount = 2;
 
+    // 공격 상태
     bool isMeleeAttacking = false;
     bool isBowCharging = false;
 
+    // 활 차징 방향
     sbyte bowChargeDirection = 1;
 
+    // 피격
     bool isHit = false;
     public float hitStunDuration = 0.3f;
 
@@ -93,11 +97,8 @@ public class PlayerMovement : MonoBehaviour
         if (Instance == null) Instance = this;
         else { Destroy(gameObject); return; }
 
-        rb = GetComponent<Rigidbody>();
-        col = GetComponent<Collider>();
-
-        // 2.5D 이동을 위해 Z축 고정
-        rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
+        rb = GetComponent<Rigidbody2D>();
+        col = GetComponent<Collider2D>();
     }
 
     private void Start()
@@ -198,273 +199,6 @@ public class PlayerMovement : MonoBehaviour
             Input.GetKeyUp(kb.weapon2Key);
     }
 
-    private void FixedUpdate()
-    {
-        if (controlLocked || isHit)
-            return;
-
-        UpdateStates();
-
-        if (isBowCharging)
-            BowMoveHandler();
-        else if (!isRolling)
-            MoveHandler();
-
-        if (!isBowCharging)
-            RotationHandler();
-
-        JumpHandler();
-    }
-
-    void BowMoveHandler()
-    {
-        sbyte horizontal = 0;
-
-        if (TryGetHorizontalInput(out horizontal))
-        {
-            currentSpeed += acceleration * Time.fixedDeltaTime;
-            currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
-
-            if (horizontal == bowChargeDirection)
-            {
-                animator?.SetBool("BowMoveForward", true);
-                animator?.SetBool("BowMoveBackward", false);
-            }
-            else if (horizontal == -bowChargeDirection)
-            {
-                animator?.SetBool("BowMoveForward", false);
-                animator?.SetBool("BowMoveBackward", true);
-            }
-        }
-        else
-        {
-            currentSpeed -= deceleration * Time.fixedDeltaTime;
-            currentSpeed = Mathf.Max(currentSpeed, 0f);
-
-            animator?.SetBool("BowMoveForward", false);
-            animator?.SetBool("BowMoveBackward", false);
-        }
-
-        rb.linearVelocity = new Vector3(currentSpeed * horizontal, rb.linearVelocity.y, 0);
-    }
-
-    void MoveHandler()
-    {
-        if (TryGetHorizontalInput(out sbyte horizontal))
-        {
-            if (horizontal != 0 && horizontal != lastInputDirection)
-            {
-                if (horizontal == 1)
-                    animator?.SetTrigger("TurnLeftToRight");
-                else
-                    animator?.SetTrigger("TurnRightToLeft");
-            }
-
-            if (!(lastInputDirection != horizontal && currentSpeed > maxSpeed * 0.1f))
-            {
-                lastInputDirection = horizontal;
-                currentSpeed += acceleration * Time.fixedDeltaTime;
-                currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
-            }
-            else
-            {
-                currentSpeed -= deceleration * Time.fixedDeltaTime * 1.5f;
-                currentSpeed = Mathf.Max(currentSpeed, 0f);
-            }
-        }
-        else
-        {
-            currentSpeed -= deceleration * Time.fixedDeltaTime;
-            currentSpeed = Mathf.Max(currentSpeed, 0f);
-        }
-
-        rb.linearVelocity = new Vector3(currentSpeed * lastInputDirection, rb.linearVelocity.y, 0);
-    }
-
-    void JumpHandler()
-    {
-        if (Input.GetKeyDown(kb.jumpKey))
-        {
-            if (jumpCount < maxJumpCount)
-            {
-                Vector3 jumpVector = Vector3.up * jumpForce;
-                jumpVector.x = rb.linearVelocity.x;
-                rb.linearVelocity = jumpVector;
-
-                jumpCount++;
-
-                if (jumpCount == 1)
-                    animator?.SetTrigger("Jump");
-                else
-                    animator?.SetTrigger("DoubleJump");
-            }
-        }
-    }
-
-    bool TryGetHorizontalInput(out sbyte horizontal)
-    {
-        bool left = Input.GetKey(kb.leftKey);
-        bool right = Input.GetKey(kb.rightKey);
-
-        if (left && right)
-        {
-            horizontal = 0;
-            return false;
-        }
-        else if (left)
-        {
-            horizontal = -1;
-            return true;
-        }
-        else if (right)
-        {
-            horizontal = 1;
-            return true;
-        }
-        else
-        {
-            horizontal = 0;
-            return false;
-        }
-    }
-
-    void RotationHandler()
-    {
-        float targetYAngle = (lastInputDirection == 1) ? 0.01f : 179.99f;
-        Quaternion targetRotation = Quaternion.Euler(0, targetYAngle, 0);
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
-    }
-
-    void Roll()
-    {
-        if (!canRoll || !isGrounded) return;
-        StartCoroutine(RollCoroutine());
-    }
-
-    IEnumerator RollCoroutine()
-    {
-        isRolling = true;
-        canRoll = false;
-
-        float elapsedTime = 0f;
-        while (elapsedTime < rollDuration)
-        {
-            rb.linearVelocity = new Vector3(lastInputDirection * maxSpeed * rollSpeedMultiplier, rb.linearVelocity.y, 0);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-        isRolling = false;
-
-        yield return new WaitForSeconds(rollCoolDown);
-        canRoll = true;
-    }
-
-    public void GetDamage(float damageAmount, Transform damageSource)
-    {
-        if (isRolling || isHit) return;
-
-        currentHp -= damageAmount;
-        UIManager.Instance.UpdatePlayerHP();
-
-        StartCoroutine(HitStun());
-
-        if (currentHp <= 0f)
-            Die();
-    }
-
-    IEnumerator HitStun()
-    {
-        isHit = true;
-
-        isMeleeAttacking = false;
-        isBowCharging = false;
-
-        animator?.SetTrigger("Hit");
-        animator?.SetBool("BowCharge", false);
-        animator?.SetBool("BowMoveForward", false);
-        animator?.SetBool("BowMoveBackward", false);
-
-        yield return new WaitForSeconds(hitStunDuration);
-
-        isHit = false;
-    }
-
-    void Die()
-    {
-        Debug.Log("Player has died.");
-    }
-    void LaunchArrow()
-    {
-        ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
-
-        // 최소 파워 보정
-        arrowPower = Mathf.Max(arrowPower, 3f);
-
-        // 1) 마우스 위치를 월드 좌표로 변환
-        Vector3 mousePos = Input.mousePosition;
-        mousePos.z = Mathf.Abs(Camera.main.transform.position.z - transform.position.z);
-        Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(mousePos);
-
-        // 2) 캐릭터 → 마우스 방향 계산
-        Vector3 rawDirection = (worldMousePos - firePoint.position);
-        rawDirection.z = 0; // 2.5D 유지
-        rawDirection.Normalize();
-
-        // 3) 좌우 방향에 따라 각도 제한 적용
-        float angle = Mathf.Atan2(rawDirection.y, rawDirection.x) * Mathf.Rad2Deg;
-
-        float minAngle = -maxArrowAngle;
-        float maxAngle = maxArrowAngle;
-
-        // 캐릭터가 왼쪽을 보고 있다면 180도 기준으로 보정
-        if (lastInputDirection < 0)
-        {
-            if (angle > 0) angle -= 180f;
-            else angle += 180f;
-
-            minAngle = 180f - maxArrowAngle;
-            maxAngle = 180f + maxArrowAngle;
-        }
-
-        float clampedAngle = Mathf.Clamp(angle, minAngle, maxAngle);
-
-        // 4) 최종 방향 벡터 계산
-        Vector3 finalDirection = new Vector3(
-            Mathf.Cos(clampedAngle * Mathf.Deg2Rad),
-            Mathf.Sin(clampedAngle * Mathf.Deg2Rad),
-            0
-        );
-
-        // 5) 캐릭터 속도 영향 최소화
-        float arrowSpeed = arrowPower + (rb.linearVelocity.magnitude * 0.1f);
-
-        // 6) 발사
-        arrowScript.Shoot(finalDirection, arrowSpeed);
-    }
-
-
-    void MeleeAttack()
-    {
-        Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * lastInputDirection, hitboxOffset.y, hitboxOffset.z);
-        Vector3 worldCenter = transform.position + localAdjustedOffset;
-
-        Collider[] hitTargets = Physics.OverlapBox(worldCenter, hitboxSize * 0.5f, Quaternion.identity, enemyLayer);
-
-        foreach (Collider targetCollider in hitTargets)
-        {
-            if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
-            {
-                enemyCombat.GetDamage(Damage, transform);
-            }
-        }
-    }
-
-    IEnumerator EndMeleeAttack()
-    {
-        yield return new WaitForSeconds(0.3f);
-        isMeleeAttacking = false;
-    }
-
     public void RecalculateStats(List<ItemInstance> items)
     {
         float oldMaxHp = MaxHp;
@@ -526,9 +260,259 @@ public class PlayerMovement : MonoBehaviour
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
     }
 
-    private void OnCollisionStay(Collision collision)
+    public void GetDamage(float damageAmount, Transform damageSource)
     {
-        foreach (ContactPoint contact in collision.contacts)
+        if (isRolling || isHit) return;
+
+        currentHp -= damageAmount;
+        UIManager.Instance.UpdatePlayerHP();
+
+        StartCoroutine(HitStun());
+
+        if (currentHp <= 0f)
+            Die();
+    }
+
+    IEnumerator HitStun()
+    {
+        isHit = true;
+
+        isMeleeAttacking = false;
+        isBowCharging = false;
+
+        animator?.SetTrigger("Hit");
+        animator?.SetBool("BowCharge", false);
+        animator?.SetBool("BowMoveForward", false);
+        animator?.SetBool("BowMoveBackward", false);
+
+        yield return new WaitForSeconds(hitStunDuration);
+
+        isHit = false;
+    }
+
+    void Die()
+    {
+        Debug.Log("Player has died.");
+    }
+
+    void LaunchArrow()
+    {
+        ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
+
+        arrowPower = Mathf.Max(arrowPower, 3f);
+
+        Vector2 arrowFireDirection = (Vector3.right * bowChargeDirection) + (Vector3)rb.linearVelocity;
+
+        float currentAngle = Mathf.Atan2(arrowFireDirection.y, arrowFireDirection.x) * Mathf.Rad2Deg;
+        float minAngle, maxAngle;
+
+        if (bowChargeDirection > 0)
+        {
+            minAngle = -maxArrowAngle;
+            maxAngle = maxArrowAngle;
+        }
+        else
+        {
+            if (currentAngle < 0) currentAngle += 360f;
+            minAngle = 180f - maxArrowAngle;
+            maxAngle = 180f + maxArrowAngle;
+        }
+
+        float clampedAngle = Mathf.Clamp(currentAngle, minAngle, maxAngle);
+        float rad = clampedAngle * Mathf.Deg2Rad;
+        arrowFireDirection = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+
+        float arrowSpeed = arrowPower + (rb.linearVelocity.magnitude / 3f);
+        arrowScript.Shoot(arrowFireDirection, arrowSpeed);
+    }
+
+    void MeleeAttack()
+    {
+        Vector2 localAdjustedOffset = new Vector2(hitboxOffset.x * lastInputDirection, hitboxOffset.y);
+        Vector2 worldCenter = (Vector2)transform.position + localAdjustedOffset;
+
+        Collider2D[] hitTargets = Physics2D.OverlapBoxAll(worldCenter, hitboxSize, 0f, enemyLayer);
+
+        foreach (Collider2D targetCollider in hitTargets)
+        {
+            if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
+            {
+                enemyCombat.GetDamage(Damage, transform);
+            }
+        }
+    }
+
+    IEnumerator EndMeleeAttack()
+    {
+        yield return new WaitForSeconds(0.3f);
+        isMeleeAttacking = false;
+    }
+
+    void Roll()
+    {
+        if (!canRoll || !isGrounded) return;
+        StartCoroutine(RollCoroutine());
+    }
+
+    IEnumerator RollCoroutine()
+    {
+        isRolling = true;
+        canRoll = false;
+
+        float elapsedTime = 0f;
+        while (elapsedTime < rollDuration)
+        {
+            rb.linearVelocity = new Vector2(lastInputDirection * maxSpeed * rollSpeedMultiplier, rb.linearVelocity.y);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        isRolling = false;
+
+        yield return new WaitForSeconds(rollCoolDown);
+        canRoll = true;
+    }
+
+    private void FixedUpdate()
+    {
+        if (controlLocked || isHit)
+            return;
+
+        UpdateStates();
+
+        if (isBowCharging)
+            BowMoveHandler();
+        else if (!isRolling)
+            MoveHandler();
+
+        if (!isBowCharging)
+            RotationHandler();
+
+        JumpHandler();
+    }
+
+    void BowMoveHandler()
+    {
+        sbyte horizontal = 0;
+
+        if (TryGetHorizontalInput(out horizontal))
+        {
+            currentSpeed += acceleration * Time.fixedDeltaTime;
+            currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+
+            if (horizontal == bowChargeDirection)
+            {
+                animator?.SetBool("BowMoveForward", true);
+                animator?.SetBool("BowMoveBackward", false);
+            }
+            else if (horizontal == -bowChargeDirection)
+            {
+                animator?.SetBool("BowMoveForward", false);
+                animator?.SetBool("BowMoveBackward", true);
+            }
+        }
+        else
+        {
+            currentSpeed -= deceleration * Time.fixedDeltaTime;
+            currentSpeed = Mathf.Max(currentSpeed, 0f);
+
+            animator?.SetBool("BowMoveForward", false);
+            animator?.SetBool("BowMoveBackward", false);
+        }
+
+        rb.linearVelocity = new Vector2(currentSpeed * horizontal, rb.linearVelocity.y);
+    }
+
+
+    void MoveHandler()
+    {
+        if (TryGetHorizontalInput(out sbyte horizontal))
+        {
+            if (horizontal != 0 && horizontal != lastInputDirection)
+            {
+                if (horizontal == 1)
+                    animator?.SetTrigger("TurnLeftToRight");
+                else
+                    animator?.SetTrigger("TurnRightToLeft");
+            }
+
+            if (!(lastInputDirection != horizontal && currentSpeed > maxSpeed * 0.1f))
+            {
+                lastInputDirection = horizontal;
+                currentSpeed += acceleration * Time.fixedDeltaTime;
+                currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            }
+            else
+            {
+                currentSpeed -= deceleration * Time.fixedDeltaTime * 1.5f;
+                currentSpeed = Mathf.Max(currentSpeed, 0f);
+            }
+        }
+        else
+        {
+            currentSpeed -= deceleration * Time.fixedDeltaTime;
+            currentSpeed = Mathf.Max(currentSpeed, 0f);
+        }
+
+        rb.linearVelocity = new Vector2(currentSpeed * lastInputDirection, rb.linearVelocity.y);
+    }
+
+    void JumpHandler()
+    {
+        if (Input.GetKeyDown(kb.jumpKey))
+        {
+            if (jumpCount < maxJumpCount)
+            {
+                Vector2 jumpVector = Vector2.up * jumpForce;
+                jumpVector.x = rb.linearVelocity.x;
+                rb.linearVelocity = jumpVector;
+
+                jumpCount++;
+
+                if (jumpCount == 1)
+                    animator?.SetTrigger("Jump");
+                else
+                    animator?.SetTrigger("DoubleJump");
+            }
+        }
+    }
+
+    bool TryGetHorizontalInput(out sbyte horizontal)
+    {
+        bool left = Input.GetKey(kb.leftKey);
+        bool right = Input.GetKey(kb.rightKey);
+
+        if (left && right)
+        {
+            horizontal = 0;
+            return false;
+        }
+        else if (left)
+        {
+            horizontal = -1;
+            return true;
+        }
+        else if (right)
+        {
+            horizontal = 1;
+            return true;
+        }
+        else
+        {
+            horizontal = 0;
+            return false;
+        }
+    }
+
+    void RotationHandler()
+    {
+        float targetYAngle = (lastInputDirection == 1) ? 0.01f : 179.99f;
+        Quaternion targetRotation = Quaternion.Euler(0, targetYAngle, 0);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        foreach (ContactPoint2D contact in collision.contacts)
         {
             if (Mathf.Abs(contact.normal.x) > 0.5f)
             {
@@ -555,20 +539,20 @@ public class PlayerMovement : MonoBehaviour
 
     bool CheckIsGrounded()
     {
-        Vector3 boxCenter = new Vector3(col.bounds.center.x, col.bounds.min.y - 0.05f, col.bounds.center.z);
-        Vector3 boxSize = new Vector3(col.bounds.size.x * 0.9f, 0.1f, col.bounds.size.z * 0.9f);
+        Vector2 boxCenter = new Vector2(col.bounds.center.x, col.bounds.min.y - 0.05f);
+        Vector2 boxSize = new Vector2(col.bounds.size.x * 0.9f, 0.1f);
 
-        return Physics.CheckBox(boxCenter, boxSize * 0.5f, Quaternion.identity, groundLayerMask);
+        RaycastHit2D hit = Physics2D.BoxCast(boxCenter, boxSize, 0f, Vector2.down, 0.01f, groundLayerMask);
+        return hit.collider != null;
     }
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
 
-        Vector3 hitboxLocalAdjustedOffset = new Vector3(hitboxOffset.x * lastInputDirection, hitboxOffset.y, hitboxOffset.z);
-        Vector3 hitboxGizmoCenter = transform.position + hitboxLocalAdjustedOffset;
+        Vector2 hitboxLocalAdjustedOffset = new Vector2(hitboxOffset.x * lastInputDirection, hitboxOffset.y);
+        Vector2 hitboxGizmoCenter = (Vector2)transform.position + hitboxLocalAdjustedOffset;
 
-        Gizmos.DrawWireCube(hitboxGizmoCenter, hitboxSize);
+        Gizmos.DrawWireCube(hitboxGizmoCenter, new Vector3(hitboxSize.x, hitboxSize.y, 0f));
     }
-
 }

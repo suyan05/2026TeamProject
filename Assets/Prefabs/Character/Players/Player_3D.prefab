@@ -41,13 +41,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2143968532358611332}
-  - component: {fileID: 6937462503598046755}
-  - component: {fileID: 1375849512237582800}
-  - component: {fileID: 6290373570318251267}
   - component: {fileID: 2240151559986993538}
   - component: {fileID: 1181974386655556435}
+  - component: {fileID: 1660364606532924818}
+  - component: {fileID: 6593436724835047707}
+  - component: {fileID: 6413478818400002993}
   m_Layer: 9
-  m_Name: Player_1
+  m_Name: Player_3D
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70,113 +70,6 @@ Transform:
   - {fileID: 6394211899131131671}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6937462503598046755
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3828376633533440286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e1177416c4ed434aa70b20d0eb2b6db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  baseMaxHp: 100
-  baseDamage: 20
-  baseAttackSpeed: 1
-  currentHp: 0
-  controlLocked: 0
-  maxSpeed: 10
-  jumpForce: 11
-  acceleration: 20
-  deceleration: 50
-  animator: {fileID: 4198326858871312266}
-  groundLayerMask:
-    serializedVersion: 2
-    m_Bits: 1024
-  arrowPrefab: {fileID: 2353487750690169481, guid: 63a5622b8c312224689e2aee4ab82538, type: 3}
-  maxArrowAngle: 10
-  firePoint: {fileID: 6394211899131131671}
-  damage: 20
-  hitboxOffset: {x: 1.5, y: 0}
-  hitboxSize: {x: 2, y: 2}
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 4096
-  rollDuration: 0.5
-  rollSpeedMultiplier: 1.5
-  rollCoolDown: 0.4
-  isRolling: 0
-  equipPrefab: {fileID: 0}
-  currentWeaponName: None
-  weaponHolder: {fileID: 6604272653286510310}
-  maxJumpCount: 2
-  hitStunDuration: 0.3
---- !u!50 &1375849512237582800
-Rigidbody2D:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3828376633533440286}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_GravityScale: 2
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 1
-  m_SleepingMode: 1
-  m_CollisionDetection: 1
-  m_Constraints: 4
---- !u!70 &6290373570318251267
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3828376633533440286}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 6200000, guid: 80968483f7e996c43a0f14426e10a327, type: 2}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.35}
-  m_Size: {x: 0.75, y: 2.8}
-  m_Direction: 0
 --- !u!114 &2240151559986993538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -209,6 +102,113 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
   gridWidth: 6
   gridHeight: 6
+--- !u!114 &1660364606532924818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3828376633533440286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe7273c68c39e574c8e7c302089bc7ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement_3D
+  baseMaxHp: 100
+  baseDamage: 20
+  baseAttackSpeed: 1
+  currentHp: 0
+  controlLocked: 0
+  maxSpeed: 10
+  jumpForce: 11
+  acceleration: 20
+  deceleration: 50
+  animator: {fileID: 4198326858871312266}
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 1024
+  arrowPrefab: {fileID: 0}
+  maxArrowAngle: 30
+  firePoint: {fileID: 6394211899131131671}
+  damage: 20
+  hitboxOffset: {x: 1, y: 0}
+  hitboxSize: {x: 1, y: 1}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 4096
+  rollDuration: 0.5
+  rollSpeedMultiplier: 1.5
+  rollCoolDown: 0.4
+  isRolling: 0
+  equipPrefab: {fileID: 0}
+  currentWeaponName: None
+  weaponHolder: {fileID: 6604272653286510310}
+  maxJumpCount: 2
+  hitStunDuration: 0.3
+--- !u!70 &6593436724835047707
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3828376633533440286}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0.5}
+  m_Size: {x: 1, y: 3}
+  m_Direction: 0
+--- !u!50 &6413478818400002993
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3828376633533440286}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &5662218920261259054
 GameObject:
   m_ObjectHideFlags: 0
