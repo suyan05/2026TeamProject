@@ -18,12 +18,19 @@ public class InventoryUI : MonoBehaviour
 
     void Start()
     {
+        // ?? 안전장치: 혹시라도 inventory 연결이 끊겨있다면 자동으로 찾아줍니다.
+        if (inventory == null) inventory = FindObjectOfType<Inventory>(true);
+
         RebuildGrid();
         RefreshItems();
     }
 
     public void RebuildGrid()
     {
+        // ?? 안전장치: inventory 데이터가 아예 없으면 그리드를 그리지 않고 대기합니다.
+        if (inventory == null) inventory = FindObjectOfType<Inventory>(true);
+        if (inventory == null) return;
+
         foreach (Transform child in gridParent)
             Destroy(child.gameObject);
 
@@ -32,6 +39,8 @@ public class InventoryUI : MonoBehaviour
 
     void GenerateGrid()
     {
+        if (inventory == null) return;
+
         slotUIs = new InventorySlotUI[inventory.gridWidth, inventory.gridHeight];
 
         float centerX = (inventory.gridWidth * slotSize) / 2f;
@@ -62,11 +71,21 @@ public class InventoryUI : MonoBehaviour
 
     public void RefreshItems()
     {
+        if (inventory == null || inventory.items == null || inventory.grid == null) return;
+
         foreach (Transform child in itemParent)
             Destroy(child.gameObject);
 
+        // ?? [?? 핵심 에러 차단 부품]: 만약 slotUIs 배열판이 아직 안 만들어졌다면 강제로 먼저 만들어줍니다.
+        if (slotUIs == null)
+        {
+            GenerateGrid();
+        }
+
         foreach (var instance in inventory.items)
         {
+            if (instance == null || instance.data == null) continue;
+
             int foundX = -1;
             int foundY = -1;
 
@@ -75,7 +94,8 @@ public class InventoryUI : MonoBehaviour
                 for (int x = 0; x < inventory.grid.gridWidth; x++)
                 {
                     var slot = inventory.grid.slots[x, y];
-                    if (slot != null && slot.item.uniqueID == instance.uniqueID)
+                    // uniqueID 비교 시 발생할 수 있는 Null 예외 방어 추가
+                    if (slot != null && slot.item != null && slot.item.uniqueID == instance.uniqueID)
                     {
                         foundX = x;
                         foundY = y;
@@ -86,6 +106,10 @@ public class InventoryUI : MonoBehaviour
         Found:
 
             if (foundX == -1)
+                continue;
+
+            // ?? [?? 99번째 줄 폭발 방지선]: 찾은 슬롯 위치의 UI 컴포넌트가 비어있다면 에러를 내지 않고 넘어갑니다.
+            if (slotUIs[foundX, foundY] == null)
                 continue;
 
             GameObject itemObj = Instantiate(itemPrefab, itemParent);
@@ -104,6 +128,7 @@ public class InventoryUI : MonoBehaviour
             float offsetX = (w - slotSize) / 2f;
             float offsetY = (h - slotSize) / 2f;
 
+            // 시현님의 원래 배치 공식 정교하게 100% 유지
             rt.anchoredPosition = slotRT.anchoredPosition + new Vector2(offsetX, -offsetY);
             rt.sizeDelta = new Vector2(w, h);
         }

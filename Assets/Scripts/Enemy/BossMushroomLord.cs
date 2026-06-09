@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 // 1. 메인 보스 AI 클래스
 public class BossMushroomLord : BossBase
@@ -21,7 +22,7 @@ public class BossMushroomLord : BossBase
     public GameObject greenSporeFilterUI;     // 화면 전반에 적용되는 녹색 포자 필터 오버레이
     public GameObject dotDamageIconUI;        // 플레이어 화면에 표시될 지속 피해 아이콘 UI
 
-    [Header("기본 평타 공격 세팅 (추가 🌟)")]
+    [Header("기본 평타 공격 세팅")]
     public float attackRange = 3.0f;          // 플레이어가 이 거리 안에 들어오면 평타 발동
     public float attackCooldown = 1.5f;       // 평타 공격 애니메이션 반복 주기 (쿨타임)
     private Animator anim;                    // 자식에게서 가져올 애니메이터 컴포넌트
@@ -30,14 +31,17 @@ public class BossMushroomLord : BossBase
     private int attackPatternCounter = 0;      // 그로기 상태 진입용 패턴 카운터
     private Coroutine passiveFallingRoutine;   // 2페이즈 천장 낙하 상시 루틴 제어용
 
+    // 💡 3D 물리 제어용 리지드바디 컴포넌트 변수 추가
+    private Rigidbody rb;
+
     private void Start()
     {
-        
         anim = GetComponentInChildren<Animator>();
 
-        StartCoroutine(BossAIRoutine());
+        // 💡 3D 리지드바디 컴포넌트 안전하게 가져오기
+        rb = GetComponent<Rigidbody>();
 
-       
+        StartCoroutine(BossAIRoutine());
         StartCoroutine(NormalAttackRoutine());
     }
 
@@ -78,7 +82,6 @@ public class BossMushroomLord : BossBase
             {
                 if (anim != null)
                 {
-                    
                     anim.Play("Attack", 0, 0f);
                 }
 
@@ -98,63 +101,55 @@ public class BossMushroomLord : BossBase
 
     private IEnumerator BossAIRoutine()
     {
-        // 보스가 거대하게 변이하는 등장 연출 시간 대기
         yield return new WaitForSeconds(3.5f);
 
         while (!isDead)
         {
-            // 패턴 간 기본 대기 쿨타임
             yield return new WaitForSeconds(4.0f);
 
             if (isPhaseTransitioning || isGroggy) continue;
 
-            // 특정 패턴 이후 잠시 그로기 상태에 빠진다
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
             {
-                isExecutingPattern = true; 
+                isExecutingPattern = true;
                 yield return StartCoroutine(GroggyStateRoutine());
-                isExecutingPattern = false; 
+                isExecutingPattern = false;
                 continue;
             }
 
             if (currentPhase == 1)
             {
-                isExecutingPattern = true; // 특수 패턴 시작하므로 평타 잠시 잠금
+                isExecutingPattern = true;
 
-                // 1페이즈 기본 공격 패턴 3종 무작위 실행
                 int randomPattern = Random.Range(0, 3);
                 if (randomPattern == 0) Pattern_SummonMinions();
                 else if (randomPattern == 1) yield return StartCoroutine(Pattern_JumpSmash());
                 else yield return StartCoroutine(Pattern_PlantSporeMines());
 
-                isExecutingPattern = false; // 특수 패턴 끝났으므로 다시 평타 허용
+                isExecutingPattern = false;
             }
             else
             {
-                isExecutingPattern = true; // 2페이즈 특수 패턴 시작
+                isExecutingPattern = true;
 
-                //  2페이즈 전용 패턴 연계 콤보 시스템
                 int randomCombo = Random.Range(0, 2);
                 if (randomCombo == 0)
                 {
-                    // 콤보 1: 흡입 ? 광역 포자 폭발
-                    Debug.Log("<color=magenta>[2페이즈 연계 콤보] 흡입 ? 광역 포자 폭발 시작!</color>");
+                    Debug.Log("<color=magenta>[2페이즈 연계 콤보] 흡입 광역 포자 폭발 시작!</color>");
                     yield return StartCoroutine(Combo_SuckAndExplode());
                 }
                 else
                 {
-                    // 콤보 2: 점프 착지 ? 연속 충격파
-                    Debug.Log("<color=magenta>[2페이즈 연계 콤보] 점프 착지 ? 연속 충격파 확정 연계 시작!</color>");
+                    Debug.Log("<color=magenta>[2페이즈 연계 콤보] 점프 착지 연속 충격파 확정 연계 시작!</color>");
                     yield return StartCoroutine(Pattern_JumpSmash());
                 }
 
-                isExecutingPattern = false; // 2페이즈 특수 패턴 종료
+                isExecutingPattern = false;
             }
         }
     }
 
-    // [기본 패턴 1] 잡옵 소환 기믹
     private void Pattern_SummonMinions()
     {
         int spawnCount = Random.Range(2, 5);
@@ -163,17 +158,15 @@ public class BossMushroomLord : BossBase
         for (int i = 0; i < spawnCount; i++)
         {
             Vector3 spawnPos = transform.position + Random.insideUnitSphere * 3.5f;
-            spawnPos.y = transform.position.y; // 보스와 같은 바닥 높이
+            spawnPos.y = transform.position.y;
             Instantiate(minionMushroomPrefab, spawnPos, Quaternion.identity);
         }
     }
 
-    
     private IEnumerator Pattern_JumpSmash()
     {
         if (playerTransform == null) yield break;
 
-        
         if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f);
 
         Vector3 targetLandPos = playerTransform.position;
@@ -185,22 +178,35 @@ public class BossMushroomLord : BossBase
         }
 
         Debug.Log("보스 액션: 보스가 크게 도약하여 공중으로 상승!");
-        yield return new WaitForSeconds(1.2f); // 도약 후 체공 시간
+        yield return new WaitForSeconds(1.2f);
 
         if (jumpSmashIndicator != null) jumpSmashIndicator.SetActive(false);
 
+        // 💡 [핵심 버그 수정] 3D 물리 엔진이 급발진하지 않도록 순간이동 전/후 속도와 관성을 완전히 0으로 초기화합니다.
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
         transform.position = targetLandPos;
+
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
         Debug.Log("?? 쿵! 보스 착지 - 1차 원형 충격파 발산");
 
-        int extraWaves = Random.Range(1, 3); // 1~2회 연속 보너스 타격
+        int extraWaves = Random.Range(1, 3);
         for (int i = 1; i < extraWaves; i++)
         {
-            yield return new WaitForSeconds(0.7f); // 타이밍 흔들기용 박자 딜레이
+            yield return new WaitForSeconds(0.7f);
             Debug.Log($"?? 쿵! {i + 1}차 연속 충격파 발산 (회피 타이밍 교란)");
         }
     }
 
-    // [기본 패턴 3] 포자 폭발 지뢰 기믹
     private IEnumerator Pattern_PlantSporeMines()
     {
         if (playerTransform == null) yield break;
@@ -225,7 +231,6 @@ public class BossMushroomLord : BossBase
         Debug.Log("패턴 시전: 전장에 독성 구름 포자 지뢰 배치 완료");
     }
 
-    // [2페이즈 콤보] 광역 포자 폭발
     private IEnumerator Combo_SuckAndExplode()
     {
         Debug.Log("기믹 시전: 보스가 주변의 모든 플레이어를 중심부로 강하게 자석처럼 끌어당김 (흡입)");
@@ -242,12 +247,11 @@ public class BossMushroomLord : BossBase
         }
     }
 
-    // [추가 패턴] 그로기 상태 루틴
     private IEnumerator GroggyStateRoutine()
     {
         isGroggy = true;
         attackPatternCounter = 0;
-        if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f); // 그로기 시 평타 정지
+        if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f);
         Debug.Log("<color=cyan><b>? [이벤트] 버섯군주가 무리하게 패턴을 시전한 후 잠시 그로기 상태에 빠집니다! (피해 30% 증가)</b></color>");
 
         yield return new WaitForSeconds(4.0f);
@@ -256,7 +260,6 @@ public class BossMushroomLord : BossBase
         Debug.Log("버섯군주가 그로기 상태에서 회복해 다시 일어섭니다.");
     }
 
-    // [페이즈 전환] 2페이즈 진입 연출 루틴
     protected override IEnumerator PhaseTransitionRoutine()
     {
         isPhaseTransitioning = true;
@@ -280,7 +283,6 @@ public class BossMushroomLord : BossBase
         isPhaseTransitioning = false;
     }
 
-    // 2페이즈 해금 기믹: 상시 천장 낙하 장애물 제어 스케줄러
     private IEnumerator PassiveFallingObstacleRoutine()
     {
         while (!isDead)
@@ -321,15 +323,13 @@ public class BossMushroomLord : BossBase
 }
 
 // 2. [서브 클래스 1] 포자 폭발 지뢰 스크립트
-
 public class MushroomLandmine : MonoBehaviour
 {
     private bool isTriggered = false;
 
     public void Setup()
     {
-        //  포자는 일정 시간이 지나도 폭발하며, 플레이어가 가까이 가면 즉시 터질 수도 있다.
-        Destroy(gameObject, 5.0f); // 5초 뒤에 밟지 않아도 타임아웃 자동 폭발
+        Destroy(gameObject, 5.0f);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -342,7 +342,6 @@ public class MushroomLandmine : MonoBehaviour
 
     private void OnDestroy()
     {
-        // 타임아웃이든, 플레이어가 밟았든 파괴될 때 무조건 독성 구름을 남김
         LeavePoisonCloud();
     }
 
@@ -355,14 +354,11 @@ public class MushroomLandmine : MonoBehaviour
 
     private void LeavePoisonCloud()
     {
-        //  폭발 후에는 독성 구름이 남아 추가 위협을 만든다. (지속 장판 영역)
         Debug.Log("지뢰 기믹 연출: 폭발 자리에 잔류 독성 구름 형성 (밟으면 지속 대미지)");
     }
 }
 
-
 // 3. [서브 클래스 2] 2페이즈 전용 천장 낙하 장애물 스크립트
-
 public class MushroomFallingObstacle : MonoBehaviour
 {
     private Vector3 targetFloorPos;
@@ -377,7 +373,6 @@ public class MushroomFallingObstacle : MonoBehaviour
     private IEnumerator FallDownRoutine()
     {
         float speed = 8f;
-        // 바닥에 도달할 때까지 아래로 하강
         while (transform.position.y > targetFloorPos.y)
         {
             transform.position = Vector3.MoveTowards(transform.position, targetFloorPos, speed * Time.deltaTime);
@@ -393,7 +388,6 @@ public class MushroomFallingObstacle : MonoBehaviour
 
     private void OnHitFloor()
     {
-        //  천장에서 버섯 덩어리와 균사체 조각이 떨어진다. 낙하 지점에는 즉발 피해 또는 지속 피해가 발생한다.
         Collider[] hitPlayers = Physics.OverlapSphere(transform.position, 2.0f);
         foreach (var player in hitPlayers)
         {
@@ -404,6 +398,6 @@ public class MushroomFallingObstacle : MonoBehaviour
         }
 
         Debug.Log("낙하 기믹: 균사체 덩어리가 깨지며 바닥에 3초간 소규모 독 지속 피해 영역 생성");
-        Destroy(gameObject, 3.0f); // 지속 장판 연출 후 소멸
+        Destroy(gameObject, 3.0f);
     }
 }
