@@ -75,17 +75,18 @@ public class RewardManager : MonoBehaviour
         return filteredList[Random.Range(0, filteredList.Count)];
     }
 
-    
+    // ?? 카드를 누르면 즉시 호출되는 핵심 함수
     public void OnRewardSelected(ItemData selectedItem)
     {
         if (selectedItem != null)
         {
             Debug.Log($"<color=lime>{selectedItem.itemName}</color> 획득 완료! 즉시 게임으로 돌아갑니다.");
 
-
+            // [연동 팁] 나중에 플레이어 인벤토리나 스탯에 아이템을 반영하려면 여기에 코드를 넣으세요!
+            // 예: PlayerMovement_3D.Instance.RecalculateStats(...);
         }
 
-        
+        // ? 별도의 버튼 클릭 없이, 고르는 순간 바로 창을 닫고 일시정지를 풉니다.
         if (rewardPanel != null) rewardPanel.SetActive(false);
         Time.timeScale = 1f;
     }

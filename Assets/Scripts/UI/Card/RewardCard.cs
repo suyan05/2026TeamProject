@@ -20,7 +20,7 @@ public class RewardCard : MonoBehaviour
         if (iconImage != null) iconImage.sprite = data.icon;
     }
 
- 
+   
     public void OnClickCard()
     {
         if (itemData != null)
