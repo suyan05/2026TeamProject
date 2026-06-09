@@ -31,14 +31,12 @@ public class BossMushroomLord : BossBase
     private int attackPatternCounter = 0;      // 그로기 상태 진입용 패턴 카운터
     private Coroutine passiveFallingRoutine;   // 2페이즈 천장 낙하 상시 루틴 제어용
 
-    // 💡 3D 물리 제어용 리지드바디 컴포넌트 변수 추가
+    // 3D 물리 제어용 리지드바디 컴포넌트 변수 추가
     private Rigidbody rb;
 
     private void Start()
     {
         anim = GetComponentInChildren<Animator>();
-
-        // 💡 3D 리지드바디 컴포넌트 안전하게 가져오기
         rb = GetComponent<Rigidbody>();
 
         StartCoroutine(BossAIRoutine());
@@ -50,6 +48,7 @@ public class BossMushroomLord : BossBase
         RotateTowardPlayer();
     }
 
+    // 플레이어 방향으로 회전
     private void RotateTowardPlayer()
     {
         if (isDead || playerTransform == null || isExecutingPattern) return;
@@ -64,6 +63,7 @@ public class BossMushroomLord : BossBase
         }
     }
 
+    // 기본 평타 루틴
     private IEnumerator NormalAttackRoutine()
     {
         yield return new WaitForSeconds(3.5f);
@@ -76,36 +76,33 @@ public class BossMushroomLord : BossBase
                 continue;
             }
 
-            float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+            float dist = Vector3.Distance(transform.position, playerTransform.position);
 
-            if (distanceToPlayer <= attackRange)
+            if (dist <= attackRange)
             {
-                if (anim != null)
-                {
-                    anim.Play("Attack", 0, 0f);
-                }
+                anim.Play("Attack", 0, 0f);
 
-                Debug.Log("보스 평타: 플레이어가 가까이 있어 연속 공격 애니메이션 발동!");
+                // 플레이어 데미지
+                PlayerMovement.Instance.GetDamage(20f, transform);
+
                 yield return new WaitForSeconds(attackCooldown);
             }
             else
             {
-                if (anim != null && !anim.GetCurrentAnimatorStateInfo(0).IsName("Armature|Armature|Idle"))
-                {
-                    anim.Play("Armature|Armature|Idle", 0, 0f);
-                }
+                anim.Play("Armature|Armature|Idle", 0, 0f);
                 yield return new WaitForSeconds(0.1f);
             }
         }
     }
 
+    // 보스 AI 루틴
     private IEnumerator BossAIRoutine()
     {
         yield return new WaitForSeconds(3.5f);
 
         while (!isDead)
         {
-            yield return new WaitForSeconds(4.0f);
+            yield return new WaitForSeconds(4f);
 
             if (isPhaseTransitioning || isGroggy) continue;
 
@@ -122,9 +119,9 @@ public class BossMushroomLord : BossBase
             {
                 isExecutingPattern = true;
 
-                int randomPattern = Random.Range(0, 3);
-                if (randomPattern == 0) Pattern_SummonMinions();
-                else if (randomPattern == 1) yield return StartCoroutine(Pattern_JumpSmash());
+                int p = Random.Range(0, 3);
+                if (p == 0) Pattern_SummonMinions();
+                else if (p == 1) yield return StartCoroutine(Pattern_JumpSmash());
                 else yield return StartCoroutine(Pattern_PlantSporeMines());
 
                 isExecutingPattern = false;
@@ -133,271 +130,222 @@ public class BossMushroomLord : BossBase
             {
                 isExecutingPattern = true;
 
-                int randomCombo = Random.Range(0, 2);
-                if (randomCombo == 0)
-                {
-                    Debug.Log("<color=magenta>[2페이즈 연계 콤보] 흡입 광역 포자 폭발 시작!</color>");
-                    yield return StartCoroutine(Combo_SuckAndExplode());
-                }
-                else
-                {
-                    Debug.Log("<color=magenta>[2페이즈 연계 콤보] 점프 착지 연속 충격파 확정 연계 시작!</color>");
-                    yield return StartCoroutine(Pattern_JumpSmash());
-                }
+                int combo = Random.Range(0, 2);
+                if (combo == 0) yield return StartCoroutine(Combo_SuckAndExplode());
+                else yield return StartCoroutine(Pattern_JumpSmash());
 
                 isExecutingPattern = false;
             }
         }
     }
 
+    // 작은 버섯 소환
     private void Pattern_SummonMinions()
     {
-        int spawnCount = Random.Range(2, 5);
-        Debug.Log($"버섯군주 패턴: 작은 버섯 몬스터 {spawnCount}마리 소환 (독성 공격 압박)");
+        int count = Random.Range(2, 5);
 
-        for (int i = 0; i < spawnCount; i++)
+        for (int i = 0; i < count; i++)
         {
-            Vector3 spawnPos = transform.position + Random.insideUnitSphere * 3.5f;
-            spawnPos.y = transform.position.y;
-            Instantiate(minionMushroomPrefab, spawnPos, Quaternion.identity);
+            Vector3 pos = transform.position + Random.insideUnitSphere * 3.5f;
+            pos.y = transform.position.y;
+            Instantiate(minionMushroomPrefab, pos, Quaternion.identity);
         }
     }
 
+    // 점프 착지 충격파
     private IEnumerator Pattern_JumpSmash()
     {
         if (playerTransform == null) yield break;
 
-        if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f);
+        anim.Play("Armature|Armature|Idle", 0, 0f);
 
-        Vector3 targetLandPos = playerTransform.position;
+        Vector3 landPos = playerTransform.position;
 
         if (jumpSmashIndicator != null)
         {
-            jumpSmashIndicator.transform.position = targetLandPos;
+            jumpSmashIndicator.transform.position = landPos;
             jumpSmashIndicator.SetActive(true);
         }
 
-        Debug.Log("보스 액션: 보스가 크게 도약하여 공중으로 상승!");
         yield return new WaitForSeconds(1.2f);
 
         if (jumpSmashIndicator != null) jumpSmashIndicator.SetActive(false);
 
-        // 💡 [핵심 버그 수정] 3D 물리 엔진이 급발진하지 않도록 순간이동 전/후 속도와 관성을 완전히 0으로 초기화합니다.
+        // 순간이동 전후 속도 초기화
         if (rb != null)
         {
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
 
-        transform.position = targetLandPos;
+        transform.position = landPos;
 
         if (rb != null)
         {
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
 
-        Debug.Log("?? 쿵! 보스 착지 - 1차 원형 충격파 발산");
+        // 착지 데미지
+        float radius = 4f;
+        Collider[] hits = Physics.OverlapSphere(transform.position, radius);
+        foreach (var h in hits)
+        {
+            if (h.CompareTag("Player"))
+                PlayerMovement.Instance.GetDamage(30f, transform);
+        }
 
-        int extraWaves = Random.Range(1, 3);
-        for (int i = 1; i < extraWaves; i++)
+        // 추가 충격파
+        int extra = Random.Range(1, 3);
+        for (int i = 1; i < extra; i++)
         {
             yield return new WaitForSeconds(0.7f);
-            Debug.Log($"?? 쿵! {i + 1}차 연속 충격파 발산 (회피 타이밍 교란)");
-        }
-    }
 
-    private IEnumerator Pattern_PlantSporeMines()
-    {
-        if (playerTransform == null) yield break;
-
-        Vector3 minePos = playerTransform.position + Random.insideUnitSphere * 2f;
-        minePos.y = transform.position.y;
-
-        if (sporeMineIndicator != null)
-        {
-            sporeMineIndicator.transform.position = minePos;
-            sporeMineIndicator.SetActive(true);
-        }
-        yield return new WaitForSeconds(1.0f);
-        if (sporeMineIndicator != null) sporeMineIndicator.SetActive(false);
-
-        GameObject mine = Instantiate(landmineSporePrefab, minePos, Quaternion.identity);
-
-        MushroomLandmine mineScript = mine.GetComponent<MushroomLandmine>();
-        if (mineScript == null) mineScript = mine.AddComponent<MushroomLandmine>();
-        mineScript.Setup();
-
-        Debug.Log("패턴 시전: 전장에 독성 구름 포자 지뢰 배치 완료");
-    }
-
-    private IEnumerator Combo_SuckAndExplode()
-    {
-        Debug.Log("기믹 시전: 보스가 주변의 모든 플레이어를 중심부로 강하게 자석처럼 끌어당김 (흡입)");
-        yield return new WaitForSeconds(2.0f);
-
-        Debug.Log("<color=red>?? 콰앙!! 보스 주변 넓은 반경에 광역 포자 폭발 피해 발생!</color>");
-        Collider[] hitPlayers = Physics.OverlapSphere(transform.position, 6.5f);
-        foreach (var player in hitPlayers)
-        {
-            if (player.CompareTag("Player"))
+            foreach (var h in hits)
             {
-                Debug.Log("플레이어가 광역 포자 폭발에 직격당했습니다.");
+                if (h.CompareTag("Player"))
+                    PlayerMovement.Instance.GetDamage(20f, transform);
             }
         }
     }
 
+    // 포자 지뢰 설치
+    private IEnumerator Pattern_PlantSporeMines()
+    {
+        if (playerTransform == null) yield break;
+
+        Vector3 pos = playerTransform.position + Random.insideUnitSphere * 2f;
+        pos.y = transform.position.y;
+
+        if (sporeMineIndicator != null)
+        {
+            sporeMineIndicator.transform.position = pos;
+            sporeMineIndicator.SetActive(true);
+        }
+
+        yield return new WaitForSeconds(1f);
+        if (sporeMineIndicator != null) sporeMineIndicator.SetActive(false);
+
+        GameObject mine = Instantiate(landmineSporePrefab, pos, Quaternion.identity);
+
+        MushroomLandmine script = mine.GetComponent<MushroomLandmine>();
+        if (script == null) script = mine.AddComponent<MushroomLandmine>();
+        script.Setup();
+    }
+
+    // 2페이즈 광역 폭발
+    private IEnumerator Combo_SuckAndExplode()
+    {
+        yield return new WaitForSeconds(2f);
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, 6.5f);
+        foreach (var h in hits)
+        {
+            if (h.CompareTag("Player"))
+                PlayerMovement_3D.Instance.GetDamage(25f, transform);
+        }
+    }
+    // 그로기 상태 루틴 추가
     private IEnumerator GroggyStateRoutine()
     {
-        isGroggy = true;
-        attackPatternCounter = 0;
-        if (anim != null) anim.Play("Armature|Armature|Idle", 0, 0f);
-        Debug.Log("<color=cyan><b>? [이벤트] 버섯군주가 무리하게 패턴을 시전한 후 잠시 그로기 상태에 빠집니다! (피해 30% 증가)</b></color>");
-
-        yield return new WaitForSeconds(4.0f);
-
-        isGroggy = false;
-        Debug.Log("버섯군주가 그로기 상태에서 회복해 다시 일어섭니다.");
+        anim.Play("Groggy", 0, 0f); // 그로기 애니메이션 재생
+        yield return new WaitForSeconds(5f); // 5초 동안 그로기 상태 유지
     }
 
     protected override IEnumerator PhaseTransitionRoutine()
     {
         isPhaseTransitioning = true;
-        attackPatternCounter = 0;
-        currentPhase = 2;
-
-        Debug.Log("<color=green><b>?? [페이즈 전환] 버섯군주 체력 50% 이하! 2페이즈 광폭화 연출 시작</b></color>");
-
-        if (greenSporeFilterUI != null) greenSporeFilterUI.SetActive(true);
-        if (dotDamageIconUI != null) dotDamageIconUI.SetActive(true);
-        Debug.Log("UI 출력: 녹색 포자 화면 필터 활성화 및 플레이어 도트 데미지 디버프 아이콘 표기");
-
-        moveSpeed *= 1.3f;
-
-        if (passiveFallingRoutine == null)
-        {
-            passiveFallingRoutine = StartCoroutine(PassiveFallingObstacleRoutine());
-        }
-
-        yield return new WaitForSeconds(3.0f);
+        anim.Play("PhaseTransition", 0, 0f); // Phase 전환 애니메이션 재생
+        yield return new WaitForSeconds(3f); // 전환 시간 대기
+        currentPhase++; // Phase 증가
         isPhaseTransitioning = false;
     }
-
-    private IEnumerator PassiveFallingObstacleRoutine()
-    {
-        while (!isDead)
-        {
-            yield return new WaitForSeconds(2.5f);
-
-            if (isPhaseTransitioning || playerTransform == null) continue;
-
-            Vector3 dropPosition = playerTransform.position + Random.insideUnitSphere * 4f;
-            dropPosition.y = transform.position.y;
-
-            if (fallingIndicatorPrefab != null)
-            {
-                GameObject indicator = Instantiate(fallingIndicatorPrefab, dropPosition, Quaternion.identity);
-                Destroy(indicator, 1.5f);
-            }
-
-            Vector3 spawnHeight = new Vector3(dropPosition.x, dropPosition.y + 10f, dropPosition.z);
-            GameObject fallingObj = Instantiate(fallingMushroomPrefab, spawnHeight, Quaternion.identity);
-
-            MushroomFallingObstacle dropScript = fallingObj.GetComponent<MushroomFallingObstacle>();
-            if (dropScript == null) dropScript = fallingObj.AddComponent<MushroomFallingObstacle>();
-            dropScript.StartFalling(dropPosition);
-        }
-    }
-
     protected override void Die()
     {
         isDead = true;
-        StopAllCoroutines();
-        if (passiveFallingRoutine != null) StopCoroutine(passiveFallingRoutine);
-
-        if (greenSporeFilterUI != null) greenSporeFilterUI.SetActive(false);
-        if (dotDamageIconUI != null) dotDamageIconUI.SetActive(false);
-
-        Debug.Log("돌연변이 버섯군주가 완전히 썩어 없어졌습니다. 클리어!");
+        anim.Play("Die", 0, 0f); // 죽음 애니메이션 재생
+        StopAllCoroutines(); // 모든 코루틴 중지
+        // 추가적으로 필요한 로직 (예: 보스 제거, 보상 지급 등)
+        Destroy(gameObject, 5f); // 5초 후 보스 오브젝트 제거
     }
-}
-
-// 2. [서브 클래스 1] 포자 폭발 지뢰 스크립트
-public class MushroomLandmine : MonoBehaviour
-{
-    private bool isTriggered = false;
-
-    public void Setup()
+    // 포자 지뢰
+    public class MushroomLandmine : MonoBehaviour
     {
-        Destroy(gameObject, 5.0f);
-    }
+        private bool isTriggered = false;
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player") && !isTriggered)
+        public void Setup()
         {
-            TriggerExplosion();
-        }
-    }
-
-    private void OnDestroy()
-    {
-        LeavePoisonCloud();
-    }
-
-    private void TriggerExplosion()
-    {
-        isTriggered = true;
-        Debug.Log("지뢰 기믹: 플레이어가 포자를 밟아 즉시 폭발 피해 발생!");
-        Destroy(gameObject);
-    }
-
-    private void LeavePoisonCloud()
-    {
-        Debug.Log("지뢰 기믹 연출: 폭발 자리에 잔류 독성 구름 형성 (밟으면 지속 대미지)");
-    }
-}
-
-// 3. [서브 클래스 2] 2페이즈 전용 천장 낙하 장애물 스크립트
-public class MushroomFallingObstacle : MonoBehaviour
-{
-    private Vector3 targetFloorPos;
-    private bool hasHitFloor = false;
-
-    public void StartFalling(Vector3 targetFloor)
-    {
-        targetFloorPos = targetFloor;
-        StartCoroutine(FallDownRoutine());
-    }
-
-    private IEnumerator FallDownRoutine()
-    {
-        float speed = 8f;
-        while (transform.position.y > targetFloorPos.y)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, targetFloorPos, speed * Time.deltaTime);
-            yield return null;
+            Destroy(gameObject, 5f); // 자동 폭발
         }
 
-        if (!hasHitFloor)
+        private void OnTriggerEnter(Collider other)
         {
-            hasHitFloor = true;
-            OnHitFloor();
-        }
-    }
-
-    private void OnHitFloor()
-    {
-        Collider[] hitPlayers = Physics.OverlapSphere(transform.position, 2.0f);
-        foreach (var player in hitPlayers)
-        {
-            if (player.CompareTag("Player"))
+            if (other.CompareTag("Player") && !isTriggered)
             {
-                Debug.Log("낙하 기믹: 플레이어가 천장에서 떨어진 균사체에 맞아 즉발 피해를 입었습니다.");
+                TriggerExplosion();
             }
         }
 
-        Debug.Log("낙하 기믹: 균사체 덩어리가 깨지며 바닥에 3초간 소규모 독 지속 피해 영역 생성");
-        Destroy(gameObject, 3.0f);
+        private void OnDestroy()
+        {
+            LeavePoisonCloud();
+        }
+
+        private void TriggerExplosion()
+        {
+            isTriggered = true;
+
+            // 데미지
+            PlayerMovement.Instance.GetDamage(15f, transform);
+
+            Destroy(gameObject);
+        }
+
+        private void LeavePoisonCloud()
+        {
+            // 지속 피해 장판
+        }
+    }
+
+    // 낙하 장애물
+    public class MushroomFallingObstacle : MonoBehaviour
+    {
+        private Vector3 targetFloorPos;
+        private bool hasHitFloor = false;
+
+        public void StartFalling(Vector3 targetFloor)
+        {
+            targetFloorPos = targetFloor;
+            StartCoroutine(FallDownRoutine());
+        }
+
+        private IEnumerator FallDownRoutine()
+        {
+            float speed = 8f;
+
+            while (transform.position.y > targetFloorPos.y)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, targetFloorPos, speed * Time.deltaTime);
+                yield return null;
+            }
+
+            if (!hasHitFloor)
+            {
+                hasHitFloor = true;
+                OnHitFloor();
+            }
+        }
+
+        private void OnHitFloor()
+        {
+            Collider[] hits = Physics.OverlapSphere(transform.position, 2f);
+            foreach (var h in hits)
+            {
+                if (h.CompareTag("Player"))
+                    PlayerMovement.Instance.GetDamage(20f, transform);
+            }
+
+            Destroy(gameObject, 3f);
+        }
     }
 }
