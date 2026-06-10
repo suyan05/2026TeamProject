@@ -28,5 +28,5 @@ MonoBehaviour:
   chargeDuration: 0.8
   attackCooldown: 2
   projectileSpeed: 12
-  enemyPrefab: {fileID: 0}
+  enemyPrefab: {fileID: 919132149155446097, guid: 43e11a5799880e448b4e72e015bd78dc, type: 3}
   icon: {fileID: 0}

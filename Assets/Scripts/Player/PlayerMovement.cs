@@ -96,7 +96,6 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         col = GetComponent<Collider>();
 
-        // 2.5D 이동을 위해 Z축 고정
         rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
     }
 
@@ -111,10 +110,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+
         if (Input.GetKeyDown(kb.inventory))
-        {
             UIManager.Instance.ToggleInventory();
-        }
 
         if (controlLocked || isHit)
             return;
@@ -175,6 +173,21 @@ public class PlayerMovement : MonoBehaviour
         float speed = Mathf.Abs(rb.linearVelocity.x);
         if (!isBowCharging)
             animator?.SetBool("Walk", speed > 0.05f);
+
+        if (controlLocked || isHit)
+            return;
+
+        UpdateStates();
+
+        if (isBowCharging)
+            BowMoveHandler();
+        else if (!isRolling)
+            MoveHandler();
+
+        if (!isBowCharging)
+            RotationHandler();
+
+        JumpHandler();
     }
 
     bool Weapon1Pressed()
@@ -200,20 +213,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (controlLocked || isHit)
-            return;
-
-        UpdateStates();
-
-        if (isBowCharging)
-            BowMoveHandler();
-        else if (!isRolling)
-            MoveHandler();
-
-        if (!isBowCharging)
-            RotationHandler();
-
-        JumpHandler();
+        
     }
 
     void BowMoveHandler()
@@ -222,74 +222,44 @@ public class PlayerMovement : MonoBehaviour
 
         if (TryGetHorizontalInput(out horizontal))
         {
-            currentSpeed += acceleration * Time.fixedDeltaTime;
-            currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            float chargeSlow = Mathf.Lerp(1f, 0.4f, arrowPower / maxArrowPower);
+            float targetSpeed = horizontal * maxSpeed * chargeSlow;
 
-            if (horizontal == bowChargeDirection)
-            {
-                animator?.SetBool("BowMoveForward", true);
-                animator?.SetBool("BowMoveBackward", false);
-            }
-            else if (horizontal == -bowChargeDirection)
-            {
-                animator?.SetBool("BowMoveForward", false);
-                animator?.SetBool("BowMoveBackward", true);
-            }
+            currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, acceleration * Time.fixedDeltaTime);
         }
         else
         {
-            currentSpeed -= deceleration * Time.fixedDeltaTime;
-            currentSpeed = Mathf.Max(currentSpeed, 0f);
-
-            animator?.SetBool("BowMoveForward", false);
-            animator?.SetBool("BowMoveBackward", false);
+            currentSpeed = Mathf.Lerp(currentSpeed, 0, deceleration * Time.fixedDeltaTime);
         }
 
-        rb.linearVelocity = new Vector3(currentSpeed * horizontal, rb.linearVelocity.y, 0);
+        rb.linearVelocity = new Vector3(currentSpeed, rb.linearVelocity.y, 0);
     }
 
     void MoveHandler()
     {
         if (TryGetHorizontalInput(out sbyte horizontal))
         {
-            if (horizontal != 0 && horizontal != lastInputDirection)
-            {
-                if (horizontal == 1)
-                    animator?.SetTrigger("TurnLeftToRight");
-                else
-                    animator?.SetTrigger("TurnRightToLeft");
-            }
-
-            if (!(lastInputDirection != horizontal && currentSpeed > maxSpeed * 0.1f))
-            {
-                lastInputDirection = horizontal;
-                currentSpeed += acceleration * Time.fixedDeltaTime;
-                currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
-            }
-            else
-            {
-                currentSpeed -= deceleration * Time.fixedDeltaTime * 1.5f;
-                currentSpeed = Mathf.Max(currentSpeed, 0f);
-            }
+            float targetSpeed = horizontal * maxSpeed;
+            currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, acceleration * Time.fixedDeltaTime);
+            lastInputDirection = horizontal;
         }
         else
         {
-            currentSpeed -= deceleration * Time.fixedDeltaTime;
-            currentSpeed = Mathf.Max(currentSpeed, 0f);
+            currentSpeed = Mathf.Lerp(currentSpeed, 0, deceleration * Time.fixedDeltaTime);
         }
 
-        rb.linearVelocity = new Vector3(currentSpeed * lastInputDirection, rb.linearVelocity.y, 0);
+        rb.linearVelocity = new Vector3(currentSpeed, rb.linearVelocity.y, 0);
     }
 
     void JumpHandler()
     {
+        // 점프 딜레이 해결: 입력 즉시 반응하도록 변경
         if (Input.GetKeyDown(kb.jumpKey))
         {
             if (jumpCount < maxJumpCount)
             {
-                Vector3 jumpVector = Vector3.up * jumpForce;
-                jumpVector.x = rb.linearVelocity.x;
-                rb.linearVelocity = jumpVector;
+                rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, 0);
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
                 jumpCount++;
 
@@ -330,9 +300,8 @@ public class PlayerMovement : MonoBehaviour
 
     void RotationHandler()
     {
-        float targetYAngle = (lastInputDirection == 1) ? 0.01f : 179.99f;
-        Quaternion targetRotation = Quaternion.Euler(0, targetYAngle, 0);
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
+        float targetYAngle = (lastInputDirection == 1) ? 0f : 180f;
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, targetYAngle, 0), Time.deltaTime * 10f);
     }
 
     void Roll()
@@ -349,7 +318,10 @@ public class PlayerMovement : MonoBehaviour
         float elapsedTime = 0f;
         while (elapsedTime < rollDuration)
         {
-            rb.linearVelocity = new Vector3(lastInputDirection * maxSpeed * rollSpeedMultiplier, rb.linearVelocity.y, 0);
+            Vector3 rollVel = rb.linearVelocity;
+            rollVel.x = lastInputDirection * maxSpeed * rollSpeedMultiplier;
+            rb.linearVelocity = rollVel;
+
             elapsedTime += Time.deltaTime;
             yield return null;
         }
@@ -365,6 +337,10 @@ public class PlayerMovement : MonoBehaviour
 
         currentHp -= damageAmount;
         UIManager.Instance.UpdatePlayerHP();
+
+        // 넉백 추가
+        Vector3 knockbackDir = (transform.position - damageSource.position).normalized;
+        rb.AddForce(knockbackDir * 5f, ForceMode.Impulse);
 
         StartCoroutine(HitStun());
 
@@ -393,30 +369,26 @@ public class PlayerMovement : MonoBehaviour
     {
         Debug.Log("Player has died.");
     }
+
     void LaunchArrow()
     {
         ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
 
-        // 최소 파워 보정
         arrowPower = Mathf.Max(arrowPower, 3f);
 
-        // 1) 마우스 위치를 월드 좌표로 변환
         Vector3 mousePos = Input.mousePosition;
         mousePos.z = Mathf.Abs(Camera.main.transform.position.z - transform.position.z);
         Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(mousePos);
 
-        // 2) 캐릭터 → 마우스 방향 계산
         Vector3 rawDirection = (worldMousePos - firePoint.position);
-        rawDirection.z = 0; // 2.5D 유지
+        rawDirection.z = 0;
         rawDirection.Normalize();
 
-        // 3) 좌우 방향에 따라 각도 제한 적용
         float angle = Mathf.Atan2(rawDirection.y, rawDirection.x) * Mathf.Rad2Deg;
 
         float minAngle = -maxArrowAngle;
         float maxAngle = maxArrowAngle;
 
-        // 캐릭터가 왼쪽을 보고 있다면 180도 기준으로 보정
         if (lastInputDirection < 0)
         {
             if (angle > 0) angle -= 180f;
@@ -428,20 +400,16 @@ public class PlayerMovement : MonoBehaviour
 
         float clampedAngle = Mathf.Clamp(angle, minAngle, maxAngle);
 
-        // 4) 최종 방향 벡터 계산
         Vector3 finalDirection = new Vector3(
             Mathf.Cos(clampedAngle * Mathf.Deg2Rad),
             Mathf.Sin(clampedAngle * Mathf.Deg2Rad),
             0
         );
 
-        // 5) 캐릭터 속도 영향 최소화
         float arrowSpeed = arrowPower + (rb.linearVelocity.magnitude * 0.1f);
 
-        // 6) 발사
         arrowScript.Shoot(finalDirection, arrowSpeed);
     }
-
 
     void MeleeAttack()
     {
@@ -570,5 +538,4 @@ public class PlayerMovement : MonoBehaviour
 
         Gizmos.DrawWireCube(hitboxGizmoCenter, hitboxSize);
     }
-
 }

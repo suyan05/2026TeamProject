@@ -16,21 +16,37 @@ public class MergeStationInteract : MonoBehaviour
 
     private void Awake()
     {
-        
+        // mergeUI 자동 할당
         if (mergeUI == null)
         {
-            Transform t = UIManager.Instance.transform.Find("MergePanel");
-            if (t != null) mergeUI = t.gameObject;
+            // UIManager에서 MergePanel을 찾거나, 씬 전체에서 탐색
+            Transform t = UIManager.Instance != null ? UIManager.Instance.transform.Find("MergePanel") : null;
+            if (t != null)
+                mergeUI = t.gameObject;
+            else
+            {
+                GameObject go = GameObject.Find("MergePanel");
+                if (go != null)
+                    mergeUI = go;
+            }
         }
 
+        // interactUI 자동 할당
         if (interactUI == null)
         {
-            Transform t = UIManager.Instance.transform.Find("Button");
-            if (t != null) interactUI = t.gameObject;
+            Transform t = UIManager.Instance != null ? UIManager.Instance.transform.Find("E") : null;
+            if (t != null)
+                interactUI = t.gameObject;
+            else
+            {
+                GameObject go = GameObject.Find("E");
+                if (go != null)
+                    interactUI = go;
+            }
         }
 
         stationUI = FindObjectOfType<MergeStationUI>();
-        player = GameObject.FindWithTag("Player").transform;
+        player = GameObject.FindWithTag("Player")?.transform;
         cam = Camera.main;
 
         if (interactUI != null)

@@ -10,6 +10,7 @@ public interface ITriggerBox
 public class TriggerBox : MonoBehaviour
 {
     public enum TriggerBoxRangeType { cancellation, maintain, notUse }
+
     [Header("해제 범위")]
     public TriggerBoxRangeType rangeType = TriggerBoxRangeType.notUse;
     // 이 영역이 어떻게 사용될지에 대한 열거형
@@ -17,19 +18,18 @@ public class TriggerBox : MonoBehaviour
     // maintain - 트리거박스의 유지 영역 (영역을 벗어났을 경우 해제)
     // notUse - 일회용. 스크립트가 한 번 작동 후 꺼짐. TriggerOut() 은 호출될 수 없음.
 
-    public Vector2 hitboxOffset = Vector2.zero;    // 오프셋
-    public Vector2 hitboxSize = new Vector2(1.0f, 1.0f); // 크기 (width, height)
+    public Vector3 hitboxOffset = Vector3.zero;    // 오프셋
+    public Vector3 hitboxSize = new Vector3(1.0f, 1.0f, 1.0f); // 크기 (width, height, depth)
     public LayerMask playerLayer;
 
     ITriggerBox[] triggerBoxParts;
-    //ITriggerBox[] TBP;    // 야!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     bool isEnabled = false;
-    Vector2 boxCenter;
+    Vector3 boxCenter;
 
     void Start()
     {
-        Collider2D col = GetComponent<Collider2D>();
+        Collider col = GetComponent<Collider>();
         if (col == null)
         {
             Destroy(gameObject);
@@ -47,16 +47,18 @@ public class TriggerBox : MonoBehaviour
             return;
         }
 
-        boxCenter = (Vector2)transform.position + hitboxOffset;
+        boxCenter = transform.position + hitboxOffset;
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter(Collider other)
     {
         if (isEnabled) return;
 
         if (other.gameObject == PlayerMovement.Instance.gameObject)
         {
+            Debug.Log("플레이어가 TriggerBox에 들어왔습니다.");
             TriggerParts(true);
+
             if (rangeType == TriggerBoxRangeType.notUse)
             {
                 this.enabled = false;
@@ -107,23 +109,29 @@ public class TriggerBox : MonoBehaviour
 
     public bool IsPlayerInRange()
     {
-        Collider2D hitCollider = Physics2D.OverlapBox(
+        Collider[] hits = Physics.OverlapBox(
             boxCenter,
-            hitboxSize,
-            0f,
+            hitboxSize * 0.5f,
+            Quaternion.identity,
             playerLayer
         );
 
-        return hitCollider != null && hitCollider.gameObject == PlayerMovement.Instance.gameObject;
+        foreach (var hit in hits)
+        {
+            if (hit.gameObject == PlayerMovement.Instance.gameObject)
+                return true;
+        }
+
+        return false;
         // 이거 왜 if안에 넣었지? 이렇게 해도 되는거잖아 정신차려정신차려정신차려정신차려정신차려정신차려정신차려정신차려정신차려정신차려정신차려
     }
 
-    private void OnDrawGizmosSelected() 
+    private void OnDrawGizmosSelected()
     {
         if (rangeType == TriggerBoxRangeType.notUse) return;
         Gizmos.color = Color.violet;
 
-        Vector2 hitboxGizmoCenter = (Vector2)transform.position + hitboxOffset;
+        Vector3 hitboxGizmoCenter = transform.position + hitboxOffset;
         Gizmos.DrawWireCube(hitboxGizmoCenter, hitboxSize);
     }
 }
