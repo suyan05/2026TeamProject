@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-// 1. 메인 보스 AI 클래스
+
 public class BossGuardian : BossBase
 {
     [Header("Player Target")]
@@ -24,8 +24,15 @@ public class BossGuardian : BossBase
 
     private int attackPatternCounter = 0;
 
+    
+    private Rigidbody rb;
+    private Animator anim;
+
     private void Start()
     {
+        rb = GetComponent<Rigidbody>();
+        anim = GetComponentInChildren<Animator>();
+
         StartCoroutine(BossAIRoutine());
     }
 
@@ -51,7 +58,7 @@ public class BossGuardian : BossBase
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
             {
-                StartCoroutine(GroggyStateRoutine());
+                yield return StartCoroutine(GroggyStateRoutine()); 
                 continue;
             }
 
@@ -67,17 +74,17 @@ public class BossGuardian : BossBase
                 int randomCombo = Random.Range(0, 2);
                 if (randomCombo == 0)
                 {
-                    Debug.Log("<color=red>[2페이즈 연계 콤보] 덩굴 속박 흡수 ? 내리찍기 연계 시작!</color>");
+                    Debug.Log("<color=red>[2페이즈 연계 콤보] 덩굴 속박 흡수 -> 내리찍기 연계 시작!</color>");
                     yield return StartCoroutine(Pattern_VineBind());
                     yield return new WaitForSeconds(0.5f);
                     yield return StartCoroutine(Pattern_Smash());
                 }
                 else
                 {
-                    Debug.Log("<color=red>[2페이즈 연계 콤보] 씨앗 투사체 발사 ? 덩굴 채찍 휘두르기 시작!</color>");
+                    Debug.Log("<color=red>[2페이즈 연계 콤보] 씨앗 투사체 발사 -> 덩굴 채찍 휘두르기 시작!</color>");
                     yield return StartCoroutine(Pattern_SpawnSeeds());
                     yield return new WaitForSeconds(0.8f);
-                    Debug.Log("보스 액션: 광역 덩굴 채찍 휘두르기로 연계 타격!");
+                    Debug.Log("보스 액션: 광역 덩굴 채찍 휘두르기로 연계 타격! (애니메이션 연동 포인트)");
                 }
             }
         }
@@ -95,9 +102,9 @@ public class BossGuardian : BossBase
         yield return new WaitForSeconds(1.5f);
         if (redCircleIndicator != null) redCircleIndicator.SetActive(false);
 
+        
         GameObject vine = Instantiate(vineTrapPrefab, playerTransform.position, Quaternion.identity);
 
-        // 에러 방지: 컴포넌트가 없으면 동적으로 붙여서 작동하도록 수정
         VineTrapObject vineScript = vine.GetComponent<VineTrapObject>();
         if (vineScript == null) vineScript = vine.AddComponent<VineTrapObject>();
         vineScript.Setup(this);
@@ -113,7 +120,19 @@ public class BossGuardian : BossBase
 
         Debug.Log("보스가 팔을 크게 들어 올린 뒤 전방을 강하게 내리찍음");
 
+      
         Instantiate(smashWavePrefab, transform.position + transform.forward * 1.5f, transform.rotation);
+
+        
+        Collider[] hitPlayers = Physics.OverlapSphere(transform.position + transform.forward * 2f, 3.0f);
+        foreach (var hit in hitPlayers)
+        {
+            if (hit.CompareTag("Player"))
+            {
+                PlayerMovement.Instance.GetDamage(25f, transform); 
+            }
+        }
+
         Debug.Log("패턴 시전: 전방 강하게 내리찍기 및 직선 충격파 발사 완료");
     }
 
@@ -125,6 +144,7 @@ public class BossGuardian : BossBase
         {
             if (playerTransform == null) break;
 
+            
             Vector3 targetPosition = playerTransform.position + Random.insideUnitSphere * 2.5f;
             targetPosition.y = transform.position.y;
 
@@ -136,7 +156,6 @@ public class BossGuardian : BossBase
 
             GameObject seed = Instantiate(seedProjectilePrefab, shootPoint.position, Quaternion.identity);
 
-            // 에러 방지: 컴포넌트가 없으면 동적으로 붙여서 작동하도록 수정
             SeedProjectileObject seedScript = seed.GetComponent<SeedProjectileObject>();
             if (seedScript == null) seedScript = seed.AddComponent<SeedProjectileObject>();
             seedScript.Launch(targetPosition);
@@ -150,7 +169,7 @@ public class BossGuardian : BossBase
     {
         isGroggy = true;
         attackPatternCounter = 0;
-        Debug.Log("<color=cyan><b> [이벤트] 보스가 그로기 상태에 빠졌습니다! (받는 피해 30% 증가)</b></color>");
+        Debug.Log("<color=cyan><b>  보스가 그로기 상태에 빠졌습니다!(받는 피해 30% 증가)</b></color>");
         yield return new WaitForSeconds(4.0f);
         isGroggy = false;
         Debug.Log("보스가 그로기 상태에서 깨어났습니다.");
@@ -191,7 +210,7 @@ public class BossGuardian : BossBase
 }
 
 // ====================================================================
-// 2. [추가] 에러 방지를 위해 같은 파일 하단에 클래스를 함께 선언합니다.
+// 2. 3D 기반 서브 클래스 (오브젝트 판정 컴포넌트)
 // ====================================================================
 
 public class VineTrapObject : MonoBehaviour
@@ -206,6 +225,7 @@ public class VineTrapObject : MonoBehaviour
         Destroy(gameObject, 4f);
     }
 
+    // ?? 3D 트리거 충돌 판정으로 명확히 선언 (Collider)
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") && !isPlayerTrapped)
@@ -223,7 +243,13 @@ public class VineTrapObject : MonoBehaviour
             timer += Time.deltaTime;
             if (bossRef != null)
             {
-                bossRef.Heal(15f * Time.deltaTime);
+                bossRef.Heal(15f * Time.deltaTime); // 보스 힐 기믹 유지
+            }
+
+            // 플레이어에게 지속 대미지를 주기 위해 인스턴스 연동 가능
+            if (PlayerMovement.Instance != null && Time.frameCount % 30 == 0) // 프레임 최적화 간격 대미지
+            {
+                PlayerMovement.Instance.GetDamage(2f, transform);
             }
 
             if (timer >= 2.0f)
@@ -253,7 +279,7 @@ public class SeedProjectileObject : MonoBehaviour
         {
             progress += Time.deltaTime * 2f;
             Vector3 currentPos = Vector3.Lerp(startPos, targetPos, progress);
-            currentPos.y += Mathf.Sin(progress * Mathf.PI) * 3f;
+            currentPos.y += Mathf.Sin(progress * Mathf.PI) * 3f; // 3D 포물선 궤도 유지
             transform.position = currentPos;
             yield return null;
         }
@@ -265,11 +291,14 @@ public class SeedProjectileObject : MonoBehaviour
     {
         yield return new WaitForSeconds(1.0f);
 
+        // ?? 3D 공간 구체 체크 (Physics.OverlapSphere)
         Collider[] hitPlayers = Physics.OverlapSphere(transform.position, 3.5f);
         foreach (var player in hitPlayers)
         {
             if (player.CompareTag("Player"))
             {
+                // [3D 대미지 판정 구현]
+                PlayerMovement.Instance.GetDamage(15f, transform); // 씨앗 폭발 대미지 15f 부여
                 Debug.Log("씨앗 폭발! 범위 내 플레이어가 피해를 입었습니다.");
             }
         }
