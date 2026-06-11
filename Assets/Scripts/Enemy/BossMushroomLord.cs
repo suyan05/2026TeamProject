@@ -63,7 +63,7 @@ public class BossMushroomLord : BossBase
         }
     }
 
-    // 기본 평타 루틴
+    // 기본 평타 및 이동 루틴
     private IEnumerator NormalAttackRoutine()
     {
         yield return new WaitForSeconds(3.5f);
@@ -72,6 +72,8 @@ public class BossMushroomLord : BossBase
         {
             if (isGroggy || isPhaseTransitioning || isExecutingPattern || playerTransform == null)
             {
+                
+                if (anim != null) anim.SetBool("Walk", false);
                 yield return null;
                 continue;
             }
@@ -80,6 +82,9 @@ public class BossMushroomLord : BossBase
 
             if (dist <= attackRange)
             {
+               
+                anim.SetBool("Walk", false);
+
                 anim.Play("Attack", 0, 0f);
 
                 // 플레이어 데미지
@@ -89,7 +94,8 @@ public class BossMushroomLord : BossBase
             }
             else
             {
-                anim.Play("Armature|Armature|Idle", 0, 0f);
+                
+                anim.SetBool("Walk", true);
                 yield return new WaitForSeconds(0.1f);
             }
         }
@@ -157,7 +163,8 @@ public class BossMushroomLord : BossBase
     {
         if (playerTransform == null) yield break;
 
-        anim.Play("Armature|Armature|Idle", 0, 0f);
+        
+        anim.SetTrigger("Static");
 
         Vector3 landPos = playerTransform.position;
 
@@ -236,6 +243,9 @@ public class BossMushroomLord : BossBase
     // 2페이즈 광역 폭발
     private IEnumerator Combo_SuckAndExplode()
     {
+        
+        anim.SetTrigger("Static");
+
         yield return new WaitForSeconds(2f);
 
         Collider[] hits = Physics.OverlapSphere(transform.position, 6.5f);
@@ -245,6 +255,7 @@ public class BossMushroomLord : BossBase
                 PlayerMovement_3D.Instance.GetDamage(25f, transform);
         }
     }
+
     // 그로기 상태 루틴 추가
     private IEnumerator GroggyStateRoutine()
     {
@@ -260,15 +271,27 @@ public class BossMushroomLord : BossBase
         currentPhase++; // Phase 증가
         isPhaseTransitioning = false;
     }
+
+    
     protected override void Die()
     {
         isDead = true;
-        anim.Play("Die", 0, 0f); // 죽음 애니메이션 재생
+
+       
+        if (anim != null) anim.SetTrigger("Die");
+
         StopAllCoroutines(); // 모든 코루틴 중지
-        // 추가적으로 필요한 로직 (예: 보스 제거, 보상 지급 등)
+
+       
+        if (RewardManager.Instance != null)
+        {
+            RewardManager.Instance.ShowRewardSelection();
+        }
+
         Destroy(gameObject, 5f); // 5초 후 보스 오브젝트 제거
     }
-    // 포자 지뢰
+
+    // 포자 지뢰 서브 클래스
     public class MushroomLandmine : MonoBehaviour
     {
         private bool isTriggered = false;
@@ -307,7 +330,7 @@ public class BossMushroomLord : BossBase
         }
     }
 
-    // 낙하 장애물
+    
     public class MushroomFallingObstacle : MonoBehaviour
     {
         private Vector3 targetFloorPos;

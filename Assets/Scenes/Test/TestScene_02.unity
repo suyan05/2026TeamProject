@@ -2675,8 +2675,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriggerBox
   rangeType: 0
-  hitboxOffset: {x: 4, y: 0}
-  hitboxSize: {x: 1, y: 1}
+  hitboxOffset: {x: 4, y: 0, z: 0}
+  hitboxSize: {x: 1, y: 1, z: 1}
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
@@ -3349,8 +3349,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriggerBox
   rangeType: 0
-  hitboxOffset: {x: -4, y: 0}
-  hitboxSize: {x: 1, y: 1}
+  hitboxOffset: {x: -4, y: 0, z: 0}
+  hitboxSize: {x: 1, y: 1, z: 1}
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
@@ -6772,7 +6772,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1769930509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7751,8 +7751,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriggerBox
   rangeType: 1
-  hitboxOffset: {x: 0, y: 0}
-  hitboxSize: {x: 1, y: 1}
+  hitboxOffset: {x: 0, y: 0, z: 0}
+  hitboxSize: {x: 1, y: 1, z: 1}
   playerLayer:
     serializedVersion: 2
     m_Bits: 512
