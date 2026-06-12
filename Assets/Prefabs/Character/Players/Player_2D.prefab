@@ -88,7 +88,7 @@ MonoBehaviour:
   currentHp: 0
   controlLocked: 0
   maxSpeed: 10
-  jumpForce: 11
+  jumpForce: 8
   acceleration: 20
   deceleration: 50
   animator: {fileID: 4198326858871312266}
