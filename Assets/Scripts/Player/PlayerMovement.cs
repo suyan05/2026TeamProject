@@ -416,13 +416,22 @@ public class PlayerMovement : MonoBehaviour
         Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * lastInputDirection, hitboxOffset.y, hitboxOffset.z);
         Vector3 worldCenter = transform.position + localAdjustedOffset;
 
+        
         Collider[] hitTargets = Physics.OverlapBox(worldCenter, hitboxSize * 0.5f, Quaternion.identity, enemyLayer);
 
         foreach (Collider targetCollider in hitTargets)
         {
+            
             if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
             {
                 enemyCombat.GetDamage(Damage, transform);
+                Debug.Log($"[일반몹 타격] {targetCollider.name}에게 {Damage}의 피해!");
+            }
+            
+            else if (targetCollider.TryGetComponent<BossBase>(out BossBase boss))
+            {
+                boss.TakeDamage(Damage); 
+                Debug.Log($"[보스몹 타격] {targetCollider.name}에게 {Damage}의 피해!");
             }
         }
     }

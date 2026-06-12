@@ -213839,6 +213839,74 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: playerTransform
+      value: 
+      objectReference: {fileID: 1721672414}
+    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: landmineSporePrefab
+      value: 
+      objectReference: {fileID: 6036688514831096253, guid: 8896c3cf76aaf3e47a578b9d34d4bae9, type: 3}
+    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: minionMushroomPrefab
+      value: 
+      objectReference: {fileID: 7739543428553537623, guid: d1622e277c7914542a82cc4e958b9cae, type: 3}
+    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: fallingMushroomPrefab
+      value: 
+      objectReference: {fileID: 3722489255312448586, guid: 6c9a7b8b1cf5e6d4cb56856df91f0e44, type: 3}
+    - target: {fileID: 449700765456748431, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_Name
+      value: BossMushroom
+      objectReference: {fileID: 0}
+    - target: {fileID: 449700765456748431, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -11.961425
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 10.13
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9163604667283284960, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8857819555115246, guid: 6b2720baa67d59745b54b0a24ad48833, type: 3}
       propertyPath: m_Layer
       value: 12
@@ -214634,78 +214702,6 @@ PrefabInstance:
     - target: {fileID: 9174346618153462195, guid: 6b2720baa67d59745b54b0a24ad48833, type: 3}
       propertyPath: m_Layer
       value: 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: maxHealth
-      value: 200
-      objectReference: {fileID: 0}
-    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: playerTransform
-      value: 
-      objectReference: {fileID: 1721672414}
-    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: landmineSporePrefab
-      value: 
-      objectReference: {fileID: 6036688514831096253, guid: 8896c3cf76aaf3e47a578b9d34d4bae9, type: 3}
-    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: minionMushroomPrefab
-      value: 
-      objectReference: {fileID: 7739543428553537623, guid: d1622e277c7914542a82cc4e958b9cae, type: 3}
-    - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: fallingMushroomPrefab
-      value: 
-      objectReference: {fileID: 3722489255312448586, guid: 6c9a7b8b1cf5e6d4cb56856df91f0e44, type: 3}
-    - target: {fileID: 449700765456748431, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_Name
-      value: BossMushroom
-      objectReference: {fileID: 0}
-    - target: {fileID: 449700765456748431, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_Layer
-      value: 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -11.961425
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 10.13
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9163604667283284960, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
-      propertyPath: m_IsTrigger
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -38,7 +38,6 @@ public class BossMushroomLord : BossBase
 
         rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
 
-        // 자동 플레이어 탐색
         if (playerTransform == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -61,10 +60,9 @@ public class BossMushroomLord : BossBase
     private void LateUpdate()
     {
         Vector3 pos = transform.position;
-        pos.z = 0f; // Z축 고정
+        pos.z = 0f;
         transform.position = pos;
     }
-
 
     private void RotateTowardPlayer()
     {
@@ -90,84 +88,87 @@ public class BossMushroomLord : BossBase
         return dot > 0.6f;
     }
 
+   
     private IEnumerator NormalAttackRoutine()
     {
         yield return new WaitForSeconds(3.5f);
 
         while (!isDead)
         {
-            // 공격 불가 상태
             if (isGroggy || isPhaseTransitioning || isExecutingPattern || playerTransform == null)
             {
-                anim.SetBool("Walk", false);
                 yield return null;
                 continue;
             }
 
             float dist = Vector3.Distance(transform.position, playerTransform.position);
-
-            // 공격 조건
-            bool canAttack =
-                dist <= attackRange &&     // 공격 범위 안
-                IsPlayerInFront() &&       // 정면
-                !isExecutingPattern &&     // 패턴 중 아님
-                !isGroggy &&               // 그로기 아님
-                !isPhaseTransitioning;     // 페이즈 전환 중 아님
+            bool canAttack = dist <= attackRange && IsPlayerInFront();
 
             if (canAttack)
             {
-                anim.SetBool("Walk", false);
-                anim.CrossFade("Attack", 0.1f);
+                if (anim != null) anim.SetBool("Walk", false);
+                if (anim != null) anim.CrossFade("Attack", 0.1f);
 
-                // 플레이어 데미지
-                PlayerMovement.Instance.GetDamage(20f, transform);
+                if (PlayerMovement.Instance != null)
+                    PlayerMovement.Instance.GetDamage(20f, transform);
 
                 yield return new WaitForSeconds(attackCooldown);
             }
             else
             {
-                // 공격 범위 밖 → 이동 또는 패트롤
-                anim.SetBool("Walk", true);
-
-                // 플레이어가 멀면 패트롤
-                if (dist > 12f)
-                    PatrolMove();
-
+                
                 yield return null;
             }
         }
     }
 
-
-    private void PatrolMove()
-    {
-        anim.SetBool("Walk", true);
-
-        transform.position = Vector3.MoveTowards(
-            transform.position,
-            patrolTarget,
-            patrolSpeed * Time.deltaTime
-        );
-
-        if (Vector3.Distance(transform.position, patrolTarget) < 0.5f)
-            SetNewPatrolPoint();
-    }
-
-    private void SetNewPatrolPoint()
-    {
-        Vector2 rand = Random.insideUnitCircle * patrolRadius;
-        patrolTarget = patrolCenter + new Vector3(rand.x, 0, rand.y);
-    }
-
+    
     private IEnumerator BossAIRoutine()
     {
         yield return new WaitForSeconds(3f);
 
         while (!isDead)
         {
-            yield return new WaitForSeconds(4f);
+            
+            float waitTimer = 0f;
+            while (waitTimer < 4f)
+            {
+                if (isPhaseTransitioning || isGroggy || isDead) break;
 
-            if (isPhaseTransitioning || isGroggy) continue;
+                if (playerTransform != null)
+                {
+                    float dist = Vector3.Distance(transform.position, playerTransform.position);
+
+                    
+                    if (dist > attackRange)
+                    {
+                        if (anim != null) anim.SetBool("Walk", true);
+
+                        
+                        if (dist > 12f)
+                        {
+                            PatrolMove();
+                        }
+                        else
+                        {
+                            
+                            Vector3 targetPos = playerTransform.position;
+                            targetPos.y = transform.position.y;
+                            targetPos.z = transform.position.z;
+
+                            transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
+                        }
+                    }
+                }
+
+                waitTimer += Time.deltaTime;
+                yield return null;
+            }
+
+            if (isPhaseTransitioning || isGroggy || isDead) continue;
+
+            
+            if (anim != null) anim.SetBool("Walk", false);
 
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
@@ -198,6 +199,25 @@ public class BossMushroomLord : BossBase
         }
     }
 
+    private void PatrolMove()
+    {
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            patrolTarget,
+            patrolSpeed * Time.deltaTime
+        );
+
+        if (Vector3.Distance(transform.position, patrolTarget) < 0.5f)
+            SetNewPatrolPoint();
+    }
+
+    private void SetNewPatrolPoint()
+    {
+        Vector2 rand = Random.insideUnitCircle * patrolRadius;
+        patrolTarget = patrolCenter + new Vector3(rand.x, 0, rand.y);
+    }
+
+    // --- (이하 하단에 있는 Pattern_SummonMinions, Die 등 기존 클래스/함수들은 변경 없이 그대로 두시면 됩니다!) ---
     private void Pattern_SummonMinions()
     {
         int count = Random.Range(2, 5);

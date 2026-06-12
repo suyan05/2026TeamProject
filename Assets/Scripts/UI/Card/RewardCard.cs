@@ -7,20 +7,24 @@ public class RewardCard : MonoBehaviour
     [Header("UI 연결")]
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI descText;
+
+
     public Image iconImage;
 
     private ItemData itemData; // 내가 품고 있는 아이템 정보
 
     public void Setup(ItemData data)
     {
-        itemData = data; 
+        itemData = data;
 
         if (nameText != null) nameText.text = data.itemName;
         if (descText != null) descText.text = data.description;
+
+       
         if (iconImage != null) iconImage.sprite = data.icon;
     }
 
-   
+
     public void OnClickCard()
     {
         if (itemData != null)
