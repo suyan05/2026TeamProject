@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody), typeof(Collider))]
 public class PlayerMovement : MonoBehaviour
@@ -211,11 +212,6 @@ public class PlayerMovement : MonoBehaviour
             Input.GetKeyUp(kb.weapon2Key);
     }
 
-    private void FixedUpdate()
-    {
-        
-    }
-
     void BowMoveHandler()
     {
         sbyte horizontal = 0;
@@ -367,7 +363,18 @@ public class PlayerMovement : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("Player has died.");
+        controlLocked = true;
+        rb.linearVelocity = Vector3.zero;
+
+        animator?.SetTrigger("Death");
+
+        StartCoroutine(DeathRoutine());
+    }
+
+    IEnumerator DeathRoutine()
+    {
+        yield return new WaitForSeconds(2f); // Death 애니메이션 길이
+        SceneManager.LoadScene("StartScene_Test");
     }
 
     void LaunchArrow()
