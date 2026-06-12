@@ -13,11 +13,15 @@ public abstract class BossBase : MonoBehaviour
     [Header("Phase & State Settings")]
     public int currentPhase = 1;
     public bool isPhaseTransitioning = false;
-    public bool isGroggy = false; // 그로기 상태 관리
+    public bool isGroggy = false;
     protected bool isDead = false;
 
     [Header("UI Reference")]
-    public Slider hpBar; // 보스 체력바 슬라이더
+    public Slider hpBar;
+
+    [Header("Attack Settings")]
+    public float attackRange = 3f;
+    public bool showAttackRange = true;
 
     protected virtual void Awake()
     {
@@ -33,32 +37,43 @@ public abstract class BossBase : MonoBehaviour
     {
         if (isDead || isPhaseTransitioning) return;
 
-        // 기획서 내용: 그로기 동안 보스가 받는 피해 30% 증가
         if (isGroggy)
-        {
             damage *= 1.3f;
-        }
 
         currentHealth -= damage;
         if (hpBar != null) hpBar.value = currentHealth;
 
-        // 체력이 50% 이하로 떨어지면 2페이즈 진입 연출 트리거
         if (currentPhase == 1 && currentHealth <= maxHealth * 0.5f)
-        {
             StartCoroutine(PhaseTransitionRoutine());
-        }
 
-        if (currentHealth <= 0 && !isDead) Die();
+        if (currentHealth <= 0 && !isDead)
+            Die();
     }
 
-    // 기획서 내용: 덩굴 속박 흡수 기믹용 체력 회복 함수
+    public bool IsPlayerInAttackRange(Transform player)
+    {
+        if (player == null) return false;
+        return Vector3.Distance(transform.position, player.position) <= attackRange;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!showAttackRange) return;
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
+    }
+
     public void Heal(float amount)
     {
         if (isDead) return;
+
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
-        if (hpBar != null) hpBar.value = currentHealth;
-        Debug.Log($"{bossName} 체력 회복 (+{amount}). 현재 체력: {currentHealth}");
+
+        if (hpBar != null)
+            hpBar.value = currentHealth;
     }
+
 
     protected abstract IEnumerator PhaseTransitionRoutine();
     protected abstract void Die();

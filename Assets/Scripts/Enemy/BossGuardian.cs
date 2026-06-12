@@ -1,14 +1,13 @@
 using UnityEngine;
 using System.Collections;
 
-// 1. ¸ÞÀÎ º¸½º AI Å¬·¡½º
 public class BossGuardian : BossBase
 {
     [Header("Player Target")]
     public Transform playerTransform;
 
-    [Header("ÀÎ½Ä ¹üÀ§ ¼³Á¤")]
-    public float detectionRange = 5.0f;        // ÀÌÁ¦ 5m ¾ÈÀ¸·Î µé¾î¿À¸é Ãß°ÝÀ» ½ÃÀÛÇÕ´Ï´Ù!
+    [Header("ï¿½Î½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
+    public float detectionRange = 5.0f;        // ï¿½ï¿½ï¿½ï¿½ 5m ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½!
     private bool isPlayerDetected = false;
 
     [Header("Pattern Prefabs")]
@@ -17,16 +16,26 @@ public class BossGuardian : BossBase
     public GameObject seedProjectilePrefab;
     public Transform shootPoint;
 
-    [Header("ÀüÅõ UI °æ°í ¿¬Ãâ")]
+    [Header("Indicators")]
     public GameObject redCircleIndicator;
     public GameObject yellowDotIndicator;
     public GameObject warningLineIndicator;
 
-    [Header("2ÆäÀÌÁî ¾àÁ¡ ½Ã½ºÅÛ")]
+    [Header("Phase 2 Settings")]
     public int remainingWeaknessVines = 3;
     private float defenseModifier = 0f;
 
+    private Animator anim;
+    private Rigidbody rb;
+
     private int attackPatternCounter = 0;
+    private bool isExecutingPattern = false;
+
+    [Header("Patrol Settings")]
+    public float patrolRadius = 6f;
+    public float patrolSpeed = 2f;
+    private Vector3 patrolCenter;
+    private Vector3 patrolTarget;
 
     private Rigidbody rb;
     private Animator anim;
@@ -36,7 +45,7 @@ public class BossGuardian : BossBase
         rb = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
 
-        // ?? [ÀÚµ¿ ÃßÀû ¾ÈÀüÀåÄ¡] È¤½Ã ÀÎ½ºÆåÅÍ¿¡ Å¸°ÙÀ» ¾È ³Ö¾ú¾îµµ Player ÅÂ±×·Î ÀÚµ¿ Á¤¹Ð Á¶ÁØ!
+        // ?? [ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¡] È¤ï¿½ï¿½ ï¿½Î½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö¾ï¿½ï¿½îµµ Player ï¿½Â±×·ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!
         if (playerTransform == null)
         {
             GameObject playerObj = GameObject.FindWithTag("Player");
@@ -46,18 +55,67 @@ public class BossGuardian : BossBase
         StartCoroutine(BossAIRoutine());
     }
 
+    private void Update()
+    {
+        if (!isDead && !isGroggy && !isExecutingPattern)
+            RotateTowardPlayer();
+    }
+
+    private void RotateTowardPlayer()
+    {
+        if (playerTransform == null) return;
+
+        Vector3 dir = playerTransform.position - transform.position;
+        dir.y = 0f;
+
+        if (dir.sqrMagnitude > 0.01f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(dir);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 5f);
+        }
+    }
+
+    private bool IsPlayerInFront()
+    {
+        if (playerTransform == null) return false;
+
+        Vector3 dir = (playerTransform.position - transform.position).normalized;
+        float dot = Vector3.Dot(transform.forward, dir);
+
+        return dot > 0.6f;
+    }
+
+    private void PatrolMove()
+    {
+        anim.SetBool("Walk", true);
+
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            patrolTarget,
+            patrolSpeed * Time.deltaTime
+        );
+
+        if (Vector3.Distance(transform.position, patrolTarget) < 0.5f)
+            SetNewPatrolPoint();
+    }
+
+    private void SetNewPatrolPoint()
+    {
+        Vector2 rand = Random.insideUnitCircle * patrolRadius;
+        patrolTarget = patrolCenter + new Vector3(rand.x, 0, rand.y);
+    }
+
     public override void TakeDamage(float damage)
     {
         if (currentPhase == 2 && remainingWeaknessVines > 0)
-        {
             damage *= (1f - defenseModifier);
-        }
+
         base.TakeDamage(damage);
     }
 
     private IEnumerator BossAIRoutine()
     {
-        // ================= [1´Ü°è: Ã¶ÀúÇÑ ÇÃ·¹ÀÌ¾î °¨Áö ´ë±â] =================
+        // ================= [1ï¿½Ü°ï¿½: Ã¶ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½] =================
         while (!isPlayerDetected)
         {
             if (playerTransform != null)
@@ -66,7 +124,7 @@ public class BossGuardian : BossBase
                 if (distance <= detectionRange)
                 {
                     isPlayerDetected = true;
-                    Debug.Log("<color=red><b>[°æ°í] º¸½º°¡ ÇÃ·¹ÀÌ¾î¸¦ °¨ÁöÇß½À´Ï´Ù! Ãß°ÝÀ» ½ÃÀÛÇÕ´Ï´Ù.</b></color>");
+                    Debug.Log("<color=red><b>[ï¿½ï¿½ï¿½] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½! ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.</b></color>");
                 }
             }
 
@@ -75,10 +133,10 @@ public class BossGuardian : BossBase
         }
         // ===================================================================
 
-        // ÇÃ·¹ÀÌ¾î ÃÖÃÊ °¨Áö ÈÄ Ã¹ Çàµ¿ Àü ¼û°í¸£±â (2ÃÊ)
+        // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ã¹ ï¿½àµ¿ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (2ï¿½ï¿½)
         yield return new WaitForSeconds(2.0f);
 
-        // ================= [2´Ü°è: º»°ÝÀûÀÎ Ãß°Ý ¹× ÀüÅõ ·çÇÁ] =================
+        // ================= [2ï¿½Ü°ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½] =================
         while (!isDead)
         {
             if (isPhaseTransitioning || isGroggy)
@@ -87,18 +145,18 @@ public class BossGuardian : BossBase
                 continue;
             }
 
-            // ???¡Î? [ÇÙ½É ¹«ºù ÄÚµå Ãß°¡] ´Ü¼ø ´ë±â ´ë½Å, 3.5ÃÊ µ¿¾È ÇÃ·¹ÀÌ¾î¸¦ ÁøÂ¥·Î ÂÑ¾Æ°©´Ï´Ù!
+            // ???ï¿½ï¿½? [ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ß°ï¿½] ï¿½Ü¼ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½, 3.5ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½Â¥ï¿½ï¿½ ï¿½Ñ¾Æ°ï¿½ï¿½Ï´ï¿½!
             if (anim != null) anim.SetBool("Walk", true);
 
             float moveTimer = 0f;
             while (moveTimer < 3.5f)
             {
-                // ÀÌµ¿ µµÁß ÆäÀÌÁî°¡ ¹Ù²î°Å³ª ±×·Î±â¿¡ °É¸®¸é Áï½Ã ÀÌµ¿ Áß´Ü
+                // ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½î°¡ ï¿½Ù²ï¿½Å³ï¿½ ï¿½×·Î±â¿¡ ï¿½É¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ß´ï¿½
                 if (isPhaseTransitioning || isGroggy || isDead) break;
 
                 if (playerTransform != null)
                 {
-                    // 1. ÇÃ·¹ÀÌ¾î¸¦ ÇâÇØ ºÎµå·´°Ô È¸Àü (°í°³°¡ ¶¥À¸·Î ²ªÀÌÁö ¾Ê°Ô YÃàÀº °íÁ¤)
+                    // 1. ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ È¸ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°ï¿½ Yï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
                     Vector3 direction = playerTransform.position - transform.position;
                     direction.y = 0;
                     if (direction != Vector3.zero)
@@ -106,18 +164,18 @@ public class BossGuardian : BossBase
                         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 5f);
                     }
 
-                    // 2. ºÎ¸ð Å¬·¡½º(BossBase)ÀÇ moveSpeed ¼Óµµ·Î ÇÃ·¹ÀÌ¾î¸¦ ÇâÇØ ÁøÂ¥ ÁÂÇ¥ ÀÌµ¿!
+                    // 2. ï¿½Î¸ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½(BossBase)ï¿½ï¿½ moveSpeed ï¿½Óµï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Â¥ ï¿½ï¿½Ç¥ ï¿½Ìµï¿½!
                     transform.position = Vector3.MoveTowards(transform.position, playerTransform.position, moveSpeed * Time.deltaTime);
                 }
 
                 moveTimer += Time.deltaTime;
-                yield return null; // ¸Å ÇÁ·¹ÀÓ ¹° Èå¸£µíÀÌ ¹«ºù ¿¬»ê
+                yield return null; // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½å¸£ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             }
 
-            // Ãß°ÝÀÌ ³¡³ª¸é ÆÐÅÏ °ø°ÝÀ» À§ÇØ ÀÌµ¿ Á¤Áö
+            // ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½
             if (isPhaseTransitioning || isGroggy || isDead) continue;
 
-            // ±×·Î±â Ä«¿îÆ® Ã¼Å©
+            // ï¿½×·Î±ï¿½ Ä«ï¿½ï¿½Æ® Ã¼Å©
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
             {
@@ -126,38 +184,41 @@ public class BossGuardian : BossBase
                 continue;
             }
 
-            // ÆÐÅÏ ½ÃÀü ´Ü°è: °ø°ÝÇÒ ¶§´Â °È±â ¾Ö´Ï¸ÞÀÌ¼ÇÀ» ²ô°í Idle »óÅÂ¿¡¼­ Æ®¸®°Å ÀÛµ¿
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ü°ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ Idle ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½Ûµï¿½
             if (anim != null) anim.SetBool("Walk", false);
             yield return new WaitForSeconds(0.1f);
 
-            // ·£´ý ÆÐÅÏ ¹ßµ¿
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ßµï¿½
             if (currentPhase == 1)
             {
-                int randomPattern = Random.Range(0, 3);
-                if (randomPattern == 0) yield return StartCoroutine(Pattern_VineBind());
-                else if (randomPattern == 1) yield return StartCoroutine(Pattern_Smash());
+                int p = Random.Range(0, 3);
+                if (p == 0) yield return StartCoroutine(Pattern_VineBind());
+                else if (p == 1) yield return StartCoroutine(Pattern_Smash());
                 else yield return StartCoroutine(Pattern_SpawnSeeds());
             }
             else
             {
-                int randomCombo = Random.Range(0, 2);
-                if (randomCombo == 0)
+                int combo = Random.Range(0, 2);
+
+                if (combo == 0)
                 {
-                    Debug.Log("<color=red>[2ÆäÀÌÁî ¿¬°è ÄÞº¸] µ¢±¼ ¼Ó¹Ú Èí¼ö -> ³»¸®Âï±â ¿¬°è ½ÃÀÛ!</color>");
+                    Debug.Log("<color=red>[2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þºï¿½] ï¿½ï¿½ï¿½ï¿½ ï¿½Ó¹ï¿½ ï¿½ï¿½ï¿½ -> ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!</color>");
                     yield return StartCoroutine(Pattern_VineBind());
                     yield return new WaitForSeconds(0.5f);
                     yield return StartCoroutine(Pattern_Smash());
                 }
                 else
                 {
-                    Debug.Log("<color=red>[2ÆäÀÌÁî ¿¬°è ÄÞº¸] ¾¾¾Ñ Åõ»çÃ¼ ¹ß»ç -> µ¢±¼ Ã¤Âï ÈÖµÎ¸£±â ½ÃÀÛ!</color>");
+                    Debug.Log("<color=red>[2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þºï¿½] ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã¼ ï¿½ß»ï¿½ -> ï¿½ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½ ï¿½ÖµÎ¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!</color>");
                     yield return StartCoroutine(Pattern_SpawnSeeds());
                     yield return new WaitForSeconds(0.8f);
 
                     if (anim != null) anim.SetTrigger("Attack");
-                    Debug.Log("º¸½º ¾×¼Ç: ±¤¿ª µ¢±¼ Ã¤Âï ÈÖµÎ¸£±â·Î ¿¬°è Å¸°Ý!");
+                    Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½×¼ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½ ï¿½ÖµÎ¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½!");
                 }
             }
+
+            isExecutingPattern = false;
         }
     }
 
@@ -167,11 +228,15 @@ public class BossGuardian : BossBase
 
         if (redCircleIndicator != null)
         {
-            redCircleIndicator.transform.position = new Vector3(playerTransform.position.x, transform.position.y, playerTransform.position.z);
+            redCircleIndicator.transform.position =
+                new Vector3(playerTransform.position.x, transform.position.y, playerTransform.position.z);
             redCircleIndicator.SetActive(true);
         }
+
         yield return new WaitForSeconds(1.5f);
-        if (redCircleIndicator != null) redCircleIndicator.SetActive(false);
+
+        if (redCircleIndicator != null)
+            redCircleIndicator.SetActive(false);
 
         if (anim != null) anim.SetTrigger("Attack");
 
@@ -180,14 +245,13 @@ public class BossGuardian : BossBase
         if (vineScript == null) vineScript = vine.AddComponent<VineTrapObject>();
         vineScript.Setup(this);
 
-        Debug.Log("ÆÐÅÏ ½ÃÀü: ÇÃ·¹ÀÌ¾î ¹ß¹Ø¿¡ ¼Ó¹Ú µ¢±¼ ¼ÒÈ¯");
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ß¹Ø¿ï¿½ ï¿½Ó¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯");
     }
 
     private IEnumerator Pattern_Smash()
     {
-        if (warningLineIndicator != null) warningLineIndicator.SetActive(true);
-        yield return new WaitForSeconds(1.5f);
-        if (warningLineIndicator != null) warningLineIndicator.SetActive(false);
+        if (warningLineIndicator != null)
+            warningLineIndicator.SetActive(true);
 
         if (anim != null) anim.SetTrigger("Attack");
 
@@ -201,7 +265,7 @@ public class BossGuardian : BossBase
                 PlayerMovement.Instance.GetDamage(25f, transform);
             }
         }
-        Debug.Log("ÆÐÅÏ ½ÃÀü: Àü¹æ ³»¸®Âï±â ¹× Ãæ°ÝÆÄ ¹ß»ç");
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½");
     }
 
     private IEnumerator Pattern_SpawnSeeds()
@@ -236,6 +300,7 @@ public class BossGuardian : BossBase
         isGroggy = true;
         attackPatternCounter = 0;
         yield return new WaitForSeconds(4.0f);
+
         isGroggy = false;
     }
 
@@ -248,6 +313,7 @@ public class BossGuardian : BossBase
         defenseModifier = 0.7f;
         remainingWeaknessVines = 3;
         yield return new WaitForSeconds(3.0f);
+
         isPhaseTransitioning = false;
     }
 
@@ -267,7 +333,7 @@ public class BossGuardian : BossBase
     }
 }
 
-// [¼­ºê Å¬·¡½ºµéÀº ÇÏ´Ü¿¡ µ¿ÀÏÇÏ°Ô À¯ÁöµÇ¹Ç·Î ÆíÀÇ»ó »ý·«]
+// [ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï´Ü¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¹Ç·ï¿½ ï¿½ï¿½ï¿½Ç»ï¿½ ï¿½ï¿½ï¿½ï¿½]
 
 
 
@@ -289,7 +355,6 @@ public class VineTrapObject : MonoBehaviour
         {
             isPlayerTrapped = true;
             timer = 0f;
-            Debug.Log("ÇÃ·¹ÀÌ¾î°¡ µ¢±¼¿¡ °É·Á 2ÃÊ°£ ¼Ó¹ÚµË´Ï´Ù! Áö¼Ó ÇÇÇØ ½ÃÀÛ");
         }
     }
 
@@ -298,10 +363,8 @@ public class VineTrapObject : MonoBehaviour
         if (isPlayerTrapped)
         {
             timer += Time.deltaTime;
-            if (bossRef != null)
-            {
-                bossRef.Heal(15f * Time.deltaTime);
-            }
+
+            bossRef.Heal(15f * Time.deltaTime);
 
             if (PlayerMovement.Instance != null && Time.frameCount % 30 == 0)
             {
@@ -317,6 +380,9 @@ public class VineTrapObject : MonoBehaviour
     }
 }
 
+// =============================================================
+// Seed Projectile
+// =============================================================
 public class SeedProjectileObject : MonoBehaviour
 {
     private Vector3 targetPos;
@@ -331,16 +397,19 @@ public class SeedProjectileObject : MonoBehaviour
     {
         float progress = 0f;
         Vector3 startPos = transform.position;
+
         while (progress < 1f)
         {
             progress += Time.deltaTime * 2f;
+
             Vector3 currentPos = Vector3.Lerp(startPos, targetPos, progress);
             currentPos.y += Mathf.Sin(progress * Mathf.PI) * 3f;
+
             transform.position = currentPos;
             yield return null;
         }
 
-        StartCoroutine(ExplosionRoutine());
+        yield return StartCoroutine(ExplosionRoutine());
     }
 
     private IEnumerator ExplosionRoutine()
@@ -353,9 +422,10 @@ public class SeedProjectileObject : MonoBehaviour
             if (player.CompareTag("Player"))
             {
                 PlayerMovement.Instance.GetDamage(15f, transform);
-                Debug.Log("¾¾¾Ñ Æø¹ß! ¹üÀ§ ³» ÇÃ·¹ÀÌ¾î°¡ ÇÇÇØ¸¦ ÀÔ¾ú½À´Ï´Ù.");
+                Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½! ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½Ø¸ï¿½ ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
             }
         }
+
         Destroy(gameObject);
     }
 }

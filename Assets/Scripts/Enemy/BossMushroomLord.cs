@@ -1,43 +1,52 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
-// 1. 메인 보스 AI 클래스
 public class BossMushroomLord : BossBase
 {
     [Header("Player Target")]
-    public Transform playerTransform; // 플레이어 위치 추적용
+    public Transform playerTransform;
 
     [Header("Pattern Prefabs")]
-    public GameObject minionMushroomPrefab;   // 독성 공격을 하는 작은 버섯 몬스터 프리팹
-    public GameObject landmineSporePrefab;    // 바닥에 배치할 포자 지뢰 프리팹
-    public GameObject fallingMushroomPrefab;  // 2페이즈 천장 낙하 장애물 프리팹
+    public GameObject minionMushroomPrefab;
+    public GameObject landmineSporePrefab;
+    public GameObject fallingMushroomPrefab;
 
-    [Header("전투 UI 및 경고 연출")]
-    public GameObject sporeMineIndicator;     // 포자 지뢰: 바닥에 초록색 점멸 원 UI
-    public GameObject jumpSmashIndicator;     // 점프 착지: 착지 지점에 붉은 원과 충격파 방향 표시 UI
-    public GameObject fallingIndicatorPrefab; // 낙하 장애물: 낙하 예정 위치에 노란 십자 마커 프리팹
+    [Header("UI Indicators")]
+    public GameObject sporeMineIndicator;
+    public GameObject jumpSmashIndicator;
+    public GameObject fallingIndicatorPrefab;
 
-    [Header("2페이즈 화면 효과 UI")]
-    public GameObject greenSporeFilterUI;     // 화면 전반에 적용되는 녹색 포자 필터 오버레이
-    public GameObject dotDamageIconUI;        // 플레이어 화면에 표시될 지속 피해 아이콘 UI
-
-    [Header("기본 평타 공격 세팅")]
-    public float attackRange = 3.0f;          // 플레이어가 이 거리 안에 들어오면 평타 발동
-    public float attackCooldown = 1.5f;       // 평타 공격 애니메이션 반복 주기 (쿨타임)
-    private Animator anim;                    // 자식에게서 가져올 애니메이터 컴포넌트
-    private bool isExecutingPattern = false;  // 특수 패턴(점프, 지뢰 등)을 쓰는 중인지 체크하는 플래그
-
-    private int attackPatternCounter = 0;      // 그로기 상태 진입용 패턴 카운터
-    private Coroutine passiveFallingRoutine;   // 2페이즈 천장 낙하 상시 루틴 제어용
-
-    // 3D 물리 제어용 리지드바디 컴포넌트 변수 추가
+    private Animator anim;
     private Rigidbody rb;
+
+    private bool isExecutingPattern = false;
+    private int attackPatternCounter = 0;
+
+    private Coroutine passiveFallingRoutine;
+
+    [Header("Patrol Settings")]
+    public float patrolRadius = 6f;
+    public float patrolSpeed = 2f;
+    public float attackCooldown = 2f;
+    private Vector3 patrolCenter;
+    private Vector3 patrolTarget;
 
     private void Start()
     {
         anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody>();
+
+        rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotation;
+
+        // 자동 플레이어 탐색
+        if (playerTransform == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) playerTransform = p.transform;
+        }
+
+        patrolCenter = transform.position;
+        SetNewPatrolPoint();
 
         StartCoroutine(BossAIRoutine());
         StartCoroutine(NormalAttackRoutine());
@@ -45,13 +54,21 @@ public class BossMushroomLord : BossBase
 
     private void Update()
     {
-        RotateTowardPlayer();
+        if (!isDead && !isGroggy && !isExecutingPattern)
+            RotateTowardPlayer();
     }
 
-    // 플레이어 방향으로 회전
+    private void LateUpdate()
+    {
+        Vector3 pos = transform.position;
+        pos.z = 0f; // Z축 고정
+        transform.position = pos;
+    }
+
+
     private void RotateTowardPlayer()
     {
-        if (isDead || playerTransform == null || isExecutingPattern) return;
+        if (playerTransform == null) return;
 
         Vector3 dir = playerTransform.position - transform.position;
         dir.y = 0f;
@@ -63,29 +80,44 @@ public class BossMushroomLord : BossBase
         }
     }
 
-    // 기본 평타 및 이동 루틴
+    private bool IsPlayerInFront()
+    {
+        if (playerTransform == null) return false;
+
+        Vector3 dir = (playerTransform.position - transform.position).normalized;
+        float dot = Vector3.Dot(transform.forward, dir);
+
+        return dot > 0.6f;
+    }
+
     private IEnumerator NormalAttackRoutine()
     {
         yield return new WaitForSeconds(3.5f);
 
         while (!isDead)
         {
+            // 공격 불가 상태
             if (isGroggy || isPhaseTransitioning || isExecutingPattern || playerTransform == null)
             {
-                
-                if (anim != null) anim.SetBool("Walk", false);
+                anim.SetBool("Walk", false);
                 yield return null;
                 continue;
             }
 
             float dist = Vector3.Distance(transform.position, playerTransform.position);
 
-            if (dist <= attackRange)
-            {
-               
-                anim.SetBool("Walk", false);
+            // 공격 조건
+            bool canAttack =
+                dist <= attackRange &&     // 공격 범위 안
+                IsPlayerInFront() &&       // 정면
+                !isExecutingPattern &&     // 패턴 중 아님
+                !isGroggy &&               // 그로기 아님
+                !isPhaseTransitioning;     // 페이즈 전환 중 아님
 
-                anim.Play("Attack", 0, 0f);
+            if (canAttack)
+            {
+                anim.SetBool("Walk", false);
+                anim.CrossFade("Attack", 0.1f);
 
                 // 플레이어 데미지
                 PlayerMovement.Instance.GetDamage(20f, transform);
@@ -94,17 +126,42 @@ public class BossMushroomLord : BossBase
             }
             else
             {
-                
+                // 공격 범위 밖 → 이동 또는 패트롤
                 anim.SetBool("Walk", true);
-                yield return new WaitForSeconds(0.1f);
+
+                // 플레이어가 멀면 패트롤
+                if (dist > 12f)
+                    PatrolMove();
+
+                yield return null;
             }
         }
     }
 
-    // 보스 AI 루틴
+
+    private void PatrolMove()
+    {
+        anim.SetBool("Walk", true);
+
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            patrolTarget,
+            patrolSpeed * Time.deltaTime
+        );
+
+        if (Vector3.Distance(transform.position, patrolTarget) < 0.5f)
+            SetNewPatrolPoint();
+    }
+
+    private void SetNewPatrolPoint()
+    {
+        Vector2 rand = Random.insideUnitCircle * patrolRadius;
+        patrolTarget = patrolCenter + new Vector3(rand.x, 0, rand.y);
+    }
+
     private IEnumerator BossAIRoutine()
     {
-        yield return new WaitForSeconds(3.5f);
+        yield return new WaitForSeconds(3f);
 
         while (!isDead)
         {
@@ -121,31 +178,26 @@ public class BossMushroomLord : BossBase
                 continue;
             }
 
+            isExecutingPattern = true;
+
             if (currentPhase == 1)
             {
-                isExecutingPattern = true;
-
                 int p = Random.Range(0, 3);
                 if (p == 0) Pattern_SummonMinions();
                 else if (p == 1) yield return StartCoroutine(Pattern_JumpSmash());
                 else yield return StartCoroutine(Pattern_PlantSporeMines());
-
-                isExecutingPattern = false;
             }
             else
             {
-                isExecutingPattern = true;
-
                 int combo = Random.Range(0, 2);
                 if (combo == 0) yield return StartCoroutine(Combo_SuckAndExplode());
                 else yield return StartCoroutine(Pattern_JumpSmash());
-
-                isExecutingPattern = false;
             }
+
+            isExecutingPattern = false;
         }
     }
 
-    // 작은 버섯 소환
     private void Pattern_SummonMinions()
     {
         int count = Random.Range(2, 5);
@@ -153,20 +205,25 @@ public class BossMushroomLord : BossBase
         for (int i = 0; i < count; i++)
         {
             Vector3 pos = transform.position + Random.insideUnitSphere * 3.5f;
-            pos.y = transform.position.y;
+            pos.y = Terrain.activeTerrain.SampleHeight(pos);
+
             Instantiate(minionMushroomPrefab, pos, Quaternion.identity);
         }
     }
 
-    // 점프 착지 충격파
     private IEnumerator Pattern_JumpSmash()
     {
         if (playerTransform == null) yield break;
 
-        
-        anim.SetTrigger("Static");
+        anim.CrossFade("JumpStart", 0.1f);
 
+        Vector3 startPos = transform.position;
         Vector3 landPos = playerTransform.position;
+        landPos.y = startPos.y;
+
+        float jumpTime = 1.2f;
+        float elapsed = 0f;
+        float jumpHeight = 4f;
 
         if (jumpSmashIndicator != null)
         {
@@ -174,26 +231,25 @@ public class BossMushroomLord : BossBase
             jumpSmashIndicator.SetActive(true);
         }
 
-        yield return new WaitForSeconds(1.2f);
+        yield return new WaitForSeconds(0.5f);
 
-        if (jumpSmashIndicator != null) jumpSmashIndicator.SetActive(false);
-
-        // 순간이동 전후 속도 초기화
-        if (rb != null)
+        while (elapsed < jumpTime)
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
+            elapsed += Time.deltaTime;
+            float t = elapsed / jumpTime;
+
+            float height = Mathf.Sin(Mathf.PI * t) * jumpHeight;
+
+            transform.position = Vector3.Lerp(startPos, landPos, t) + Vector3.up * height;
+
+            yield return null;
         }
 
-        transform.position = landPos;
+        if (jumpSmashIndicator != null)
+            jumpSmashIndicator.SetActive(false);
 
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-        }
+        anim.CrossFade("JumpLand", 0.1f);
 
-        // 착지 데미지
         float radius = 4f;
         Collider[] hits = Physics.OverlapSphere(transform.position, radius);
         foreach (var h in hits)
@@ -201,22 +257,8 @@ public class BossMushroomLord : BossBase
             if (h.CompareTag("Player"))
                 PlayerMovement.Instance.GetDamage(30f, transform);
         }
-
-        // 추가 충격파
-        int extra = Random.Range(1, 3);
-        for (int i = 1; i < extra; i++)
-        {
-            yield return new WaitForSeconds(0.7f);
-
-            foreach (var h in hits)
-            {
-                if (h.CompareTag("Player"))
-                    PlayerMovement.Instance.GetDamage(20f, transform);
-            }
-        }
     }
 
-    // 포자 지뢰 설치
     private IEnumerator Pattern_PlantSporeMines()
     {
         if (playerTransform == null) yield break;
@@ -240,11 +282,9 @@ public class BossMushroomLord : BossBase
         script.Setup();
     }
 
-    // 2페이즈 광역 폭발
     private IEnumerator Combo_SuckAndExplode()
     {
-        
-        anim.SetTrigger("Static");
+        anim.CrossFade("Static", 0.1f);
 
         yield return new WaitForSeconds(2f);
 
@@ -252,85 +292,90 @@ public class BossMushroomLord : BossBase
         foreach (var h in hits)
         {
             if (h.CompareTag("Player"))
-                PlayerMovement_3D.Instance.GetDamage(25f, transform);
+                PlayerMovement.Instance.GetDamage(25f, transform);
         }
     }
 
-    // 그로기 상태 루틴 추가
     private IEnumerator GroggyStateRoutine()
     {
-        anim.Play("Groggy", 0, 0f); // 그로기 애니메이션 재생
-        yield return new WaitForSeconds(5f); // 5초 동안 그로기 상태 유지
+        anim.CrossFade("Groggy", 0.1f);
+        isGroggy = true;
+        yield return new WaitForSeconds(5f);
+        isGroggy = false;
     }
 
     protected override IEnumerator PhaseTransitionRoutine()
     {
         isPhaseTransitioning = true;
-        anim.Play("PhaseTransition", 0, 0f); // Phase 전환 애니메이션 재생
-        yield return new WaitForSeconds(3f); // 전환 시간 대기
-        currentPhase++; // Phase 증가
+        anim.CrossFade("PhaseTransition", 0.1f);
+
+        yield return new WaitForSeconds(3f);
+
+        currentPhase++;
+
+        if (currentPhase == 2 && passiveFallingRoutine == null)
+            passiveFallingRoutine = StartCoroutine(PassiveFallingRoutine());
+
         isPhaseTransitioning = false;
     }
 
-    
+    private IEnumerator PassiveFallingRoutine()
+    {
+        while (!isDead)
+        {
+            yield return new WaitForSeconds(Random.Range(2f, 4f));
+
+            Vector3 pos = playerTransform.position + Random.insideUnitSphere * 3f;
+            pos.y = transform.position.y + 10f;
+
+            GameObject fall = Instantiate(fallingMushroomPrefab, pos, Quaternion.identity);
+
+            MushroomFallingObstacle f = fall.GetComponent<MushroomFallingObstacle>();
+            if (f == null) f = fall.AddComponent<MushroomFallingObstacle>();
+
+            Vector3 floorPos = pos;
+            floorPos.y = Terrain.activeTerrain.SampleHeight(pos);
+
+            f.StartFalling(floorPos);
+        }
+    }
+
     protected override void Die()
     {
         isDead = true;
 
-       
-        if (anim != null) anim.SetTrigger("Die");
+        anim.SetTrigger("Die");
 
-        StopAllCoroutines(); // 모든 코루틴 중지
+        StopAllCoroutines();
 
-       
         if (RewardManager.Instance != null)
-        {
             RewardManager.Instance.ShowRewardSelection();
-        }
 
-        Destroy(gameObject, 5f); // 5초 후 보스 오브젝트 제거
+        Destroy(gameObject, 5f);
     }
 
-    // 포자 지뢰 서브 클래스
+    // ---------------- Sub Classes ----------------
+
     public class MushroomLandmine : MonoBehaviour
     {
         private bool isTriggered = false;
 
         public void Setup()
         {
-            Destroy(gameObject, 5f); // 자동 폭발
+            Destroy(gameObject, 5f);
         }
 
         private void OnTriggerEnter(Collider other)
         {
             if (other.CompareTag("Player") && !isTriggered)
             {
-                TriggerExplosion();
+                isTriggered = true;
+                PlayerMovement.Instance.GetDamage(15f, transform);
+                Destroy(gameObject);
             }
-        }
-
-        private void OnDestroy()
-        {
-            LeavePoisonCloud();
-        }
-
-        private void TriggerExplosion()
-        {
-            isTriggered = true;
-
-            // 데미지
-            PlayerMovement.Instance.GetDamage(15f, transform);
-
-            Destroy(gameObject);
-        }
-
-        private void LeavePoisonCloud()
-        {
-            // 지속 피해 장판
         }
     }
 
-    
     public class MushroomFallingObstacle : MonoBehaviour
     {
         private Vector3 targetFloorPos;
@@ -355,20 +400,16 @@ public class BossMushroomLord : BossBase
             if (!hasHitFloor)
             {
                 hasHitFloor = true;
-                OnHitFloor();
-            }
-        }
 
-        private void OnHitFloor()
-        {
-            Collider[] hits = Physics.OverlapSphere(transform.position, 2f);
-            foreach (var h in hits)
-            {
-                if (h.CompareTag("Player"))
-                    PlayerMovement.Instance.GetDamage(20f, transform);
-            }
+                Collider[] hits = Physics.OverlapSphere(transform.position, 2f);
+                foreach (var h in hits)
+                {
+                    if (h.CompareTag("Player"))
+                        PlayerMovement.Instance.GetDamage(20f, transform);
+                }
 
-            Destroy(gameObject, 3f);
+                Destroy(gameObject, 3f);
+            }
         }
     }
 }
