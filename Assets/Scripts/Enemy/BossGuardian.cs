@@ -1,13 +1,14 @@
 using UnityEngine;
 using System.Collections;
 
+
 public class BossGuardian : BossBase
 {
     [Header("Player Target")]
     public Transform playerTransform;
 
-    [Header("�ν� ���� ����")]
-    public float detectionRange = 5.0f;        // ���� 5m ������ ������ �߰��� �����մϴ�!
+    [Header("인식 범위 설정")]
+    public float detectionRange = 5.0f;        
     private bool isPlayerDetected = false;
 
     [Header("Pattern Prefabs")]
@@ -16,26 +17,16 @@ public class BossGuardian : BossBase
     public GameObject seedProjectilePrefab;
     public Transform shootPoint;
 
-    [Header("Indicators")]
+    [Header("전투 UI 경고 연출")]
     public GameObject redCircleIndicator;
     public GameObject yellowDotIndicator;
     public GameObject warningLineIndicator;
 
-    [Header("Phase 2 Settings")]
+    [Header("2페이즈 약점 시스템")]
     public int remainingWeaknessVines = 3;
     private float defenseModifier = 0f;
 
-    private Animator anim;
-    private Rigidbody rb;
-
     private int attackPatternCounter = 0;
-    private bool isExecutingPattern = false;
-
-    [Header("Patrol Settings")]
-    public float patrolRadius = 6f;
-    public float patrolSpeed = 2f;
-    private Vector3 patrolCenter;
-    private Vector3 patrolTarget;
 
     private Rigidbody rb;
     private Animator anim;
@@ -45,7 +36,7 @@ public class BossGuardian : BossBase
         rb = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
 
-        // ?? [�ڵ� ���� ������ġ] Ȥ�� �ν����Ϳ� Ÿ���� �� �־�� Player �±׷� �ڵ� ���� ����!
+        
         if (playerTransform == null)
         {
             GameObject playerObj = GameObject.FindWithTag("Player");
@@ -55,67 +46,18 @@ public class BossGuardian : BossBase
         StartCoroutine(BossAIRoutine());
     }
 
-    private void Update()
-    {
-        if (!isDead && !isGroggy && !isExecutingPattern)
-            RotateTowardPlayer();
-    }
-
-    private void RotateTowardPlayer()
-    {
-        if (playerTransform == null) return;
-
-        Vector3 dir = playerTransform.position - transform.position;
-        dir.y = 0f;
-
-        if (dir.sqrMagnitude > 0.01f)
-        {
-            Quaternion targetRot = Quaternion.LookRotation(dir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 5f);
-        }
-    }
-
-    private bool IsPlayerInFront()
-    {
-        if (playerTransform == null) return false;
-
-        Vector3 dir = (playerTransform.position - transform.position).normalized;
-        float dot = Vector3.Dot(transform.forward, dir);
-
-        return dot > 0.6f;
-    }
-
-    private void PatrolMove()
-    {
-        anim.SetBool("Walk", true);
-
-        transform.position = Vector3.MoveTowards(
-            transform.position,
-            patrolTarget,
-            patrolSpeed * Time.deltaTime
-        );
-
-        if (Vector3.Distance(transform.position, patrolTarget) < 0.5f)
-            SetNewPatrolPoint();
-    }
-
-    private void SetNewPatrolPoint()
-    {
-        Vector2 rand = Random.insideUnitCircle * patrolRadius;
-        patrolTarget = patrolCenter + new Vector3(rand.x, 0, rand.y);
-    }
-
     public override void TakeDamage(float damage)
     {
         if (currentPhase == 2 && remainingWeaknessVines > 0)
+        {
             damage *= (1f - defenseModifier);
-
+        }
         base.TakeDamage(damage);
     }
 
     private IEnumerator BossAIRoutine()
     {
-        // ================= [1�ܰ�: ö���� �÷��̾� ���� ���] =================
+        
         while (!isPlayerDetected)
         {
             if (playerTransform != null)
@@ -124,19 +66,19 @@ public class BossGuardian : BossBase
                 if (distance <= detectionRange)
                 {
                     isPlayerDetected = true;
-                    Debug.Log("<color=red><b>[���] ������ �÷��̾ �����߽��ϴ�! �߰��� �����մϴ�.</b></color>");
+                    Debug.Log("<color=red><b>[경고] 보스가 플레이어를 감지했습니다! 추격을 시작합니다.</b></color>");
                 }
             }
 
             if (anim != null) anim.SetBool("Walk", false);
             yield return new WaitForSeconds(0.2f);
         }
-        // ===================================================================
+        
 
-        // �÷��̾� ���� ���� �� ù �ൿ �� ������� (2��)
+        
         yield return new WaitForSeconds(2.0f);
 
-        // ================= [2�ܰ�: �������� �߰� �� ���� ����] =================
+        
         while (!isDead)
         {
             if (isPhaseTransitioning || isGroggy)
@@ -145,18 +87,18 @@ public class BossGuardian : BossBase
                 continue;
             }
 
-            // ???��? [�ٽ� ���� �ڵ� �߰�] �ܼ� ��� ���, 3.5�� ���� �÷��̾ ��¥�� �Ѿư��ϴ�!
+           
             if (anim != null) anim.SetBool("Walk", true);
 
             float moveTimer = 0f;
             while (moveTimer < 3.5f)
             {
-                // �̵� ���� ����� �ٲ�ų� �׷α⿡ �ɸ��� ��� �̵� �ߴ�
+                
                 if (isPhaseTransitioning || isGroggy || isDead) break;
 
                 if (playerTransform != null)
                 {
-                    // 1. �÷��̾ ���� �ε巴�� ȸ�� (����� ������ ������ �ʰ� Y���� ����)
+                    
                     Vector3 direction = playerTransform.position - transform.position;
                     direction.y = 0;
                     if (direction != Vector3.zero)
@@ -164,18 +106,18 @@ public class BossGuardian : BossBase
                         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 5f);
                     }
 
-                    // 2. �θ� Ŭ����(BossBase)�� moveSpeed �ӵ��� �÷��̾ ���� ��¥ ��ǥ �̵�!
+                    // 2. 부모 클래스(BossBase)의 moveSpeed 속도로 플레이어를 향해 진짜 좌표 이동!
                     transform.position = Vector3.MoveTowards(transform.position, playerTransform.position, moveSpeed * Time.deltaTime);
                 }
 
                 moveTimer += Time.deltaTime;
-                yield return null; // �� ������ �� �帣���� ���� ����
+                yield return null; // 매 프레임 물 흐르듯이 무빙 연산
             }
 
-            // �߰��� ������ ���� ������ ���� �̵� ����
+            // 추격이 끝나면 패턴 공격을 위해 이동 정지
             if (isPhaseTransitioning || isGroggy || isDead) continue;
 
-            // �׷α� ī��Ʈ üũ
+            // 그로기 카운트 체크
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
             {
@@ -184,41 +126,38 @@ public class BossGuardian : BossBase
                 continue;
             }
 
-            // ���� ���� �ܰ�: ������ ���� �ȱ� �ִϸ��̼��� ��� Idle ���¿��� Ʈ���� �۵�
+            // 패턴 시전 단계: 공격할 때는 걷기 애니메이션을 끄고 Idle 상태에서 트리거 작동
             if (anim != null) anim.SetBool("Walk", false);
             yield return new WaitForSeconds(0.1f);
 
-            // ���� ���� �ߵ�
+            // 랜덤 패턴 발동
             if (currentPhase == 1)
             {
-                int p = Random.Range(0, 3);
-                if (p == 0) yield return StartCoroutine(Pattern_VineBind());
-                else if (p == 1) yield return StartCoroutine(Pattern_Smash());
+                int randomPattern = Random.Range(0, 3);
+                if (randomPattern == 0) yield return StartCoroutine(Pattern_VineBind());
+                else if (randomPattern == 1) yield return StartCoroutine(Pattern_Smash());
                 else yield return StartCoroutine(Pattern_SpawnSeeds());
             }
             else
             {
-                int combo = Random.Range(0, 2);
-
-                if (combo == 0)
+                int randomCombo = Random.Range(0, 2);
+                if (randomCombo == 0)
                 {
-                    Debug.Log("<color=red>[2������ ���� �޺�] ���� �ӹ� ��� -> ������� ���� ����!</color>");
+                    Debug.Log("<color=red>[2페이즈 연계 콤보] 덩굴 속박 흡수 -> 내리찍기 연계 시작!</color>");
                     yield return StartCoroutine(Pattern_VineBind());
                     yield return new WaitForSeconds(0.5f);
                     yield return StartCoroutine(Pattern_Smash());
                 }
                 else
                 {
-                    Debug.Log("<color=red>[2������ ���� �޺�] ���� ����ü �߻� -> ���� ä�� �ֵθ��� ����!</color>");
+                    Debug.Log("<color=red>[2페이즈 연계 콤보] 씨앗 투사체 발사 -> 덩굴 채찍 휘두르기 시작!</color>");
                     yield return StartCoroutine(Pattern_SpawnSeeds());
                     yield return new WaitForSeconds(0.8f);
 
                     if (anim != null) anim.SetTrigger("Attack");
-                    Debug.Log("���� �׼�: ���� ���� ä�� �ֵθ���� ���� Ÿ��!");
+                    Debug.Log("보스 액션: 광역 덩굴 채찍 휘두르기로 연계 타격!");
                 }
             }
-
-            isExecutingPattern = false;
         }
     }
 
@@ -228,15 +167,11 @@ public class BossGuardian : BossBase
 
         if (redCircleIndicator != null)
         {
-            redCircleIndicator.transform.position =
-                new Vector3(playerTransform.position.x, transform.position.y, playerTransform.position.z);
+            redCircleIndicator.transform.position = new Vector3(playerTransform.position.x, transform.position.y, playerTransform.position.z);
             redCircleIndicator.SetActive(true);
         }
-
         yield return new WaitForSeconds(1.5f);
-
-        if (redCircleIndicator != null)
-            redCircleIndicator.SetActive(false);
+        if (redCircleIndicator != null) redCircleIndicator.SetActive(false);
 
         if (anim != null) anim.SetTrigger("Attack");
 
@@ -245,13 +180,14 @@ public class BossGuardian : BossBase
         if (vineScript == null) vineScript = vine.AddComponent<VineTrapObject>();
         vineScript.Setup(this);
 
-        Debug.Log("���� ����: �÷��̾� �߹ؿ� �ӹ� ���� ��ȯ");
+        Debug.Log("패턴 시전: 플레이어 발밑에 속박 덩굴 소환");
     }
 
     private IEnumerator Pattern_Smash()
     {
-        if (warningLineIndicator != null)
-            warningLineIndicator.SetActive(true);
+        if (warningLineIndicator != null) warningLineIndicator.SetActive(true);
+        yield return new WaitForSeconds(1.5f);
+        if (warningLineIndicator != null) warningLineIndicator.SetActive(false);
 
         if (anim != null) anim.SetTrigger("Attack");
 
@@ -265,7 +201,7 @@ public class BossGuardian : BossBase
                 PlayerMovement.Instance.GetDamage(25f, transform);
             }
         }
-        Debug.Log("���� ����: ���� ������� �� ����� �߻�");
+        Debug.Log("패턴 시전: 전방 내리찍기 및 충격파 발사");
     }
 
     private IEnumerator Pattern_SpawnSeeds()
@@ -300,7 +236,6 @@ public class BossGuardian : BossBase
         isGroggy = true;
         attackPatternCounter = 0;
         yield return new WaitForSeconds(4.0f);
-
         isGroggy = false;
     }
 
@@ -313,7 +248,6 @@ public class BossGuardian : BossBase
         defenseModifier = 0.7f;
         remainingWeaknessVines = 3;
         yield return new WaitForSeconds(3.0f);
-
         isPhaseTransitioning = false;
     }
 
@@ -332,9 +266,6 @@ public class BossGuardian : BossBase
         StopAllCoroutines();
     }
 }
-
-// [���� Ŭ�������� �ϴܿ� �����ϰ� �����ǹǷ� ���ǻ� ����]
-
 
 
 public class VineTrapObject : MonoBehaviour
@@ -355,6 +286,7 @@ public class VineTrapObject : MonoBehaviour
         {
             isPlayerTrapped = true;
             timer = 0f;
+            Debug.Log("플레이어가 덩굴에 걸려 2초간 속박됩니다! 지속 피해 시작");
         }
     }
 
@@ -363,8 +295,10 @@ public class VineTrapObject : MonoBehaviour
         if (isPlayerTrapped)
         {
             timer += Time.deltaTime;
-
-            bossRef.Heal(15f * Time.deltaTime);
+            if (bossRef != null)
+            {
+                bossRef.Heal(15f * Time.deltaTime);
+            }
 
             if (PlayerMovement.Instance != null && Time.frameCount % 30 == 0)
             {
@@ -380,9 +314,6 @@ public class VineTrapObject : MonoBehaviour
     }
 }
 
-// =============================================================
-// Seed Projectile
-// =============================================================
 public class SeedProjectileObject : MonoBehaviour
 {
     private Vector3 targetPos;
@@ -397,19 +328,16 @@ public class SeedProjectileObject : MonoBehaviour
     {
         float progress = 0f;
         Vector3 startPos = transform.position;
-
         while (progress < 1f)
         {
             progress += Time.deltaTime * 2f;
-
             Vector3 currentPos = Vector3.Lerp(startPos, targetPos, progress);
             currentPos.y += Mathf.Sin(progress * Mathf.PI) * 3f;
-
             transform.position = currentPos;
             yield return null;
         }
 
-        yield return StartCoroutine(ExplosionRoutine());
+        StartCoroutine(ExplosionRoutine());
     }
 
     private IEnumerator ExplosionRoutine()
@@ -422,10 +350,9 @@ public class SeedProjectileObject : MonoBehaviour
             if (player.CompareTag("Player"))
             {
                 PlayerMovement.Instance.GetDamage(15f, transform);
-                Debug.Log("���� ����! ���� �� �÷��̾ ���ظ� �Ծ����ϴ�.");
+                Debug.Log("씨앗 폭발! 범위 내 플레이어가 피해를 입었습니다.");
             }
         }
-
         Destroy(gameObject);
     }
 }
