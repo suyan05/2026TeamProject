@@ -18,8 +18,30 @@ public class InventoryUI : MonoBehaviour
 
     void Start()
     {
-        // ?? 안전장치: 혹시라도 inventory 연결이 끊겨있다면 자동으로 찾아줍니다.
-        if (inventory == null) inventory = FindObjectOfType<Inventory>(true);
+        // Inventory 자동 참조
+        if (inventory == null)
+            inventory = Object.FindFirstObjectByType<Inventory>(UnityEngine.FindObjectsInactive.Include);
+
+        // Grid Parent 자동 참조
+        if (gridParent == null)
+            gridParent = transform.Find("GridParent")?.GetComponent<RectTransform>();
+
+        // Item Parent 자동 참조
+        if (itemParent == null)
+            itemParent = transform.Find("ItemParent")?.GetComponent<RectTransform>();
+
+        // Inventory Area 자동 참조
+        if (inventoryArea == null)
+            inventoryArea = transform.Find("InventoryArea")?.GetComponent<RectTransform>();
+
+        // Prefab 자동 참조 (Resources 폴더 기준)
+        if (slotPrefab == null)
+            slotPrefab = Resources.Load<GameObject>("UI/SlotPrefab");
+
+        if (itemPrefab == null)
+            itemPrefab = Resources.Load<GameObject>("UI/ItemPrefab");
+
+        if (inventory == null) inventory = Object.FindFirstObjectByType<Inventory>(UnityEngine.FindObjectsInactive.Include);
 
         RebuildGrid();
         RefreshItems();
@@ -28,7 +50,7 @@ public class InventoryUI : MonoBehaviour
     public void RebuildGrid()
     {
         // ?? 안전장치: inventory 데이터가 아예 없으면 그리드를 그리지 않고 대기합니다.
-        if (inventory == null) inventory = FindObjectOfType<Inventory>(true);
+        if (inventory == null) inventory = Object.FindFirstObjectByType<Inventory>(UnityEngine.FindObjectsInactive.Include);
         if (inventory == null) return;
 
         foreach (Transform child in gridParent)

@@ -6,6 +6,22 @@ public class UpgradeInventory : MonoBehaviour
     public Inventory inventory;
     public InventoryUI inventoryUI;
 
+    private void Awake()
+    {
+        AutoReference();
+    }
+
+    void AutoReference()
+    {
+        // Inventory 자동 참조
+        if (inventory == null)
+            inventory = Object.FindFirstObjectByType<Inventory>(UnityEngine.FindObjectsInactive.Include);
+
+        // InventoryUI 자동 참조
+        if (inventoryUI == null)
+            inventoryUI = Object.FindFirstObjectByType<InventoryUI>(UnityEngine.FindObjectsInactive.Include);
+    }
+
     public void UpgradeBottom(int amount = 1)
     {
         Upgrade(inventory.gridWidth, inventory.gridHeight + amount, Direction.Bottom);

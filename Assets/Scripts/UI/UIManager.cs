@@ -44,6 +44,7 @@ public class UIManager : MonoBehaviour
 
     private void Awake()
     {
+        // 싱글톤 설정
         if (Instance == null)
         {
             Instance = this;
@@ -52,7 +53,52 @@ public class UIManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
+
+        AutoReference();
+    }
+
+    void AutoReference()
+    {
+        // 월드 캔버스 자동 참조
+        if (worldCanvas == null)
+            worldCanvas = GameObject.Find("WorldCanvas");
+
+        // 인벤토리 UI 자동 참조
+        if (inventoryUI == null)
+            inventoryUI = GameObject.Find("InventoryUI");
+
+        // 차지 게이지 자동 참조
+        if (chargeGaugeRoot == null)
+            chargeGaugeRoot = transform.Find("ChargeGaugeRoot")?.GetComponent<RectTransform>();
+
+        if (chargeFill == null && chargeGaugeRoot != null)
+            chargeFill = chargeGaugeRoot.GetComponentInChildren<Image>();
+
+        // 페이드 커튼 자동 참조
+        if (fadeCurtain == null)
+            fadeCurtain = GameObject.Find("FadeCurtain")?.GetComponent<Image>();
+
+        // 플레이어 HP 바 자동 참조
+        if (playerHpBar == null)
+            playerHpBar = GameObject.Find("PlayerHPBar")?.GetComponent<Slider>();
+
+        // Enemy HP Panel 자동 참조
+        if (enemyHpPanel == null)
+            enemyHpPanel = GameObject.Find("EnemyHPPanel")?.transform;
+
+        // Enemy HP Item Prefab 자동 로드 (Resources 폴더 기준)
+        if (enemyHpItemPrefab == null)
+            enemyHpItemPrefab = Resources.Load<GameObject>("UI/EnemyHPItem");
+
+        // 무기 텍스트 자동 참조
+        if (equippedWeaponText == null)
+            equippedWeaponText = GameObject.Find("EquippedWeaponText")?.GetComponent<Text>();
+
+        // 스탯 텍스트 자동 참조
+        if (statText == null)
+            statText = GameObject.Find("PlayerStatText")?.GetComponent<Text>();
     }
 
     private void LateUpdate()

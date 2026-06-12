@@ -15,11 +15,21 @@ public class RewardManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
-        if (rewardPanel != null) rewardPanel.SetActive(false);
+        if (rewardPanel != null)
+            rewardPanel.SetActive(false);
     }
+
 
     public void ShowRewardSelection()
     {

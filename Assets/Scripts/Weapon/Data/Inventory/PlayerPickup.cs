@@ -2,24 +2,68 @@ using UnityEngine;
 
 public class PlayerPickup : MonoBehaviour
 {
-    public float interactDistance = 3f;     // 아이템 줍기 거리
-    public LayerMask itemLayer;             // WorldItem 레이어
+    public float interactDistance = 3f;
+    public LayerMask itemLayer;
 
-    public Inventory inventory;             // 플레이어 인벤토리
-    public InventoryUI inventoryUI;         // 인벤토리 UI
+    public Inventory inventory;
+    public InventoryUI inventoryUI;
+
+    bool isFindingUI = true;
+
+    private void Start()
+    {
+        // Inventory는 보통 바로 찾힘
+        if (inventory == null)
+            inventory = Object.FindFirstObjectByType<Inventory>(FindObjectsInactive.Include);
+
+        // InventoryUI는 Start에서 못 찾을 가능성이 높음 → Update에서 찾게 함
+        TryFindUI();
+    }
 
     void Update()
     {
-        // Scene 뷰에서 오른쪽 방향 Ray 시각화
+        // InventoryUI 못 찾았으면 계속 찾기
+        if (isFindingUI)
+            TryFindUI();
+
+        if (inventory == null || inventoryUI == null)
+            return;
+
         Debug.DrawRay(transform.position, transform.right * interactDistance, Color.blue);
 
         if (Input.GetKeyDown(KeyCode.F))
             TryPickup();
     }
 
+    void TryFindUI()
+    {
+        if (inventoryUI != null)
+        {
+            isFindingUI = false;
+            return;
+        }
+
+        // 1) 씬에서 찾기
+        inventoryUI = Object.FindFirstObjectByType<InventoryUI>(FindObjectsInactive.Include);
+
+        // 2) 못 찾으면 DontDestroyOnLoad 영역까지 포함해서 전부 검색
+        if (inventoryUI == null)
+        {
+            var all = Resources.FindObjectsOfTypeAll<InventoryUI>();
+            if (all != null && all.Length > 0)
+                inventoryUI = all[0];
+        }
+
+        // 3) 찾았으면 탐색 종료
+        if (inventoryUI != null)
+        {
+            isFindingUI = false;
+            Debug.Log("<color=lime>[PlayerPickup] InventoryUI 자동 참조 성공!</color>");
+        }
+    }
+
     void TryPickup()
     {
-        // 플레이어 기준 오른쪽 방향으로 Raycast
         Ray ray = new Ray(transform.position, transform.right);
 
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, itemLayer))
@@ -28,11 +72,10 @@ public class PlayerPickup : MonoBehaviour
 
             if (worldItem != null)
             {
-                // 인벤토리에 아이템 추가 시도
                 if (inventory.TryAddItem(worldItem.itemData))
                 {
-                    Destroy(worldItem.gameObject);   // 바닥 아이템 삭제
-                    inventoryUI.RefreshItems();      // UI 갱신
+                    Destroy(worldItem.gameObject);
+                    inventoryUI.RefreshItems();
                 }
             }
         }

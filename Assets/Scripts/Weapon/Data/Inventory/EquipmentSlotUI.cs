@@ -11,31 +11,72 @@ public class EquipmentSlotUI : MonoBehaviour, IDropHandler
 
     private GameObject currentItemUI;
 
+    bool isFinding = true;
+
+    private void Start()
+    {
+        TryFindReferences();
+    }
+
+    private void Update()
+    {
+        if (isFinding)
+            TryFindReferences();
+    }
+
+    void TryFindReferences()
+    {
+        if (inventory == null)
+            inventory = Object.FindFirstObjectByType<Inventory>(FindObjectsInactive.Include);
+
+        if (inventoryUI == null)
+        {
+            // 1차: 일반 검색
+            inventoryUI = Object.FindFirstObjectByType<InventoryUI>(FindObjectsInactive.Include);
+
+            // 2차: DontDestroyOnLoad까지 포함한 전체 검색
+            if (inventoryUI == null)
+            {
+                var all = Resources.FindObjectsOfTypeAll<InventoryUI>();
+                if (all != null && all.Length > 0)
+                    inventoryUI = all[0];
+            }
+        }
+
+        // 둘 다 찾았으면 탐색 종료
+        if (inventory != null && inventoryUI != null)
+        {
+            isFinding = false;
+            Debug.Log("<color=lime>[EquipmentSlotUI] Inventory & InventoryUI 자동 참조 완료!</color>");
+        }
+    }
+
     public void OnDrop(PointerEventData eventData)
     {
+        if (inventory == null || inventoryUI == null)
+            return;
+
         InventoryItemUI dragged = eventData.pointerDrag.GetComponent<InventoryItemUI>();
         if (dragged == null) return;
 
         ItemInstance item = dragged.itemInstance;
 
-        // 무기만 장착 가능
         if (item.data.itemType != ItemType.Weapon)
             return;
 
-        // 장비칸에 드롭되었다고 표시
         dragged.droppedOnEquipment = true;
 
-        // 인벤토리에서 먼저 제거
         inventory.RemoveItem(item);
         inventoryUI.RefreshItems();
 
-        // 장비칸에 장착
         Equip(item);
     }
 
     public void Equip(ItemInstance newItem)
     {
-        // 기존 장착 아이템이 있으면 인벤토리로 되돌리기
+        if (inventory == null || inventoryUI == null)
+            return;
+
         if (equippedItem != null)
         {
             inventory.TryAddItem(equippedItem.data);
@@ -64,11 +105,14 @@ public class EquipmentSlotUI : MonoBehaviour, IDropHandler
 
     public void UnequipToInventory()
     {
+        if (inventory == null || inventoryUI == null)
+            return;
+
         if (equippedItem == null) return;
 
         if (!inventory.TryAddItem(equippedItem.data))
         {
-            Debug.LogWarning("인벤토리가 가득 차서 장비를 해제할 수 없습니다.");
+            Debug.LogWarning("인벤토리에 공간이 부족하여 장비를 해제할 수 없습니다.");
             return;
         }
 
