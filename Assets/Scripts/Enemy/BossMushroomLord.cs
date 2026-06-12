@@ -23,6 +23,8 @@ public class BossMushroomLord : BossBase
     private int attackPatternCounter = 0;
 
     private Coroutine passiveFallingRoutine;
+    private Coroutine aiRoutine;
+    private Coroutine attackRoutine;
 
     [Header("Patrol Settings")]
     public float patrolRadius = 6f;
@@ -47,8 +49,9 @@ public class BossMushroomLord : BossBase
         patrolCenter = transform.position;
         SetNewPatrolPoint();
 
-        StartCoroutine(BossAIRoutine());
-        StartCoroutine(NormalAttackRoutine());
+        // 코루틴 참조를 안전하게 저장
+        aiRoutine = StartCoroutine(BossAIRoutine());
+        attackRoutine = StartCoroutine(NormalAttackRoutine());
     }
 
     private void Update()
@@ -88,7 +91,6 @@ public class BossMushroomLord : BossBase
         return dot > 0.6f;
     }
 
-   
     private IEnumerator NormalAttackRoutine()
     {
         yield return new WaitForSeconds(3.5f);
@@ -116,20 +118,17 @@ public class BossMushroomLord : BossBase
             }
             else
             {
-                
                 yield return null;
             }
         }
     }
 
-    
     private IEnumerator BossAIRoutine()
     {
         yield return new WaitForSeconds(3f);
 
         while (!isDead)
         {
-            
             float waitTimer = 0f;
             while (waitTimer < 4f)
             {
@@ -139,19 +138,16 @@ public class BossMushroomLord : BossBase
                 {
                     float dist = Vector3.Distance(transform.position, playerTransform.position);
 
-                    
                     if (dist > attackRange)
                     {
                         if (anim != null) anim.SetBool("Walk", true);
 
-                        
                         if (dist > 12f)
                         {
                             PatrolMove();
                         }
                         else
                         {
-                            
                             Vector3 targetPos = playerTransform.position;
                             targetPos.y = transform.position.y;
                             targetPos.z = transform.position.z;
@@ -165,9 +161,13 @@ public class BossMushroomLord : BossBase
                 yield return null;
             }
 
-            if (isPhaseTransitioning || isGroggy || isDead) continue;
+           
+            if (isPhaseTransitioning || isGroggy || isDead)
+            {
+                yield return null; // 한 프레임을 쉬어주어 유니티가 멈추는 것을 방지
+                continue;
+            }
 
-            
             if (anim != null) anim.SetBool("Walk", false);
 
             attackPatternCounter++;
@@ -217,7 +217,6 @@ public class BossMushroomLord : BossBase
         patrolTarget = patrolCenter + new Vector3(rand.x, 0, rand.y);
     }
 
-    // --- (이하 하단에 있는 Pattern_SummonMinions, Die 등 기존 클래스/함수들은 변경 없이 그대로 두시면 됩니다!) ---
     private void Pattern_SummonMinions()
     {
         int count = Random.Range(2, 5);
@@ -225,9 +224,11 @@ public class BossMushroomLord : BossBase
         for (int i = 0; i < count; i++)
         {
             Vector3 pos = transform.position + Random.insideUnitSphere * 3.5f;
-            pos.y = Terrain.activeTerrain.SampleHeight(pos);
+            pos.z = 0f;
+            pos.y = GetGroundHeight(pos);
 
-            Instantiate(minionMushroomPrefab, pos, Quaternion.identity);
+            if (minionMushroomPrefab != null)
+                Instantiate(minionMushroomPrefab, pos, Quaternion.identity);
         }
     }
 
@@ -235,11 +236,12 @@ public class BossMushroomLord : BossBase
     {
         if (playerTransform == null) yield break;
 
-        anim.CrossFade("JumpStart", 0.1f);
+        if (anim != null) anim.CrossFade("JumpStart", 0.1f);
 
         Vector3 startPos = transform.position;
         Vector3 landPos = playerTransform.position;
         landPos.y = startPos.y;
+        landPos.z = 0f;
 
         float jumpTime = 1.2f;
         float elapsed = 0f;
@@ -255,26 +257,25 @@ public class BossMushroomLord : BossBase
 
         while (elapsed < jumpTime)
         {
+            if (isDead) yield break;
             elapsed += Time.deltaTime;
             float t = elapsed / jumpTime;
-
             float height = Mathf.Sin(Mathf.PI * t) * jumpHeight;
 
             transform.position = Vector3.Lerp(startPos, landPos, t) + Vector3.up * height;
-
             yield return null;
         }
 
         if (jumpSmashIndicator != null)
             jumpSmashIndicator.SetActive(false);
 
-        anim.CrossFade("JumpLand", 0.1f);
+        if (anim != null) anim.CrossFade("JumpLand", 0.1f);
 
         float radius = 4f;
         Collider[] hits = Physics.OverlapSphere(transform.position, radius);
         foreach (var h in hits)
         {
-            if (h.CompareTag("Player"))
+            if (h.CompareTag("Player") && PlayerMovement.Instance != null)
                 PlayerMovement.Instance.GetDamage(30f, transform);
         }
     }
@@ -285,6 +286,7 @@ public class BossMushroomLord : BossBase
 
         Vector3 pos = playerTransform.position + Random.insideUnitSphere * 2f;
         pos.y = transform.position.y;
+        pos.z = 0f;
 
         if (sporeMineIndicator != null)
         {
@@ -295,30 +297,33 @@ public class BossMushroomLord : BossBase
         yield return new WaitForSeconds(1f);
         if (sporeMineIndicator != null) sporeMineIndicator.SetActive(false);
 
-        GameObject mine = Instantiate(landmineSporePrefab, pos, Quaternion.identity);
-
-        MushroomLandmine script = mine.GetComponent<MushroomLandmine>();
-        if (script == null) script = mine.AddComponent<MushroomLandmine>();
-        script.Setup();
+        if (landmineSporePrefab != null)
+        {
+            GameObject mine = Instantiate(landmineSporePrefab, pos, Quaternion.identity);
+            MushroomLandmine script = mine.GetComponent<MushroomLandmine>();
+            if (script == null) script = mine.AddComponent<MushroomLandmine>();
+            script.Setup();
+        }
     }
 
     private IEnumerator Combo_SuckAndExplode()
     {
-        anim.CrossFade("Static", 0.1f);
+        if (anim != null) anim.CrossFade("Static", 0.1f);
 
         yield return new WaitForSeconds(2f);
+        if (isDead) yield break;
 
         Collider[] hits = Physics.OverlapSphere(transform.position, 6.5f);
         foreach (var h in hits)
         {
-            if (h.CompareTag("Player"))
+            if (h.CompareTag("Player") && PlayerMovement.Instance != null)
                 PlayerMovement.Instance.GetDamage(25f, transform);
         }
     }
 
     private IEnumerator GroggyStateRoutine()
     {
-        anim.CrossFade("Groggy", 0.1f);
+        if (anim != null) anim.CrossFade("Groggy", 0.1f);
         isGroggy = true;
         yield return new WaitForSeconds(5f);
         isGroggy = false;
@@ -327,7 +332,7 @@ public class BossMushroomLord : BossBase
     protected override IEnumerator PhaseTransitionRoutine()
     {
         isPhaseTransitioning = true;
-        anim.CrossFade("PhaseTransition", 0.1f);
+        if (anim != null) anim.CrossFade("PhaseTransition", 0.1f);
 
         yield return new WaitForSeconds(3f);
 
@@ -344,29 +349,36 @@ public class BossMushroomLord : BossBase
         while (!isDead)
         {
             yield return new WaitForSeconds(Random.Range(2f, 4f));
+            if (isDead || playerTransform == null) yield break;
 
             Vector3 pos = playerTransform.position + Random.insideUnitSphere * 3f;
+            pos.z = 0f;
             pos.y = transform.position.y + 10f;
 
-            GameObject fall = Instantiate(fallingMushroomPrefab, pos, Quaternion.identity);
+            if (fallingMushroomPrefab != null)
+            {
+                GameObject fall = Instantiate(fallingMushroomPrefab, pos, Quaternion.identity);
+                MushroomFallingObstacle f = fall.GetComponent<MushroomFallingObstacle>();
+                if (f == null) f = fall.AddComponent<MushroomFallingObstacle>();
 
-            MushroomFallingObstacle f = fall.GetComponent<MushroomFallingObstacle>();
-            if (f == null) f = fall.AddComponent<MushroomFallingObstacle>();
+                Vector3 floorPos = pos;
+                floorPos.y = GetGroundHeight(pos);
 
-            Vector3 floorPos = pos;
-            floorPos.y = Terrain.activeTerrain.SampleHeight(pos);
-
-            f.StartFalling(floorPos);
+                f.StartFalling(floorPos);
+            }
         }
     }
 
     protected override void Die()
     {
+        if (isDead) return;
         isDead = true;
 
-        anim.SetTrigger("Die");
+        if (anim != null) anim.SetTrigger("Die");
 
-        StopAllCoroutines();
+        if (aiRoutine != null) StopCoroutine(aiRoutine);
+        if (attackRoutine != null) StopCoroutine(attackRoutine);
+        if (passiveFallingRoutine != null) StopCoroutine(passiveFallingRoutine);
 
         if (RewardManager.Instance != null)
             RewardManager.Instance.ShowRewardSelection();
@@ -374,8 +386,21 @@ public class BossMushroomLord : BossBase
         Destroy(gameObject, 5f);
     }
 
-    // ---------------- Sub Classes ----------------
+    private float GetGroundHeight(Vector3 pos)
+    {
+        if (Terrain.activeTerrain != null)
+        {
+            return Terrain.activeTerrain.SampleHeight(pos);
+        }
 
+        if (Physics.Raycast(pos, Vector3.down, out RaycastHit hit, 20f))
+        {
+            return hit.point.y;
+        }
+        return transform.position.y;
+    }
+
+    
     public class MushroomLandmine : MonoBehaviour
     {
         private bool isTriggered = false;
@@ -390,12 +415,14 @@ public class BossMushroomLord : BossBase
             if (other.CompareTag("Player") && !isTriggered)
             {
                 isTriggered = true;
-                PlayerMovement.Instance.GetDamage(15f, transform);
+                if (PlayerMovement.Instance != null)
+                    PlayerMovement.Instance.GetDamage(15f, transform);
                 Destroy(gameObject);
             }
         }
     }
 
+   
     public class MushroomFallingObstacle : MonoBehaviour
     {
         private Vector3 targetFloorPos;
@@ -424,7 +451,7 @@ public class BossMushroomLord : BossBase
                 Collider[] hits = Physics.OverlapSphere(transform.position, 2f);
                 foreach (var h in hits)
                 {
-                    if (h.CompareTag("Player"))
+                    if (h.CompareTag("Player") && PlayerMovement.Instance != null)
                         PlayerMovement.Instance.GetDamage(20f, transform);
                 }
 
