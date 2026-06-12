@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 927ff45fcaecdae4db876c01ccb81a66
+guid: 484e8f0b57074844bba977f22df51b01
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4313397667342461855
-    second: "\uAC8C\uC784 \uC2A4\uD0C0\uD2B8 UI_0"
+      213: 3907721248601932646
+    second: GameTitle_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -96,17 +96,43 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\uAC8C\uC784 \uC2A4\uD0C0\uD2B8 UI_0"
+      name: GameTitle_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1377
-        height: 768
+        width: 660
+        height: 152
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f9b22f833544cdb30800000000000000
-      internalID: 4313397667342461855
+      spriteID: 6630a2885c30b3630800000000000000
+      internalID: 3907721248601932646
       vertices: []
       indices: 
       edges: []
@@ -125,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "\uAC8C\uC784 \uC2A4\uD0C0\uD2B8 UI_0": 4313397667342461855
+      GameTitle_0: 3907721248601932646
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
