@@ -89,6 +89,9 @@ public class PlayerMovement : MonoBehaviour
     bool isHit = false;
     public float hitStunDuration = 0.3f;
 
+    // 💡 사망 상태를 추적하여 중복 사망과 죽은 뒤의 조작을 막는 안전 플래그입니다.
+    private bool isDead = false;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -111,6 +114,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        // 💡 죽은 상태라면 인벤토리를 제외한 모든 전투/이동 입력을 차단합니다.
+        if (isDead) return;
 
         if (Input.GetKeyDown(kb.inventory))
             UIManager.Instance.ToggleInventory();
@@ -249,7 +254,8 @@ public class PlayerMovement : MonoBehaviour
 
     void JumpHandler()
     {
-        // 점프 딜레이 해결: 입력 즉시 반응하도록 변경
+        if (isDead) return;
+
         if (Input.GetKeyDown(kb.jumpKey))
         {
             if (jumpCount < maxJumpCount)
@@ -302,7 +308,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Roll()
     {
-        if (!canRoll || !isGrounded) return;
+        if (!canRoll || !isGrounded || isDead) return;
         StartCoroutine(RollCoroutine());
     }
 
@@ -314,6 +320,7 @@ public class PlayerMovement : MonoBehaviour
         float elapsedTime = 0f;
         while (elapsedTime < rollDuration)
         {
+            if (isDead) yield break; // 구르는 도중 죽으면 즉시 중단
             Vector3 rollVel = rb.linearVelocity;
             rollVel.x = lastInputDirection * maxSpeed * rollSpeedMultiplier;
             rb.linearVelocity = rollVel;
@@ -329,7 +336,8 @@ public class PlayerMovement : MonoBehaviour
 
     public void GetDamage(float damageAmount, Transform damageSource)
     {
-        if (isRolling || isHit) return;
+        // 💡 이미 죽은 상태라면 추가 피격 및 넉백을 무시합니다.
+        if (isDead || isRolling || isHit) return;
 
         currentHp -= damageAmount;
         UIManager.Instance.UpdatePlayerHP();
@@ -361,24 +369,34 @@ public class PlayerMovement : MonoBehaviour
         isHit = false;
     }
 
+    // 💡 사망 처리 함수 수정
     void Die()
     {
+        if (isDead) return;
+        isDead = true;
+
         controlLocked = true;
-        rb.linearVelocity = Vector3.zero;
+        rb.linearVelocity = Vector3.zero; // 사망 시 즉시 미끄러짐 멈춤
 
         animator?.SetTrigger("Death");
 
+        // 기존에 적어두셨던 DeathRoutine을 안정적으로 실행합니다.
         StartCoroutine(DeathRoutine());
     }
 
+    // 💡 기존 리스폰 코루틴 유지 및 안정성 확보
     IEnumerator DeathRoutine()
     {
-        yield return new WaitForSeconds(2f); // Death 애니메이션 길이
+        yield return new WaitForSeconds(2f); // Death 애니메이션 길이만큼 대기
+
+        // 스타트씬(StartScene_Test)으로 안전하게 이동합니다.
         SceneManager.LoadScene("StartScene_Test");
     }
 
     void LaunchArrow()
     {
+        if (isDead) return;
+
         ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
 
         arrowPower = Mathf.Max(arrowPower, 3f);
@@ -423,21 +441,18 @@ public class PlayerMovement : MonoBehaviour
         Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * lastInputDirection, hitboxOffset.y, hitboxOffset.z);
         Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        
         Collider[] hitTargets = Physics.OverlapBox(worldCenter, hitboxSize * 0.5f, Quaternion.identity, enemyLayer);
 
         foreach (Collider targetCollider in hitTargets)
         {
-            
             if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
             {
                 enemyCombat.GetDamage(Damage, transform);
                 Debug.Log($"[일반몹 타격] {targetCollider.name}에게 {Damage}의 피해!");
             }
-            
             else if (targetCollider.TryGetComponent<BossBase>(out BossBase boss))
             {
-                boss.TakeDamage(Damage); 
+                boss.TakeDamage(Damage);
                 Debug.Log($"[보스몹 타격] {targetCollider.name}에게 {Damage}의 피해!");
             }
         }
@@ -512,6 +527,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionStay(Collision collision)
     {
+        if (isDead) return;
+
         foreach (ContactPoint contact in collision.contacts)
         {
             if (Mathf.Abs(contact.normal.x) > 0.5f)
