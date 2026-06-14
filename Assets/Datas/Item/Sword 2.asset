@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7d62f91a16992f4585d21e827e9c976, type: 3}
   m_Name: Sword 2
   m_EditorClassIdentifier: Assembly-CSharp::ShopItemData
-  itemName: sword
+  itemName: Sword
   itemDescription: 
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 6572326869005571329, guid: a517760a4d84a42498bab344287e41f9, type: 3}
   rarity: 0
   actualItemData: {fileID: 11400000, guid: 44efa00c5de4fcd45888696d9bbf537e, type: 2}

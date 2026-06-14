@@ -8,28 +8,49 @@ public class RewardCard : MonoBehaviour
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI descText;
 
+    [Header("아이콘 오브젝트 설정 (칼/활 각각 연결)")]
+    public GameObject swordIconObj; 
+    public GameObject bowIconObj;   
 
-    public Image iconImage;
-
-    private ItemData itemData; // 내가 품고 있는 아이템 정보
+    private ItemData itemData; 
 
     public void Setup(ItemData data)
     {
         itemData = data;
 
+       
+        if (swordIconObj != null) swordIconObj.SetActive(false);
+        if (bowIconObj != null) bowIconObj.SetActive(false);
+
+        if (data == null) return;
+
+       
         if (nameText != null) nameText.text = data.itemName;
         if (descText != null) descText.text = data.description;
 
-       
-        if (iconImage != null) iconImage.sprite = data.icon;
-    }
+      
+        if (data.itemType == ItemType.Weapon)
+        {
+           
+            string itemNameStr = data.itemName.ToLower();
 
+            
+            if (itemNameStr.Contains("dagger") || itemNameStr.Contains("sword"))
+            {
+                if (swordIconObj != null) swordIconObj.SetActive(true);
+            }
+           
+            else if (itemNameStr.Contains("arrow") || itemNameStr.Contains("bow"))
+            {
+                if (bowIconObj != null) bowIconObj.SetActive(true);
+            }
+        }
+    }
 
     public void OnClickCard()
     {
         if (itemData != null)
         {
-           
             RewardManager.Instance.OnRewardSelected(itemData);
         }
         else

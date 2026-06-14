@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 public class RewardManager : MonoBehaviour
 {
     public static RewardManager Instance { get; private set; }
 
-    [Header("아이템 데이터베이스")]
+    [Header("아이템 데이터베이스 (여기에 넣은 순서대로 고정!)")]
     public List<ItemData> itemDatabase;
 
     [Header("보상 UI 설정")]
@@ -30,73 +29,39 @@ public class RewardManager : MonoBehaviour
             rewardPanel.SetActive(false);
     }
 
-
     public void ShowRewardSelection()
     {
-        if (itemDatabase == null || itemDatabase.Count == 0)
+        if (itemDatabase == null || itemDatabase.Count < 3)
         {
-            Debug.LogError("아이템 데이터베이스가 완전히 비어있습니다!");
+            Debug.LogError("아이템 데이터베이스에 아이템을 3개 이상 넣어주세요!");
             return;
         }
 
-        int targetCount = Mathf.Min(3, itemDatabase.Count);
-        List<ItemData> selectedItems = new List<ItemData>();
-
-        int loopSafety = 0;
-        while (selectedItems.Count < targetCount && loopSafety < 100)
-        {
-            loopSafety++;
-            ItemData candidate = GetWeightedRandomItem();
-
-            if (candidate != null && !selectedItems.Contains(candidate))
-            {
-                selectedItems.Add(candidate);
-            }
-        }
-
         rewardPanel.SetActive(true);
-        for (int i = 0; i < cards.Length; i++)
+
+        
+        for (int i = 0; i < 3; i++)
         {
-            if (i < selectedItems.Count)
+            if (i < cards.Length)
             {
                 cards[i].gameObject.SetActive(true);
-                cards[i].Setup(selectedItems[i]); // 카드에 데이터 주입
-            }
-            else
-            {
-                cards[i].gameObject.SetActive(false);
+                cards[i].Setup(itemDatabase[i]);
             }
         }
 
         Time.timeScale = 0f; // 게임 일시정지
-        Debug.Log("보상 선택창 활성화 (게임 일시정지)");
+        Debug.Log("고정 보상 선택창 활성화 (게임 일시정지)");
     }
 
-    private ItemData GetWeightedRandomItem()
-    {
-        float roll = Random.Range(0f, 100f);
-        ItemType targetType = (roll < 70f) ? ItemType.Weapon : ItemType.Item;
-
-        var filteredList = itemDatabase.FindAll(x => x.itemType == targetType);
-
-        if (filteredList.Count == 0)
-            return itemDatabase[Random.Range(0, itemDatabase.Count)];
-
-        return filteredList[Random.Range(0, filteredList.Count)];
-    }
-
-    // ?? 카드를 누르면 즉시 호출되는 핵심 함수
     public void OnRewardSelected(ItemData selectedItem)
     {
         if (selectedItem != null)
         {
             Debug.Log($"<color=lime>{selectedItem.itemName}</color> 획득 완료! 즉시 게임으로 돌아갑니다.");
 
-            // [연동 팁] 나중에 플레이어 인벤토리나 스탯에 아이템을 반영하려면 여기에 코드를 넣으세요!
-            // 예: PlayerMovement_3D.Instance.RecalculateStats(...);
+           
         }
 
-        // ? 별도의 버튼 클릭 없이, 고르는 순간 바로 창을 닫고 일시정지를 풉니다.
         if (rewardPanel != null) rewardPanel.SetActive(false);
         Time.timeScale = 1f;
     }

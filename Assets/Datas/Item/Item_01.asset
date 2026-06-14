@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a268c63b2de0ed34c89ee05d3bab9899, type: 3}
   m_Name: Item_01
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  rarity: 0
   itemID: -910170
   itemName: Arrow
   description: 

@@ -4872,7 +4872,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &33522369 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 7326308086656437384, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
+  m_CorrespondingSourceObject: {fileID: 6258667636001805109, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
   m_PrefabInstance: {fileID: 973868048}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &36355982
@@ -32909,7 +32909,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &213092182 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 5316609513351239561, guid: 4db940c31d61ac149801c850fc645d68, type: 3}
+  m_CorrespondingSourceObject: {fileID: 1575901116381070661, guid: 4db940c31d61ac149801c850fc645d68, type: 3}
   m_PrefabInstance: {fileID: 2116530518}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &213963657
@@ -53170,7 +53170,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &342680796 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 7326308086656437384, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
+  m_CorrespondingSourceObject: {fileID: 7182325659214864057, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
   m_PrefabInstance: {fileID: 1139892363}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &343549611
@@ -95640,7 +95640,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &595421550 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 7326308086656437384, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
+  m_CorrespondingSourceObject: {fileID: 6258667636001805109, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
   m_PrefabInstance: {fileID: 1226060356}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &595429391
@@ -147990,7 +147990,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &918594379 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 7326308086656437384, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
+  m_CorrespondingSourceObject: {fileID: 6258667636001805109, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
   m_PrefabInstance: {fileID: 656163252}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &918667741
@@ -213850,15 +213850,15 @@ PrefabInstance:
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: landmineSporePrefab
       value: 
-      objectReference: {fileID: 6036688514831096253, guid: 8896c3cf76aaf3e47a578b9d34d4bae9, type: 3}
+      objectReference: {fileID: 308650663367626842, guid: c0accfbe3b10c074e84577e3a282be3e, type: 3}
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: minionMushroomPrefab
       value: 
-      objectReference: {fileID: 7739543428553537623, guid: d1622e277c7914542a82cc4e958b9cae, type: 3}
+      objectReference: {fileID: 94117209824322150, guid: 75d7aa289f15f4f49a786e8f60b8393a, type: 3}
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: fallingMushroomPrefab
       value: 
-      objectReference: {fileID: 3722489255312448586, guid: 6c9a7b8b1cf5e6d4cb56856df91f0e44, type: 3}
+      objectReference: {fileID: 308650663367626842, guid: c0accfbe3b10c074e84577e3a282be3e, type: 3}
     - target: {fileID: 449700765456748431, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: m_Name
       value: BossMushroom
@@ -241687,7 +241687,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &1454146599 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 7326308086656437384, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
+  m_CorrespondingSourceObject: {fileID: 6258667636001805109, guid: 81d960fe44e3f6b46bcda7b24988e254, type: 3}
   m_PrefabInstance: {fileID: 1125741817}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1454424063
@@ -286689,7 +286689,7 @@ PrefabInstance:
     - target: {fileID: 2240151559986993538, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
       propertyPath: inventoryUI
       value: 
-      objectReference: {fileID: 7103237499037330217}
+      objectReference: {fileID: 0}
     - target: {fileID: 3828376633533440286, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
       propertyPath: m_Name
       value: Player_2D
@@ -355636,17 +355636,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e4a20d475f21e7644b788211e0d41f91, type: 3}
---- !u!114 &7103237499037330217 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4382480655177315048, guid: e4a20d475f21e7644b788211e0d41f91, type: 3}
-  m_PrefabInstance: {fileID: 4340331050491274406}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a9a0d43d538865349b08259c79157c15, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryUI
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
