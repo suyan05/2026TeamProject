@@ -303,7 +303,7 @@ public class PlayerMovement : MonoBehaviour
     void RotationHandler()
     {
         float targetYAngle = (lastInputDirection == 1) ? 0f : 180f;
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, targetYAngle, 0), Time.deltaTime * 10f);
+        transform.rotation = Quaternion.Euler(0f, targetYAngle, 0f);
     }
 
     void Roll()
