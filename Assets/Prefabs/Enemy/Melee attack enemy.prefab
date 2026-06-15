@@ -53,7 +53,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MeleeAttackEnemy
   maxHp: 30
   enemyData: {fileID: 11400000, guid: c3e27bba21cfde14faec50f4f33c3a66, type: 2}
-  maxSpeed: 8
+  maxSpeed: 3
   moveRadius: 3
   trunDuration: 0.5
   acceleration: 2

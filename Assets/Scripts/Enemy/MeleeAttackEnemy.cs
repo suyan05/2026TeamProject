@@ -11,7 +11,7 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     public EnemyData enemyData;
 
     [Header("움직임")]
-    public float maxSpeed = 8; // 최대 움직임 속도
+    public float maxSpeed = 3; // 최대 움직임 속도
     public float moveRadius; // 대기 상태에 들어간 위치로부터 최대 탐색 범위.
     public float trunDuration = 0.5f;   // 회전 대기 시간
     public float acceleration = 2f; // 가속도
@@ -51,10 +51,12 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     private float currentNormalizedSpeed = 0;   // 정규화된 속도
     private float detectionRate = 0;    // 플레이어 감지율 (0~1)
     public float currentHp;    // 현재 체력
-    private const float layerCheckRadius = 0.05f;  // 감지 위치 반경
+
+    // 💥 센서 크기를 넉넉하게 키웠습니다 (0.05f -> 0.2f)
+    private float layerCheckRadius = 0.2f;
 
     private bool isFacingRight = true;  // 오른쪽을 바라보는지 여부
-    private bool canGoStraight = true;  // 직진 가능 여부 (벽이 없고 땅이 있어야 함)
+    private bool canGoStraight = true;  // 직진 가능 여부
     private bool isDead = false;    // 죽었는지 여부
 
     Vector3 movePosRight;
@@ -180,6 +182,7 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         {
             float sign = isFacingRight ? 1f : -1f;
 
+            // 순찰 중일 때는 바닥이 있는지(canGoStraight) 확인합니다.
             while (!HasArrived(targetPos) && canGoStraight)
             {
                 currentNormalizedSpeed = Mathf.Min(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.5f);
@@ -211,7 +214,8 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         Vector3 checkPos = playerObject.transform.position;
         checkPos.y = transform.position.y;
 
-        if (canGoStraight && !HasArrived(checkPos))
+        // 💥 플레이어를 발견하면 벽/바닥 눈치 안 보고 무지성 돌격! (canGoStraight 제거)
+        if (!HasArrived(checkPos))
         {
             currentNormalizedSpeed = Mathf.Clamp(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.505f, 1f);
             rb.linearVelocity = new Vector3(facingSign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y, 0f);
@@ -267,7 +271,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         UpdateStates();
     }
 
-    // 💥 FIX 1: 조건 완화 - PlayerLayer에 속한 콜라이더가 닿기만 하면 사정거리 진입으로 판정!
     bool IsPlayerInRange()
     {
         Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
@@ -301,7 +304,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         SetState(state.track);
     }
 
-    // 💥 FIX 2: 공격 시 PlayerLayer에 닿았으면 무조건 인스턴스에 데미지 적용
     void Attack()
     {
         Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
@@ -324,7 +326,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         SetState(state.idle);
     }
 
-    // 💥 FIX 3: 레이저(Raycast)를 쏠 때 Y축 높이를 +0.5f 만큼 올려 바닥을 긁지 않도록 수정!
     bool IsPlayerInView()
     {
         Vector3 localAdjustedOffset = new Vector3(viewOffset.x * facingSign, viewOffset.y, 0f);
@@ -332,10 +333,12 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
         Collider[] hitTargets = Physics.OverlapBox(worldCenter, viewSize / 2f, Quaternion.identity, playerLayer);
 
-        // 시야 박스 안에 PlayerLayer가 감지되지 않았다면 무조건 false
         if (hitTargets.Length == 0) return false;
 
-        // 장애물(벽) 검사를 위한 레이저 발사 (명치 높이인 0.5f를 더해줌)
+        // 💥 시야에 들어온 플레이어를 타겟으로 업데이트
+        playerObject = hitTargets[0].gameObject;
+
+        // 💥 레이저 발사 위치 상향 조정 (바닥 긁힘 방지)
         Vector3 startPos = transform.position + Vector3.up * 0.5f;
         Vector3 endPos = playerObject.transform.position + Vector3.up * 0.5f;
 
@@ -357,10 +360,8 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         bool upperGroundDetect = Physics.CheckSphere(upperGroundCheckPos.position, layerCheckRadius, obstacleMask);
         bool lowerGroundDetect = Physics.CheckSphere(lowerGroundCheckPos.position, layerCheckRadius, obstacleMask);
 
-        bool isGrounded = upperGroundDetect || lowerGroundDetect;
-        bool isTouchingAnyWall = Physics.CheckSphere(wallCheckPos.position, layerCheckRadius, obstacleMask);
-
-        canGoStraight = isGrounded && !isTouchingAnyWall;
+        // 💥 오작동 유발하는 벽 센서 검사 제거. 바닥만 있으면 갈 수 있다고 판단!
+        canGoStraight = upperGroundDetect || lowerGroundDetect;
     }
 
     public void GetDamage(float damage, Transform attackerTransform)
@@ -433,9 +434,9 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         }
 
         Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(upperGroundCheckPos.position, 0.05f);
-        Gizmos.DrawWireSphere(lowerGroundCheckPos.position, 0.05f);
+        Gizmos.DrawWireSphere(upperGroundCheckPos.position, layerCheckRadius); 
+        Gizmos.DrawWireSphere(lowerGroundCheckPos.position, layerCheckRadius);
         Gizmos.color = Color.magenta;
-        Gizmos.DrawWireSphere(wallCheckPos.position, 0.05f);
+        Gizmos.DrawWireSphere(wallCheckPos.position, layerCheckRadius);
     }
 }
