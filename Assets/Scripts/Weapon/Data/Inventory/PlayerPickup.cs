@@ -16,7 +16,6 @@ public class PlayerPickup : MonoBehaviour
         if (inventory == null)
             inventory = Object.FindFirstObjectByType<Inventory>(FindObjectsInactive.Include);
 
-        // InventoryUI는 Start에서 못 찾을 가능성이 높음 → Update에서 찾게 함
         TryFindUI();
     }
 

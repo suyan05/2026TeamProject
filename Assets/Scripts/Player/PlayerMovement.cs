@@ -48,6 +48,9 @@ public class PlayerMovement : MonoBehaviour
     public float maxArrowAngle = 30f;
     public Transform firePoint;
 
+    [Header("활 오브젝트")]
+    public GameObject bowObject;
+
     [Header("근접")]
     public float damage = 20f;
     public Vector3 hitboxOffset = Vector3.zero;
@@ -89,9 +92,6 @@ public class PlayerMovement : MonoBehaviour
     bool isHit = false;
     public float hitStunDuration = 0.3f;
 
-    // 💡 사망 상태를 추적하여 중복 사망과 죽은 뒤의 조작을 막는 안전 플래그입니다.
-    private bool isDead = false;
-
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -110,13 +110,19 @@ public class PlayerMovement : MonoBehaviour
 
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
         UIManager.Instance.UpdatePlayerHP();
+
+        if (bowObject != null && weaponHolder != null)
+        {
+            bowObject.transform.SetParent(weaponHolder);
+            bowObject.transform.localPosition = Vector3.zero;
+            bowObject.transform.localRotation = Quaternion.identity;
+        }
+
+        bowObject?.SetActive(false);
     }
 
     private void Update()
     {
-        // 💡 죽은 상태라면 인벤토리를 제외한 모든 전투/이동 입력을 차단합니다.
-        if (isDead) return;
-
         if (Input.GetKeyDown(kb.inventory))
             UIManager.Instance.ToggleInventory();
 
@@ -128,22 +134,29 @@ public class PlayerMovement : MonoBehaviour
 
         bool inventoryOpen = GameStateManager.Current == GameState.InventoryOpen;
 
-        // 근접 공격
         if (!inventoryOpen && Weapon1Pressed() && !isBowCharging)
         {
+            bowObject?.SetActive(false);
+            if (equippedWeaponObject != null)
+                equippedWeaponObject.SetActive(true);
+
             animator?.SetTrigger("Attack");
             isMeleeAttacking = true;
             MeleeAttack();
             StartCoroutine(EndMeleeAttack());
         }
 
-        // 활 차징
         if (!inventoryOpen)
         {
             if (Weapon2Hold() && !isMeleeAttacking)
             {
                 if (!isBowCharging)
+                {
                     bowChargeDirection = lastInputDirection;
+                    bowObject?.SetActive(true);
+                    if (equippedWeaponObject != null)
+                        equippedWeaponObject.SetActive(false);
+                }
 
                 isBowCharging = true;
                 animator?.SetBool("BowCharge", true);
@@ -165,11 +178,14 @@ public class PlayerMovement : MonoBehaviour
 
                 lastInputDirection = bowChargeDirection;
 
+                bowObject?.SetActive(false);
+                if (equippedWeaponObject != null)
+                    equippedWeaponObject.SetActive(true);
+
                 UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
             }
         }
 
-        // 구르기
         if (!inventoryOpen && Input.GetKeyDown(kb.rollKey))
         {
             animator?.SetTrigger("Roll");
@@ -227,10 +243,23 @@ public class PlayerMovement : MonoBehaviour
             float targetSpeed = horizontal * maxSpeed * chargeSlow;
 
             currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, acceleration * Time.fixedDeltaTime);
+
+            if (horizontal == bowChargeDirection)
+            {
+                animator?.SetBool("BowMoveForward", true);
+                animator?.SetBool("BowMoveBackward", false);
+            }
+            else
+            {
+                animator?.SetBool("BowMoveForward", false);
+                animator?.SetBool("BowMoveBackward", true);
+            }
         }
         else
         {
             currentSpeed = Mathf.Lerp(currentSpeed, 0, deceleration * Time.fixedDeltaTime);
+            animator?.SetBool("BowMoveForward", false);
+            animator?.SetBool("BowMoveBackward", false);
         }
 
         rb.linearVelocity = new Vector3(currentSpeed, rb.linearVelocity.y, 0);
@@ -254,8 +283,6 @@ public class PlayerMovement : MonoBehaviour
 
     void JumpHandler()
     {
-        if (isDead) return;
-
         if (Input.GetKeyDown(kb.jumpKey))
         {
             if (jumpCount < maxJumpCount)
@@ -308,7 +335,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Roll()
     {
-        if (!canRoll || !isGrounded || isDead) return;
+        if (!canRoll || !isGrounded) return;
         StartCoroutine(RollCoroutine());
     }
 
@@ -320,7 +347,6 @@ public class PlayerMovement : MonoBehaviour
         float elapsedTime = 0f;
         while (elapsedTime < rollDuration)
         {
-            if (isDead) yield break; // 구르는 도중 죽으면 즉시 중단
             Vector3 rollVel = rb.linearVelocity;
             rollVel.x = lastInputDirection * maxSpeed * rollSpeedMultiplier;
             rb.linearVelocity = rollVel;
@@ -336,13 +362,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void GetDamage(float damageAmount, Transform damageSource)
     {
-        // 💡 이미 죽은 상태라면 추가 피격 및 넉백을 무시합니다.
-        if (isDead || isRolling || isHit) return;
+        if (isRolling || isHit) return;
 
         currentHp -= damageAmount;
         UIManager.Instance.UpdatePlayerHP();
 
-        // 넉백 추가
         Vector3 knockbackDir = (transform.position - damageSource.position).normalized;
         rb.AddForce(knockbackDir * 5f, ForceMode.Impulse);
 
@@ -369,34 +393,24 @@ public class PlayerMovement : MonoBehaviour
         isHit = false;
     }
 
-    // 💡 사망 처리 함수 수정
     void Die()
     {
-        if (isDead) return;
-        isDead = true;
-
         controlLocked = true;
-        rb.linearVelocity = Vector3.zero; // 사망 시 즉시 미끄러짐 멈춤
+        rb.linearVelocity = Vector3.zero;
 
         animator?.SetTrigger("Death");
 
-        // 기존에 적어두셨던 DeathRoutine을 안정적으로 실행합니다.
         StartCoroutine(DeathRoutine());
     }
 
-    // 💡 기존 리스폰 코루틴 유지 및 안정성 확보
     IEnumerator DeathRoutine()
     {
-        yield return new WaitForSeconds(2f); // Death 애니메이션 길이만큼 대기
-
-        // 스타트씬(StartScene_Test)으로 안전하게 이동합니다.
-        SceneManager.LoadScene("StartScene_Test");
+        yield return new WaitForSeconds(2f);
+        SceneManager.LoadScene("StartScene");
     }
 
     void LaunchArrow()
     {
-        if (isDead) return;
-
         ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
 
         arrowPower = Mathf.Max(arrowPower, 3f);
@@ -405,6 +419,7 @@ public class PlayerMovement : MonoBehaviour
         mousePos.z = Mathf.Abs(Camera.main.transform.position.z - transform.position.z);
         Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(mousePos);
 
+        // 기존 2D 방식 그대로 유지
         Vector3 rawDirection = (worldMousePos - firePoint.position);
         rawDirection.z = 0;
         rawDirection.Normalize();
@@ -428,16 +443,32 @@ public class PlayerMovement : MonoBehaviour
         Vector3 finalDirection = new Vector3(
             Mathf.Cos(clampedAngle * Mathf.Deg2Rad),
             Mathf.Sin(clampedAngle * Mathf.Deg2Rad),
-            0
+            0f
         );
+
+        finalDirection.Normalize();
 
         float arrowSpeed = arrowPower + (rb.linearVelocity.magnitude * 0.1f);
 
         arrowScript.Shoot(finalDirection, arrowSpeed);
+
+        // 화살 회전: 앞/뒤만 바뀌도록 Y축 고정
+        float yRot = (finalDirection.x >= 0) ? 0f : 180f;
+
+        arrowScript.transform.rotation = Quaternion.Euler(
+            -clampedAngle,   // 위/아래 각도는 X축 회전
+            yRot,            // 좌/우 방향만 Y축으로 결정
+            0f
+        );
     }
+
 
     void MeleeAttack()
     {
+        bowObject?.SetActive(false);
+        if (equippedWeaponObject != null)
+            equippedWeaponObject.SetActive(true);
+
         Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * lastInputDirection, hitboxOffset.y, hitboxOffset.z);
         Vector3 worldCenter = transform.position + localAdjustedOffset;
 
@@ -448,12 +479,10 @@ public class PlayerMovement : MonoBehaviour
             if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
             {
                 enemyCombat.GetDamage(Damage, transform);
-                Debug.Log($"[일반몹 타격] {targetCollider.name}에게 {Damage}의 피해!");
             }
             else if (targetCollider.TryGetComponent<BossBase>(out BossBase boss))
             {
                 boss.TakeDamage(Damage);
-                Debug.Log($"[보스몹 타격] {targetCollider.name}에게 {Damage}의 피해!");
             }
         }
     }
@@ -527,8 +556,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionStay(Collision collision)
     {
-        if (isDead) return;
-
         foreach (ContactPoint contact in collision.contacts)
         {
             if (Mathf.Abs(contact.normal.x) > 0.5f)

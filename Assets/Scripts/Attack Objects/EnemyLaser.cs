@@ -4,7 +4,7 @@ using UnityEngine;
 public class EnemyLaser : MonoBehaviour
 {
     [Header("레이저")]
-    public SpriteRenderer laserSpriteRenderer;
+    public MeshRenderer laserRenderer;
 
     [Header("조준")]
     public float aimingTime = 2;
@@ -31,16 +31,16 @@ public class EnemyLaser : MonoBehaviour
 
     const float maxRayDistance = 100f;
     bool hasOrigin = false;
-    bool isFiring;  // 발사하고 사라지는 도중인지 여부
+    bool isFiring;
 
     Transform originTransform;
     Transform target;
-    Vector2 targetPos;
+    Vector3 targetPos;
 
     void Start()
     {
-        transform.localScale = new Vector2(transform.localScale.x, laserThickness);
-        laserSpriteRenderer.color = aimingColor;
+        transform.localScale = new Vector3(0, laserThickness, laserThickness);
+        laserRenderer.material.color = aimingColor;
 
         if (aimingTime > 0) StartCoroutine(Aiming());
         else StartCoroutine(Fire());
@@ -50,36 +50,39 @@ public class EnemyLaser : MonoBehaviour
     {
         if (hasOrigin)
         {
-            if (originTransform != null) transform.position = originTransform.position;
-            else if (!isFiring) Destroy(gameObject);
+            if (originTransform != null)
+                transform.position = originTransform.position;
+            else if (!isFiring)
+                Destroy(gameObject);
         }
     }
 
-    public void SetOrigin(Transform target)
+    public void SetOrigin(Transform t)
     {
-        if (target != null) originTransform = target;
+        originTransform = t;
         hasOrigin = true;
     }
 
-    public void SetTarget(Transform targetTransform)
+    public void SetTarget(Transform t)
     {
-        if (targetTransform != null) target = targetTransform;
+        target = t;
     }
 
     IEnumerator Aiming()
     {
-        float elapsedTime = 0f;
+        float elapsed = 0f;
 
-        while (elapsedTime < aimingTime)
+        while (elapsed < aimingTime)
         {
             if (target != null) targetPos = target.position;
+
             LookPos(targetPos);
             RaycastResize();
 
-            float currentThickness = Mathf.Lerp(0, laserThickness, elapsedTime / aimingTime);
-            transform.localScale = new Vector2(transform.localScale.x, currentThickness);
+            float currentThickness = Mathf.Lerp(0, laserThickness, elapsed / aimingTime);
+            transform.localScale = new Vector3(transform.localScale.x, currentThickness, currentThickness);
 
-            elapsedTime += Time.deltaTime;
+            elapsed += Time.deltaTime;
             yield return null;
         }
 
@@ -89,22 +92,24 @@ public class EnemyLaser : MonoBehaviour
     IEnumerator Fire()
     {
         if (target != null) targetPos = target.position;
+
         LookPos(targetPos);
 
         if (laserDispersion > 0)
         {
             float randomAngle = Random.Range(-laserDispersion / 2f, laserDispersion / 2f);
-            Rotate(randomAngle);
+            transform.Rotate(0, randomAngle, 0);
         }
 
         if (timeToFire > 0)
         {
-            laserSpriteRenderer.color = lockOnColor;
-            float elapsedTime = 0f;
-            while (elapsedTime < timeToFire)
+            laserRenderer.material.color = lockOnColor;
+            float elapsed = 0f;
+
+            while (elapsed < timeToFire)
             {
                 RaycastResize();
-                elapsedTime += Time.deltaTime;
+                elapsed += Time.deltaTime;
                 yield return null;
             }
         }
@@ -115,84 +120,61 @@ public class EnemyLaser : MonoBehaviour
 
     void ShootLaser()
     {
-        laserSpriteRenderer.color = startColor;
-
+        laserRenderer.material.color = startColor;
         isFiring = true;
 
-        Vector2 origin = transform.position;
-        Vector2 direction = transform.right;
-        RaycastHit2D hit = Physics2D.Raycast(origin, direction, maxRayDistance, collisionMask);
+        Vector3 origin = transform.position;
+        Vector3 direction = transform.forward;
 
-        if (hit)
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, maxRayDistance, collisionMask))
         {
             if (hit.collider.gameObject == PlayerMovement.Instance.gameObject)
-            {
                 PlayerMovement.Instance.GetDamage(damage, transform);
-            }
         }
 
         StartCoroutine(Co_ShrinkAndDestroy());
     }
 
-
-    void Rotate(float angle)
-    {
-        float currentZ = transform.localEulerAngles.z;
-
-        float newZ = currentZ + angle;
-
-        transform.localRotation = Quaternion.Euler(
-            transform.localEulerAngles.x,
-            transform.localEulerAngles.y,
-            newZ
-        );
-    }
-
     IEnumerator Co_ShrinkAndDestroy()
     {
-        float elapsedTime = 0f;
+        float elapsed = 0f;
         float startThickness = transform.localScale.y;
 
-        while (elapsedTime < shrinkTime)
+        while (elapsed < shrinkTime)
         {
-            float t = elapsedTime / shrinkTime;
+            float t = elapsed / shrinkTime;
 
             float currentThickness = Mathf.Lerp(startThickness, 0f, t);
-            transform.localScale = new Vector2(transform.localScale.x, currentThickness);
+            transform.localScale = new Vector3(transform.localScale.x, currentThickness, currentThickness);
 
-            laserSpriteRenderer.color = Color.Lerp(startColor, endColor, t);
+            laserRenderer.material.color = Color.Lerp(startColor, endColor, t);
 
-            elapsedTime += Time.deltaTime;
+            elapsed += Time.deltaTime;
             yield return null;
         }
 
         Destroy(gameObject);
     }
 
-    public void LookPos(Vector2 pos)
+    public void LookPos(Vector3 pos)
     {
-        targetPos = pos;
-        Vector2 direction = targetPos - (Vector2)transform.position;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        Quaternion rotation = Quaternion.Euler(0f, 0f, angle);
-        transform.rotation = rotation;
+        Vector3 dir = pos - transform.position;
+        Quaternion rot = Quaternion.LookRotation(dir);
+        transform.rotation = rot;
     }
 
     void RaycastResize()
     {
-        Vector2 origin = transform.position;
-        Vector2 direction = transform.right;
+        Vector3 origin = transform.position;
+        Vector3 direction = transform.forward;
 
-        RaycastHit2D hit = Physics2D.Raycast(origin, direction, maxRayDistance, collisionMask);
-        float distanceToSet = maxRayDistance;
+        float distance = maxRayDistance;
 
-        if (hit)
-        {
-            distanceToSet = hit.distance;
-        }
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, maxRayDistance, collisionMask))
+            distance = hit.distance;
 
         Vector3 newScale = transform.localScale;
-        newScale.x = distanceToSet;
+        newScale.x = distance;
         transform.localScale = newScale;
     }
 }
