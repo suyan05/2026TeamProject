@@ -405,7 +405,7 @@ public class PlayerMovement : MonoBehaviour
     IEnumerator DeathRoutine()
     {
         yield return new WaitForSeconds(2f);
-        SceneManager.LoadScene("StartScene");
+        SceneManager.LoadScene("StartScene_Test");
     }
 
     // 활 발사
