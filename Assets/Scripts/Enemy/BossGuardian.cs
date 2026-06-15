@@ -264,6 +264,9 @@ public class BossGuardian : BossBase
         if (anim != null) anim.SetTrigger("Die");
         if (anim != null) anim.SetBool("Walk", false);
         StopAllCoroutines();
+
+        // 추가된 부분: 3초 뒤에 보스 가디언 오브젝트 파괴
+        Destroy(gameObject, 3.0f);
     }
 }
 

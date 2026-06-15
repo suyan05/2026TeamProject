@@ -213841,7 +213841,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: maxHealth
-      value: 200
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: playerTransform

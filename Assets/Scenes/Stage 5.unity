@@ -65272,13 +65272,73 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4976420665920508595, guid: e1479d9bb76a23045ab50c514942bace, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 676773244}
+    - targetCorrespondingSourceObject: {fileID: 462214478246658853, guid: e1479d9bb76a23045ab50c514942bace, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 676773243}
   m_SourcePrefab: {fileID: 100100000, guid: e1479d9bb76a23045ab50c514942bace, type: 3}
 --- !u!4 &676773240 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8087443341407206232, guid: e1479d9bb76a23045ab50c514942bace, type: 3}
   m_PrefabInstance: {fileID: 676773239}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &676773241 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 462214478246658853, guid: e1479d9bb76a23045ab50c514942bace, type: 3}
+  m_PrefabInstance: {fileID: 676773239}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &676773242 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4976420665920508595, guid: e1479d9bb76a23045ab50c514942bace, type: 3}
+  m_PrefabInstance: {fileID: 676773239}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &676773243
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 676773241}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4711208715938537054, guid: 9aca41184800dfb47bb94396bd323788, type: 3}
+--- !u!64 &676773244
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 676773242}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 2534964839176971238, guid: 9aca41184800dfb47bb94396bd323788, type: 3}
 --- !u!4 &678183092 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: e956369f8c98c604d948831d83e3233c, type: 3}
@@ -183382,7 +183442,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: maxHealth
-      value: 200
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: playerTransform
@@ -183391,18 +183451,22 @@ PrefabInstance:
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: landmineSporePrefab
       value: 
-      objectReference: {fileID: 6036688514831096253, guid: 8896c3cf76aaf3e47a578b9d34d4bae9, type: 3}
+      objectReference: {fileID: 308650663367626842, guid: c0accfbe3b10c074e84577e3a282be3e, type: 3}
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: minionMushroomPrefab
       value: 
-      objectReference: {fileID: 7739543428553537623, guid: d1622e277c7914542a82cc4e958b9cae, type: 3}
+      objectReference: {fileID: 94117209824322150, guid: 75d7aa289f15f4f49a786e8f60b8393a, type: 3}
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: fallingMushroomPrefab
       value: 
-      objectReference: {fileID: 3722489255312448586, guid: 6c9a7b8b1cf5e6d4cb56856df91f0e44, type: 3}
+      objectReference: {fileID: 308650663367626842, guid: c0accfbe3b10c074e84577e3a282be3e, type: 3}
     - target: {fileID: 449700765456748431, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: m_Name
       value: BossMushroom
+      objectReference: {fileID: 0}
+    - target: {fileID: 449700765456748431, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5439841109542886227, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: m_LocalPosition.x
@@ -199262,7 +199326,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1759307754034332348, guid: 74fbd29c84df5c14db38e230bc8a428d, type: 3}
       propertyPath: maxHealth
-      value: 200
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 1759307754034332348, guid: 74fbd29c84df5c14db38e230bc8a428d, type: 3}
       propertyPath: vineTrapPrefab
@@ -199279,10 +199343,14 @@ PrefabInstance:
     - target: {fileID: 1759307754034332348, guid: 74fbd29c84df5c14db38e230bc8a428d, type: 3}
       propertyPath: seedProjectilePrefab
       value: 
-      objectReference: {fileID: 3134978419912627734, guid: 5d564893f5f4c7049b536223fbc85fb2, type: 3}
+      objectReference: {fileID: 308650663367626842, guid: c0accfbe3b10c074e84577e3a282be3e, type: 3}
     - target: {fileID: 4437461200327273736, guid: 74fbd29c84df5c14db38e230bc8a428d, type: 3}
       propertyPath: m_Name
       value: BossGuardian
+      objectReference: {fileID: 0}
+    - target: {fileID: 4437461200327273736, guid: 74fbd29c84df5c14db38e230bc8a428d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7371099955405087042, guid: 74fbd29c84df5c14db38e230bc8a428d, type: 3}
       propertyPath: m_LocalPosition.x

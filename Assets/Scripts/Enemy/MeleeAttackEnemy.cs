@@ -1,12 +1,11 @@
 using System.Collections;
 using UnityEngine;
 
-
 [RequireComponent(typeof(Rigidbody))]
 public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 {
     [Header("체력")]
-    public float maxHp = 30f;   
+    public float maxHp = 30f;
 
     [Header("적 데이터")]
     public EnemyData enemyData;
@@ -31,12 +30,12 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     public float damage = 0.4f;  // 공격 대미지
 
     [Header("히트박스")]
-    public Vector3 hitboxOffset = Vector3.zero;    //  3D 오프셋(Vector3)으로 변경
-    public Vector3 hitboxSize = new Vector3(1.0f, 1.0f, 1.0f); //  3D 크기(Vector3)로 변경
+    public Vector3 hitboxOffset = Vector3.zero;    //  3D 오프셋(Vector3)
+    public Vector3 hitboxSize = new Vector3(1.0f, 1.0f, 1.0f); //  3D 크기(Vector3)
 
     [Header("시야 범위")]
     public Vector3 viewOffset = new Vector3(0f, 0.5f, 0f); //  3D 시야 오프셋
-    public Vector3 viewSize = new Vector3(5f, 3f, 5f);     //  3D 시야 영역 크기
+    public Vector3 viewSize = new Vector3(5f, 3f, 5f);       //  3D 시야 영역 크기
 
     [Header("감지, 레이어")]
     public float detectionDecayTime = 3f;   // 플레이어 감지 후 감지율이 0으로 떨어지는 시간
@@ -65,7 +64,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     public enum state { idle, track, attack, endAttack }
     state currentState;
 
-    // 3D 리지드바디로 컴포넌트 타입을 바꿈
     private Rigidbody rb;
     GameObject playerObject;    // 플레이어 오브젝트
     public float dashTime;
@@ -75,7 +73,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
     private void Awake()
     {
-        //  Rigidbody를 가져옵니다.
         rb = GetComponent<Rigidbody>();
     }
 
@@ -83,7 +80,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
     {
         anim = GetComponentInChildren<Animator>();
 
-        //  싱글톤이 안전하게 들어왔는지 체크 후 대입
         if (PlayerMovement.Instance != null)
         {
             playerObject = PlayerMovement.Instance.gameObject;
@@ -117,7 +113,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
 
         if (anim != null && currentState != state.attack)
         {
-            // ] 3D 리지드바디의 X축 속도(velocity.x)를 반영합니다.
             anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
         }
 
@@ -148,7 +143,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         StopAllCoroutines();
         currentState = targetState;
 
-        //  3D 속도 0 제어
         Vector3 originVelocity = rb.linearVelocity;
         originVelocity.x = 0;
         rb.linearVelocity = originVelocity;
@@ -189,7 +183,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
             while (!HasArrived(targetPos) && canGoStraight)
             {
                 currentNormalizedSpeed = Mathf.Min(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.5f);
-                //  3D Rigidbody 속도 반영 (Z축은 0으로 유지하여 라인 고정)
                 rb.linearVelocity = new Vector3(sign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y, 0f);
                 yield return null;
             }
@@ -221,7 +214,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         if (canGoStraight && !HasArrived(checkPos))
         {
             currentNormalizedSpeed = Mathf.Clamp(currentNormalizedSpeed + acceleration * Time.deltaTime, 0.505f, 1f);
-            // 3D Rigidbody 속도 반영
             rb.linearVelocity = new Vector3(facingSign * currentNormalizedSpeed * maxSpeed, rb.linearVelocity.y, 0f);
         }
         else
@@ -275,26 +267,15 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         UpdateStates();
     }
 
-    //  3D 사정거리 감지 (Physics.OverlapBox)
+    // 💥 FIX 1: 조건 완화 - PlayerLayer에 속한 콜라이더가 닿기만 하면 사정거리 진입으로 판정!
     bool IsPlayerInRange()
     {
         Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
         Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        // 💥 Physics2D.OverlapBoxAll를 3D용 Physics.OverlapBox로 변경!
         Collider[] hitTargets = Physics.OverlapBox(worldCenter, hitboxSize / 2f, Quaternion.identity, playerLayer);
 
-        if (hitTargets.Length > 0)
-        {
-            foreach (Collider targetCollider in hitTargets)
-            {
-                if (targetCollider.gameObject == playerObject)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return hitTargets.Length > 0;
     }
 
     IEnumerator AttackHandler()
@@ -320,24 +301,19 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         SetState(state.track);
     }
 
-    //  3D 진짜 데미지 처리 (Physics.OverlapBox)
+    // 💥 FIX 2: 공격 시 PlayerLayer에 닿았으면 무조건 인스턴스에 데미지 적용
     void Attack()
     {
         Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * facingSign, hitboxOffset.y, 0f);
         Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        // 💥 3D 공간의 플레이어 캡슐/박스 콜라이더를 정확히 탐색합니다.
         Collider[] hitTargets = Physics.OverlapBox(worldCenter, hitboxSize / 2f, Quaternion.identity, playerLayer);
 
         if (hitTargets.Length > 0)
         {
-            foreach (Collider targetCollider in hitTargets)
+            if (PlayerMovement.Instance != null)
             {
-                if (targetCollider.gameObject == playerObject)
-                {
-                    PlayerMovement.Instance.GetDamage(damage, transform);
-                    break;
-                }
+                PlayerMovement.Instance.GetDamage(damage, transform);
             }
         }
     }
@@ -348,37 +324,24 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         SetState(state.idle);
     }
 
-    //  3D 시야 감지 (Physics.OverlapBox + 3D Raycast)
+    // 💥 FIX 3: 레이저(Raycast)를 쏠 때 Y축 높이를 +0.5f 만큼 올려 바닥을 긁지 않도록 수정!
     bool IsPlayerInView()
     {
         Vector3 localAdjustedOffset = new Vector3(viewOffset.x * facingSign, viewOffset.y, 0f);
         Vector3 worldCenter = transform.position + localAdjustedOffset;
 
-        // 💥 시야 감지 영역 역시 3D로 바꿉니다.
         Collider[] hitTargets = Physics.OverlapBox(worldCenter, viewSize / 2f, Quaternion.identity, playerLayer);
 
-        bool isPlayerInView = false;
+        // 시야 박스 안에 PlayerLayer가 감지되지 않았다면 무조건 false
+        if (hitTargets.Length == 0) return false;
 
-        if (hitTargets.Length > 0)
-        {
-            foreach (Collider targetCollider in hitTargets)
-            {
-                if (targetCollider.gameObject == playerObject)
-                {
-                    isPlayerInView = true;
-                    break;
-                }
-            }
-        }
+        // 장애물(벽) 검사를 위한 레이저 발사 (명치 높이인 0.5f를 더해줌)
+        Vector3 startPos = transform.position + Vector3.up * 0.5f;
+        Vector3 endPos = playerObject.transform.position + Vector3.up * 0.5f;
 
-        if (!isPlayerInView) return false;
-
-        Vector3 startPos = transform.position;
-        Vector3 endPos = playerObject.transform.position;
         Vector3 direction = (endPos - startPos).normalized;
         float distance = Vector3.Distance(startPos, endPos);
 
-        //  3D 물리(Physics.Raycast)를 쓰도록 변경합니다.
         RaycastHit hit;
         if (Physics.Raycast(startPos, direction, out hit, distance, obstacleMask))
         {
@@ -387,12 +350,10 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         return true;
     }
 
-    //  지형 체크 레이캐스트 (Physics.OverlapSphere)
     void UpdateStates()
     {
         movePosRight.y = movePosLeft.y = targetPos.y = transform.position.y;
 
-        // 💥 바닥 감지 및 벽 감지 센서 레이더들을 전부 3D(Physics.OverlapSphere)로 교체합니다.
         bool upperGroundDetect = Physics.CheckSphere(upperGroundCheckPos.position, layerCheckRadius, obstacleMask);
         bool lowerGroundDetect = Physics.CheckSphere(lowerGroundCheckPos.position, layerCheckRadius, obstacleMask);
 
@@ -437,7 +398,6 @@ public class MeleeAttackEnemy : MonoBehaviour, IEnemyCombat
         Destroy(gameObject, 1.0f);
     }
 
-    
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
