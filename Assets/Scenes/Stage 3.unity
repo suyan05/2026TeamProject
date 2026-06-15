@@ -7610,7 +7610,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1644151073529912008, guid: 5eb990fd73630ac4cb2775155b91ba88, type: 3}
       propertyPath: customSceneName
-      value: MergeRoom
+      value: Stage 4
       objectReference: {fileID: 0}
     - target: {fileID: 2750192949314896997, guid: 5eb990fd73630ac4cb2775155b91ba88, type: 3}
       propertyPath: m_Name

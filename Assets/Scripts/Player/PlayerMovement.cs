@@ -51,6 +51,9 @@ public class PlayerMovement : MonoBehaviour
     [Header("활 오브젝트")]
     public GameObject bowObject;
 
+    [Header("활 장착 위치 (추가됨)")]
+    public Transform bowHolder;   // ← 새로 추가된 활 장착 위치
+
     [Header("근접")]
     public float damage = 20f;
     public Vector3 hitboxOffset = Vector3.zero;
@@ -76,7 +79,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("장비")]
     public GameObject equipPrefab;
     public string currentWeaponName = "None";
-    public Transform weaponHolder;
+    public Transform weaponHolder;   // 근접무기 장착 위치
     private GameObject equippedWeaponObject;
 
     KeyBindingManager kb;
@@ -111,9 +114,10 @@ public class PlayerMovement : MonoBehaviour
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
         UIManager.Instance.UpdatePlayerHP();
 
-        if (bowObject != null && weaponHolder != null)
+        // 활을 bowHolder에 장착
+        if (bowObject != null && bowHolder != null)
         {
-            bowObject.transform.SetParent(weaponHolder);
+            bowObject.transform.SetParent(bowHolder);
             bowObject.transform.localPosition = Vector3.zero;
             bowObject.transform.localRotation = Quaternion.identity;
         }
@@ -134,6 +138,7 @@ public class PlayerMovement : MonoBehaviour
 
         bool inventoryOpen = GameStateManager.Current == GameState.InventoryOpen;
 
+        // 근접 공격
         if (!inventoryOpen && Weapon1Pressed() && !isBowCharging)
         {
             bowObject?.SetActive(false);
@@ -146,6 +151,7 @@ public class PlayerMovement : MonoBehaviour
             StartCoroutine(EndMeleeAttack());
         }
 
+        // 활 차징
         if (!inventoryOpen)
         {
             if (Weapon2Hold() && !isMeleeAttacking)
@@ -186,6 +192,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        // 구르기
         if (!inventoryOpen && Input.GetKeyDown(kb.rollKey))
         {
             animator?.SetTrigger("Roll");
@@ -212,27 +219,12 @@ public class PlayerMovement : MonoBehaviour
         JumpHandler();
     }
 
-    bool Weapon1Pressed()
-    {
-        return kb.weapon1IsMouse ?
-            Input.GetMouseButtonDown((int)kb.weapon1Mouse) :
-            Input.GetKeyDown(kb.weapon1Key);
-    }
+    // 입력 처리
+    bool Weapon1Pressed() => kb.weapon1IsMouse ? Input.GetMouseButtonDown((int)kb.weapon1Mouse) : Input.GetKeyDown(kb.weapon1Key);
+    bool Weapon2Hold() => kb.weapon2IsMouse ? Input.GetMouseButton((int)kb.weapon2Mouse) : Input.GetKey(kb.weapon2Key);
+    bool Weapon2Release() => kb.weapon2IsMouse ? Input.GetMouseButtonUp((int)kb.weapon2Mouse) : Input.GetKeyUp(kb.weapon2Key);
 
-    bool Weapon2Hold()
-    {
-        return kb.weapon2IsMouse ?
-            Input.GetMouseButton((int)kb.weapon2Mouse) :
-            Input.GetKey(kb.weapon2Key);
-    }
-
-    bool Weapon2Release()
-    {
-        return kb.weapon2IsMouse ?
-            Input.GetMouseButtonUp((int)kb.weapon2Mouse) :
-            Input.GetKeyUp(kb.weapon2Key);
-    }
-
+    // 활 차징 중 이동
     void BowMoveHandler()
     {
         sbyte horizontal = 0;
@@ -265,6 +257,7 @@ public class PlayerMovement : MonoBehaviour
         rb.linearVelocity = new Vector3(currentSpeed, rb.linearVelocity.y, 0);
     }
 
+    // 일반 이동
     void MoveHandler()
     {
         if (TryGetHorizontalInput(out sbyte horizontal))
@@ -281,6 +274,7 @@ public class PlayerMovement : MonoBehaviour
         rb.linearVelocity = new Vector3(currentSpeed, rb.linearVelocity.y, 0);
     }
 
+    // 점프
     void JumpHandler()
     {
         if (Input.GetKeyDown(kb.jumpKey))
@@ -300,6 +294,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // 좌우 입력
     bool TryGetHorizontalInput(out sbyte horizontal)
     {
         bool left = Input.GetKey(kb.leftKey);
@@ -327,12 +322,14 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // 플레이어 좌우 회전
     void RotationHandler()
     {
         float targetYAngle = (lastInputDirection == 1) ? 0f : 180f;
         transform.rotation = Quaternion.Euler(0f, targetYAngle, 0f);
     }
 
+    // 구르기
     void Roll()
     {
         if (!canRoll || !isGrounded) return;
@@ -360,6 +357,7 @@ public class PlayerMovement : MonoBehaviour
         canRoll = true;
     }
 
+    // 피격 처리
     public void GetDamage(float damageAmount, Transform damageSource)
     {
         if (isRolling || isHit) return;
@@ -393,6 +391,7 @@ public class PlayerMovement : MonoBehaviour
         isHit = false;
     }
 
+    // 사망 처리
     void Die()
     {
         controlLocked = true;
@@ -409,6 +408,7 @@ public class PlayerMovement : MonoBehaviour
         SceneManager.LoadScene("StartScene");
     }
 
+    // 활 발사
     void LaunchArrow()
     {
         ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
@@ -419,7 +419,6 @@ public class PlayerMovement : MonoBehaviour
         mousePos.z = Mathf.Abs(Camera.main.transform.position.z - transform.position.z);
         Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(mousePos);
 
-        // 기존 2D 방식 그대로 유지
         Vector3 rawDirection = (worldMousePos - firePoint.position);
         rawDirection.z = 0;
         rawDirection.Normalize();
@@ -452,17 +451,16 @@ public class PlayerMovement : MonoBehaviour
 
         arrowScript.Shoot(finalDirection, arrowSpeed);
 
-        // 화살 회전: 앞/뒤만 바뀌도록 Y축 고정
         float yRot = (finalDirection.x >= 0) ? 0f : 180f;
 
         arrowScript.transform.rotation = Quaternion.Euler(
-            -clampedAngle,   // 위/아래 각도는 X축 회전
-            yRot,            // 좌/우 방향만 Y축으로 결정
+            -clampedAngle,
+            yRot,
             0f
         );
     }
 
-
+    // 근접 공격
     void MeleeAttack()
     {
         bowObject?.SetActive(false);
@@ -493,6 +491,7 @@ public class PlayerMovement : MonoBehaviour
         isMeleeAttacking = false;
     }
 
+    // 스탯 재계산
     public void RecalculateStats(List<ItemInstance> items)
     {
         float oldMaxHp = MaxHp;
@@ -522,6 +521,7 @@ public class PlayerMovement : MonoBehaviour
         UIManager.Instance.UpdatePlayerHP();
     }
 
+    // 무기 장착
     public void EquipWeapon(ItemData data)
     {
         if (equippedWeaponObject != null)
@@ -554,6 +554,7 @@ public class PlayerMovement : MonoBehaviour
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
     }
 
+    // 벽 충돌 처리
     private void OnCollisionStay(Collision collision)
     {
         foreach (ContactPoint contact in collision.contacts)
@@ -569,6 +570,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // 상태 업데이트
     private void UpdateStates()
     {
         bool wasGrounded = isGrounded;
@@ -581,6 +583,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // 바닥 체크
     bool CheckIsGrounded()
     {
         Vector3 boxCenter = new Vector3(col.bounds.center.x, col.bounds.min.y - 0.05f, col.bounds.center.z);
@@ -593,7 +596,12 @@ public class PlayerMovement : MonoBehaviour
     {
         Gizmos.color = Color.red;
 
-        Vector3 hitboxLocalAdjustedOffset = new Vector3(hitboxOffset.x * lastInputDirection, hitboxOffset.y, hitboxOffset.z);
+        Vector3 hitboxLocalAdjustedOffset = new Vector3(
+            hitboxOffset.x * lastInputDirection,
+            hitboxOffset.y,
+            hitboxOffset.z
+        );
+
         Vector3 hitboxGizmoCenter = transform.position + hitboxLocalAdjustedOffset;
 
         Gizmos.DrawWireCube(hitboxGizmoCenter, hitboxSize);
