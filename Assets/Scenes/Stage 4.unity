@@ -162804,7 +162804,7 @@ PrefabInstance:
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: fallingMushroomPrefab
       value: 
-      objectReference: {fileID: 308650663367626842, guid: c0accfbe3b10c074e84577e3a282be3e, type: 3}
+      objectReference: {fileID: 5129991902282839862, guid: 5b2ced74dd7a2794c816f8777dbd8184, type: 3}
     - target: {fileID: 449700765456748431, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: m_Name
       value: BossMushroom
