@@ -48,6 +48,12 @@ public class PlayerMovement : MonoBehaviour
     public float maxArrowAngle = 30f;
     public Transform firePoint;
 
+    [Header("활 오브젝트")]
+    public GameObject bowObject;
+
+    [Header("활 장착 위치 (추가됨)")]
+    public Transform bowHolder;   // ← 새로 추가된 활 장착 위치
+
     [Header("근접")]
     public float damage = 20f;
     public Vector3 hitboxOffset = Vector3.zero;
@@ -73,7 +79,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("장비")]
     public GameObject equipPrefab;
     public string currentWeaponName = "None";
-    public Transform weaponHolder;
+    public Transform weaponHolder;   // 근접무기 장착 위치
     private GameObject equippedWeaponObject;
 
     KeyBindingManager kb;
@@ -88,9 +94,6 @@ public class PlayerMovement : MonoBehaviour
 
     bool isHit = false;
     public float hitStunDuration = 0.3f;
-
-    // 💡 사망 상태를 추적하여 중복 사망과 죽은 뒤의 조작을 막는 안전 플래그입니다.
-    private bool isDead = false;
 
     private void Awake()
     {
@@ -110,13 +113,20 @@ public class PlayerMovement : MonoBehaviour
 
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
         UIManager.Instance.UpdatePlayerHP();
+
+        // 활을 bowHolder에 장착
+        if (bowObject != null && bowHolder != null)
+        {
+            bowObject.transform.SetParent(bowHolder);
+            bowObject.transform.localPosition = Vector3.zero;
+            bowObject.transform.localRotation = Quaternion.identity;
+        }
+
+        bowObject?.SetActive(false);
     }
 
     private void Update()
     {
-        // 💡 죽은 상태라면 인벤토리를 제외한 모든 전투/이동 입력을 차단합니다.
-        if (isDead) return;
-
         if (Input.GetKeyDown(kb.inventory))
             UIManager.Instance.ToggleInventory();
 
@@ -131,6 +141,10 @@ public class PlayerMovement : MonoBehaviour
         // 근접 공격
         if (!inventoryOpen && Weapon1Pressed() && !isBowCharging)
         {
+            bowObject?.SetActive(false);
+            if (equippedWeaponObject != null)
+                equippedWeaponObject.SetActive(true);
+
             animator?.SetTrigger("Attack");
             isMeleeAttacking = true;
             MeleeAttack();
@@ -143,7 +157,12 @@ public class PlayerMovement : MonoBehaviour
             if (Weapon2Hold() && !isMeleeAttacking)
             {
                 if (!isBowCharging)
+                {
                     bowChargeDirection = lastInputDirection;
+                    bowObject?.SetActive(true);
+                    if (equippedWeaponObject != null)
+                        equippedWeaponObject.SetActive(false);
+                }
 
                 isBowCharging = true;
                 animator?.SetBool("BowCharge", true);
@@ -164,6 +183,10 @@ public class PlayerMovement : MonoBehaviour
                 isBowCharging = false;
 
                 lastInputDirection = bowChargeDirection;
+
+                bowObject?.SetActive(false);
+                if (equippedWeaponObject != null)
+                    equippedWeaponObject.SetActive(true);
 
                 UIManager.Instance.UpdateChargeGauge(0, maxArrowPower);
             }
@@ -196,27 +219,12 @@ public class PlayerMovement : MonoBehaviour
         JumpHandler();
     }
 
-    bool Weapon1Pressed()
-    {
-        return kb.weapon1IsMouse ?
-            Input.GetMouseButtonDown((int)kb.weapon1Mouse) :
-            Input.GetKeyDown(kb.weapon1Key);
-    }
+    // 입력 처리
+    bool Weapon1Pressed() => kb.weapon1IsMouse ? Input.GetMouseButtonDown((int)kb.weapon1Mouse) : Input.GetKeyDown(kb.weapon1Key);
+    bool Weapon2Hold() => kb.weapon2IsMouse ? Input.GetMouseButton((int)kb.weapon2Mouse) : Input.GetKey(kb.weapon2Key);
+    bool Weapon2Release() => kb.weapon2IsMouse ? Input.GetMouseButtonUp((int)kb.weapon2Mouse) : Input.GetKeyUp(kb.weapon2Key);
 
-    bool Weapon2Hold()
-    {
-        return kb.weapon2IsMouse ?
-            Input.GetMouseButton((int)kb.weapon2Mouse) :
-            Input.GetKey(kb.weapon2Key);
-    }
-
-    bool Weapon2Release()
-    {
-        return kb.weapon2IsMouse ?
-            Input.GetMouseButtonUp((int)kb.weapon2Mouse) :
-            Input.GetKeyUp(kb.weapon2Key);
-    }
-
+    // 활 차징 중 이동
     void BowMoveHandler()
     {
         sbyte horizontal = 0;
@@ -227,15 +235,29 @@ public class PlayerMovement : MonoBehaviour
             float targetSpeed = horizontal * maxSpeed * chargeSlow;
 
             currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, acceleration * Time.fixedDeltaTime);
+
+            if (horizontal == bowChargeDirection)
+            {
+                animator?.SetBool("BowMoveForward", true);
+                animator?.SetBool("BowMoveBackward", false);
+            }
+            else
+            {
+                animator?.SetBool("BowMoveForward", false);
+                animator?.SetBool("BowMoveBackward", true);
+            }
         }
         else
         {
             currentSpeed = Mathf.Lerp(currentSpeed, 0, deceleration * Time.fixedDeltaTime);
+            animator?.SetBool("BowMoveForward", false);
+            animator?.SetBool("BowMoveBackward", false);
         }
 
         rb.linearVelocity = new Vector3(currentSpeed, rb.linearVelocity.y, 0);
     }
 
+    // 일반 이동
     void MoveHandler()
     {
         if (TryGetHorizontalInput(out sbyte horizontal))
@@ -252,10 +274,9 @@ public class PlayerMovement : MonoBehaviour
         rb.linearVelocity = new Vector3(currentSpeed, rb.linearVelocity.y, 0);
     }
 
+    // 점프
     void JumpHandler()
     {
-        if (isDead) return;
-
         if (Input.GetKeyDown(kb.jumpKey))
         {
             if (jumpCount < maxJumpCount)
@@ -273,6 +294,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // 좌우 입력
     bool TryGetHorizontalInput(out sbyte horizontal)
     {
         bool left = Input.GetKey(kb.leftKey);
@@ -300,15 +322,17 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // 플레이어 좌우 회전
     void RotationHandler()
     {
         float targetYAngle = (lastInputDirection == 1) ? 0f : 180f;
         transform.rotation = Quaternion.Euler(0f, targetYAngle, 0f);
     }
 
+    // 구르기
     void Roll()
     {
-        if (!canRoll || !isGrounded || isDead) return;
+        if (!canRoll || !isGrounded) return;
         StartCoroutine(RollCoroutine());
     }
 
@@ -320,7 +344,6 @@ public class PlayerMovement : MonoBehaviour
         float elapsedTime = 0f;
         while (elapsedTime < rollDuration)
         {
-            if (isDead) yield break; // 구르는 도중 죽으면 즉시 중단
             Vector3 rollVel = rb.linearVelocity;
             rollVel.x = lastInputDirection * maxSpeed * rollSpeedMultiplier;
             rb.linearVelocity = rollVel;
@@ -334,15 +357,14 @@ public class PlayerMovement : MonoBehaviour
         canRoll = true;
     }
 
+    // 피격 처리
     public void GetDamage(float damageAmount, Transform damageSource)
     {
-        // 💡 이미 죽은 상태라면 추가 피격 및 넉백을 무시합니다.
-        if (isDead || isRolling || isHit) return;
+        if (isRolling || isHit) return;
 
         currentHp -= damageAmount;
         UIManager.Instance.UpdatePlayerHP();
 
-        // 넉백 추가
         Vector3 knockbackDir = (transform.position - damageSource.position).normalized;
         rb.AddForce(knockbackDir * 5f, ForceMode.Impulse);
 
@@ -369,34 +391,26 @@ public class PlayerMovement : MonoBehaviour
         isHit = false;
     }
 
-    // 💡 사망 처리 함수 수정
+    // 사망 처리
     void Die()
     {
-        if (isDead) return;
-        isDead = true;
-
         controlLocked = true;
-        rb.linearVelocity = Vector3.zero; // 사망 시 즉시 미끄러짐 멈춤
+        rb.linearVelocity = Vector3.zero;
 
         animator?.SetTrigger("Death");
 
-        // 기존에 적어두셨던 DeathRoutine을 안정적으로 실행합니다.
         StartCoroutine(DeathRoutine());
     }
 
-    // 💡 기존 리스폰 코루틴 유지 및 안정성 확보
     IEnumerator DeathRoutine()
     {
-        yield return new WaitForSeconds(2f); // Death 애니메이션 길이만큼 대기
-
-        // 스타트씬(StartScene_Test)으로 안전하게 이동합니다.
+        yield return new WaitForSeconds(2f);
         SceneManager.LoadScene("StartScene_Test");
     }
 
+    // 활 발사
     void LaunchArrow()
     {
-        if (isDead) return;
-
         ArrowController arrowScript = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
 
         arrowPower = Mathf.Max(arrowPower, 3f);
@@ -428,16 +442,31 @@ public class PlayerMovement : MonoBehaviour
         Vector3 finalDirection = new Vector3(
             Mathf.Cos(clampedAngle * Mathf.Deg2Rad),
             Mathf.Sin(clampedAngle * Mathf.Deg2Rad),
-            0
+            0f
         );
+
+        finalDirection.Normalize();
 
         float arrowSpeed = arrowPower + (rb.linearVelocity.magnitude * 0.1f);
 
         arrowScript.Shoot(finalDirection, arrowSpeed);
+
+        float yRot = (finalDirection.x >= 0) ? 0f : 180f;
+
+        arrowScript.transform.rotation = Quaternion.Euler(
+            -clampedAngle,
+            yRot,
+            0f
+        );
     }
 
+    // 근접 공격
     void MeleeAttack()
     {
+        bowObject?.SetActive(false);
+        if (equippedWeaponObject != null)
+            equippedWeaponObject.SetActive(true);
+
         Vector3 localAdjustedOffset = new Vector3(hitboxOffset.x * lastInputDirection, hitboxOffset.y, hitboxOffset.z);
         Vector3 worldCenter = transform.position + localAdjustedOffset;
 
@@ -448,12 +477,10 @@ public class PlayerMovement : MonoBehaviour
             if (targetCollider.TryGetComponent<IEnemyCombat>(out IEnemyCombat enemyCombat))
             {
                 enemyCombat.GetDamage(Damage, transform);
-                Debug.Log($"[일반몹 타격] {targetCollider.name}에게 {Damage}의 피해!");
             }
             else if (targetCollider.TryGetComponent<BossBase>(out BossBase boss))
             {
                 boss.TakeDamage(Damage);
-                Debug.Log($"[보스몹 타격] {targetCollider.name}에게 {Damage}의 피해!");
             }
         }
     }
@@ -464,6 +491,7 @@ public class PlayerMovement : MonoBehaviour
         isMeleeAttacking = false;
     }
 
+    // 스탯 재계산
     public void RecalculateStats(List<ItemInstance> items)
     {
         float oldMaxHp = MaxHp;
@@ -493,6 +521,7 @@ public class PlayerMovement : MonoBehaviour
         UIManager.Instance.UpdatePlayerHP();
     }
 
+    // 무기 장착
     public void EquipWeapon(ItemData data)
     {
         if (equippedWeaponObject != null)
@@ -525,10 +554,9 @@ public class PlayerMovement : MonoBehaviour
         UIManager.Instance.UpdatePlayerStatsUI(MaxHp, Damage, AttackSpeed, weaponAttackPower, weaponAttackSpeed);
     }
 
+    // 벽 충돌 처리
     private void OnCollisionStay(Collision collision)
     {
-        if (isDead) return;
-
         foreach (ContactPoint contact in collision.contacts)
         {
             if (Mathf.Abs(contact.normal.x) > 0.5f)
@@ -542,6 +570,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // 상태 업데이트
     private void UpdateStates()
     {
         bool wasGrounded = isGrounded;
@@ -554,6 +583,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // 바닥 체크
     bool CheckIsGrounded()
     {
         Vector3 boxCenter = new Vector3(col.bounds.center.x, col.bounds.min.y - 0.05f, col.bounds.center.z);
@@ -566,7 +596,12 @@ public class PlayerMovement : MonoBehaviour
     {
         Gizmos.color = Color.red;
 
-        Vector3 hitboxLocalAdjustedOffset = new Vector3(hitboxOffset.x * lastInputDirection, hitboxOffset.y, hitboxOffset.z);
+        Vector3 hitboxLocalAdjustedOffset = new Vector3(
+            hitboxOffset.x * lastInputDirection,
+            hitboxOffset.y,
+            hitboxOffset.z
+        );
+
         Vector3 hitboxGizmoCenter = transform.position + hitboxLocalAdjustedOffset;
 
         Gizmos.DrawWireCube(hitboxGizmoCenter, hitboxSize);

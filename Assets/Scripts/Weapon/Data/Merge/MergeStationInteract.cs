@@ -45,7 +45,7 @@ public class MergeStationInteract : MonoBehaviour
             }
         }
 
-        stationUI = FindObjectOfType<MergeStationUI>();
+        stationUI = Object.FindFirstObjectByType<MergeStationUI>(); // 변경된 부분
         player = GameObject.FindWithTag("Player")?.transform;
         cam = Camera.main;
 

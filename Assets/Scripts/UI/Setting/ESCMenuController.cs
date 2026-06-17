@@ -7,6 +7,12 @@ public class ESCMenuController : MonoBehaviour
 
     bool isOpen = false;
 
+    private void Start()
+    {
+        escMenu.SetActive(false);
+        settingsMenu.SetActive(false);
+    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
