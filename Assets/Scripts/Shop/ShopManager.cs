@@ -27,7 +27,7 @@ public class ShopManager : MonoBehaviour
     public Text tooltipNameText;
     public Text tooltipDescText;
 
-    private int playerGold = 10;
+  
 
     private void Awake()
     {
@@ -45,7 +45,12 @@ public class ShopManager : MonoBehaviour
 
     public void OpenShop()
     {
-        if (shopPanelObject != null) { shopPanelObject.SetActive(true); RefreshShopProducts(); }
+        if (shopPanelObject != null)
+        {
+            shopPanelObject.SetActive(true);
+            RefreshShopProducts();
+            UpdateMoneyUI(); 
+        }
     }
 
     public void CloseShop()
@@ -72,7 +77,8 @@ public class ShopManager : MonoBehaviour
         ShopItemData targetItem = clickedCard.itemData;
         int cost = targetItem.GetTierPrice();
 
-        if (playerGold >= cost)
+      
+        if (CurrencyManager.Instance.HasEnoughGold(cost))
         {
             InventoryUI invUI = inventoryUI;
             if (invUI == null) invUI = FindObjectOfType<InventoryUI>(true);
@@ -82,24 +88,34 @@ public class ShopManager : MonoBehaviour
 
             if (directInv != null)
             {
-                // 시현님의 Inventory 스크립트 함수명에 맞춰 호출
+                
                 if (directInv.TryAddItem(targetItem.actualItemData))
                 {
-                    playerGold -= cost;
+                    
+                    CurrencyManager.Instance.SpendGold(cost);
+
                     UpdateMoneyUI();
                     if (invUI != null) invUI.RefreshItems();
                     clickedCard.gameObject.SetActive(false);
                     HideTooltip();
-                    Debug.Log($"<{targetItem.itemName}> 구매 성공! 잔액: {playerGold}원");
+                    Debug.Log($"<{targetItem.itemName}> 구매 성공! 남은 잔액: {CurrencyManager.Instance.Gold}원");
                     return;
                 }
             }
-            Debug.LogError("씬에 인벤토리(Inventory) 데이터가 없습니다!");
+            Debug.LogError("씬에 인벤토리(Inventory) 데이터가 없거나 가방이 꽉 찼습니다!");
+        }
+        else
+        {
+            Debug.Log("골드가 부족하여 구매할 수 없습니다.");
         }
     }
 
-    public void AddGold(int amount) { playerGold += amount; UpdateMoneyUI(); }
-    private void UpdateMoneyUI() { if (playerMoneyText != null) playerMoneyText.text = $"보유 재화: {playerGold}원"; }
+   
+    public void UpdateMoneyUI()
+    {
+        if (playerMoneyText != null && CurrencyManager.Instance != null)
+            playerMoneyText.text = $"보유 재화: {CurrencyManager.Instance.Gold}원";
+    }
 
     public void ShowTooltip(ShopItemData data, Vector3 cardPosition)
     {
