@@ -110,13 +110,13 @@ public class ShopManager : MonoBehaviour
         }
     }
 
-   
+
     public void UpdateMoneyUI()
     {
         if (playerMoneyText != null && CurrencyManager.Instance != null)
-            playerMoneyText.text = $"보유 재화: {CurrencyManager.Instance.Gold}원";
-    }
 
+            playerMoneyText.text = CurrencyManager.Instance.Gold.ToString();
+    }
     public void ShowTooltip(ShopItemData data, Vector3 cardPosition)
     {
         if (tooltipPanel == null) return;
