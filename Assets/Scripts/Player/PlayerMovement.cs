@@ -325,7 +325,7 @@ public class PlayerMovement : MonoBehaviour
     // 플레이어 좌우 회전
     void RotationHandler()
     {
-        float targetYAngle = (lastInputDirection == 1) ? 0f : 180f;
+        float targetYAngle = (lastInputDirection == 1) ? 90f : 270f;
         transform.rotation = Quaternion.Euler(0f, targetYAngle, 0f);
     }
 
