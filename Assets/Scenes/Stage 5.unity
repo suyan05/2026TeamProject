@@ -72885,7 +72885,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2143968532358611332, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -126.3
+      value: -132.58
       objectReference: {fileID: 0}
     - target: {fileID: 2143968532358611332, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
       propertyPath: m_LocalPosition.y
@@ -72946,6 +72946,26 @@ PrefabInstance:
 --- !u!1 &755433373 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3828376633533440286, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
+  m_PrefabInstance: {fileID: 755433372}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &755433374 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6604272653286510310, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
+  m_PrefabInstance: {fileID: 755433372}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &755433375 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2906874671385409095, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
+  m_PrefabInstance: {fileID: 755433372}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &755433376 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3045401841996227738, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
+  m_PrefabInstance: {fileID: 755433372}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &755433377 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6394211899131131671, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
   m_PrefabInstance: {fileID: 755433372}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &755493518
@@ -173174,7 +173194,7 @@ MonoBehaviour:
   itemLayer:
     serializedVersion: 2
     m_Bits: 8192
-  inventory: {fileID: 0}
+  inventory: {fileID: 1748225834}
   inventoryUI: {fileID: 0}
 --- !u!114 &1748225837
 MonoBehaviour:
@@ -173203,9 +173223,9 @@ MonoBehaviour:
     m_Bits: 1024
   arrowPrefab: {fileID: -3075293000298968710, guid: 55fb96cca3f2e50468a12923bb7c0dce, type: 3}
   maxArrowAngle: 10
-  firePoint: {fileID: 0}
-  bowObject: {fileID: 0}
-  bowHolder: {fileID: 0}
+  firePoint: {fileID: 755433377}
+  bowObject: {fileID: 755433376}
+  bowHolder: {fileID: 755433375}
   damage: 20
   hitboxOffset: {x: 1.5, y: 0, z: 0}
   hitboxSize: {x: 2, y: 2, z: 1}
@@ -173218,7 +173238,7 @@ MonoBehaviour:
   isRolling: 0
   equipPrefab: {fileID: 0}
   currentWeaponName: None
-  weaponHolder: {fileID: 0}
+  weaponHolder: {fileID: 755433374}
   maxJumpCount: 2
   hitStunDuration: 0.3
 --- !u!136 &1748225838
