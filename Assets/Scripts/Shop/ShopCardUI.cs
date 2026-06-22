@@ -24,7 +24,7 @@ public class ShopCardUI : MonoBehaviour
         gameObject.SetActive(true);
         itemIconImage.sprite = itemData.itemIcon;
         itemNameText.text = itemData.itemName;
-        itemPriceText.text = $"{itemData.GetTierPrice()}¿ø";
+        itemPriceText.text = $"{itemData.GetTierPrice()}Gold";
         itemRarityText.text = $"[{itemData.rarity.ToString()}]";
 
         buyButton.onClick.RemoveAllListeners();
