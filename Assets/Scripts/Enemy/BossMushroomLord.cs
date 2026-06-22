@@ -16,6 +16,10 @@ public class BossMushroomLord : BossBase
     public GameObject jumpSmashIndicator;
     public GameObject fallingIndicatorPrefab;
 
+    
+    [Header("보상 설정")]
+    public int rewardGold = 500;
+
     private Animator anim;
     private Rigidbody rb;
 
@@ -161,10 +165,9 @@ public class BossMushroomLord : BossBase
                 yield return null;
             }
 
-           
             if (isPhaseTransitioning || isGroggy || isDead)
             {
-                yield return null; // 한 프레임을 쉬어주어 유니티가 멈추는 것을 방지
+                yield return null;
                 continue;
             }
 
@@ -380,6 +383,17 @@ public class BossMushroomLord : BossBase
         if (attackRoutine != null) StopCoroutine(attackRoutine);
         if (passiveFallingRoutine != null) StopCoroutine(passiveFallingRoutine);
 
+        
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.AddGold(rewardGold);
+            Debug.Log($"<color=yellow>[골드 지급 성공] 버섯군주 처치! {rewardGold} 골드를 획득했습니다.</color>");
+        }
+        else
+        {
+            Debug.LogError("[골드 지급 실패] 현재 씬에서 'CurrencyManager'를 찾을 수 없습니다!");
+        }
+
         if (RewardManager.Instance != null)
             RewardManager.Instance.ShowRewardSelection();
 
@@ -400,7 +414,6 @@ public class BossMushroomLord : BossBase
         return transform.position.y;
     }
 
-    
     public class MushroomLandmine : MonoBehaviour
     {
         private bool isTriggered = false;
@@ -422,7 +435,6 @@ public class BossMushroomLord : BossBase
         }
     }
 
-   
     public class MushroomFallingObstacle : MonoBehaviour
     {
         private Vector3 targetFloorPos;

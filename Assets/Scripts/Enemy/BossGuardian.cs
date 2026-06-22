@@ -1,14 +1,13 @@
 using UnityEngine;
 using System.Collections;
 
-
 public class BossGuardian : BossBase
 {
     [Header("Player Target")]
     public Transform playerTransform;
 
     [Header("인식 범위 설정")]
-    public float detectionRange = 5.0f;        
+    public float detectionRange = 5.0f;
     private bool isPlayerDetected = false;
 
     [Header("Pattern Prefabs")]
@@ -26,6 +25,10 @@ public class BossGuardian : BossBase
     public int remainingWeaknessVines = 3;
     private float defenseModifier = 0f;
 
+ 
+    [Header("보상 설정")]
+    public int rewardGold = 500;
+
     private int attackPatternCounter = 0;
 
     private Rigidbody rb;
@@ -36,7 +39,6 @@ public class BossGuardian : BossBase
         rb = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
 
-        
         if (playerTransform == null)
         {
             GameObject playerObj = GameObject.FindWithTag("Player");
@@ -57,7 +59,6 @@ public class BossGuardian : BossBase
 
     private IEnumerator BossAIRoutine()
     {
-        
         while (!isPlayerDetected)
         {
             if (playerTransform != null)
@@ -73,12 +74,9 @@ public class BossGuardian : BossBase
             if (anim != null) anim.SetBool("Walk", false);
             yield return new WaitForSeconds(0.2f);
         }
-        
 
-        
         yield return new WaitForSeconds(2.0f);
 
-        
         while (!isDead)
         {
             if (isPhaseTransitioning || isGroggy)
@@ -87,18 +85,15 @@ public class BossGuardian : BossBase
                 continue;
             }
 
-           
             if (anim != null) anim.SetBool("Walk", true);
 
             float moveTimer = 0f;
             while (moveTimer < 3.5f)
             {
-                
                 if (isPhaseTransitioning || isGroggy || isDead) break;
 
                 if (playerTransform != null)
                 {
-                    
                     Vector3 direction = playerTransform.position - transform.position;
                     direction.y = 0;
                     if (direction != Vector3.zero)
@@ -106,18 +101,15 @@ public class BossGuardian : BossBase
                         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 5f);
                     }
 
-                    // 2. 부모 클래스(BossBase)의 moveSpeed 속도로 플레이어를 향해 진짜 좌표 이동!
                     transform.position = Vector3.MoveTowards(transform.position, playerTransform.position, moveSpeed * Time.deltaTime);
                 }
 
                 moveTimer += Time.deltaTime;
-                yield return null; // 매 프레임 물 흐르듯이 무빙 연산
+                yield return null;
             }
 
-            // 추격이 끝나면 패턴 공격을 위해 이동 정지
             if (isPhaseTransitioning || isGroggy || isDead) continue;
 
-            // 그로기 카운트 체크
             attackPatternCounter++;
             if (attackPatternCounter >= 4)
             {
@@ -126,11 +118,9 @@ public class BossGuardian : BossBase
                 continue;
             }
 
-            // 패턴 시전 단계: 공격할 때는 걷기 애니메이션을 끄고 Idle 상태에서 트리거 작동
             if (anim != null) anim.SetBool("Walk", false);
             yield return new WaitForSeconds(0.1f);
 
-            // 랜덤 패턴 발동
             if (currentPhase == 1)
             {
                 int randomPattern = Random.Range(0, 3);
@@ -265,17 +255,22 @@ public class BossGuardian : BossBase
         if (anim != null) anim.SetBool("Walk", false);
         StopAllCoroutines();
 
-        // 추가된 부분: 3초 뒤에 보스 가디언 오브젝트 파괴
+      
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.AddGold(rewardGold);
+        }
+
+       
         Destroy(gameObject, 3.0f);
     }
 }
-
 
 public class VineTrapObject : MonoBehaviour
 {
     private BossGuardian bossRef;
     private bool isPlayerTrapped = false;
-    private float timer = 0f;
+    private float floatTimer = 0f;
 
     public void Setup(BossGuardian boss)
     {
@@ -288,7 +283,7 @@ public class VineTrapObject : MonoBehaviour
         if (other.CompareTag("Player") && !isPlayerTrapped)
         {
             isPlayerTrapped = true;
-            timer = 0f;
+            floatTimer = 0f;
             Debug.Log("플레이어가 덩굴에 걸려 2초간 속박됩니다! 지속 피해 시작");
         }
     }
@@ -297,7 +292,7 @@ public class VineTrapObject : MonoBehaviour
     {
         if (isPlayerTrapped)
         {
-            timer += Time.deltaTime;
+            floatTimer += Time.deltaTime;
             if (bossRef != null)
             {
                 bossRef.Heal(15f * Time.deltaTime);
@@ -308,7 +303,7 @@ public class VineTrapObject : MonoBehaviour
                 PlayerMovement.Instance.GetDamage(2f, transform);
             }
 
-            if (timer >= 2.0f)
+            if (floatTimer >= 2.0f)
             {
                 isPlayerTrapped = false;
                 Destroy(gameObject);
