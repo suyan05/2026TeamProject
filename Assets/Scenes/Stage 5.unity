@@ -90306,11 +90306,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!4 &909524764 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2143968532358611332, guid: 36c5f979b3a2188449cbba42e34e2132, type: 3}
-  m_PrefabInstance: {fileID: 755433372}
-  m_PrefabAsset: {fileID: 0}
 --- !u!82 &909524771
 AudioSource:
   m_ObjectHideFlags: 0
@@ -184179,7 +184174,7 @@ PrefabInstance:
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: playerTransform
       value: 
-      objectReference: {fileID: 909524764}
+      objectReference: {fileID: 672225889}
     - target: {fileID: 237459492683689719, guid: 7e79756125d141e45b55f096ce050b13, type: 3}
       propertyPath: landmineSporePrefab
       value: 
@@ -200067,7 +200062,7 @@ PrefabInstance:
     - target: {fileID: 1759307754034332348, guid: 74fbd29c84df5c14db38e230bc8a428d, type: 3}
       propertyPath: playerTransform
       value: 
-      objectReference: {fileID: 909524764}
+      objectReference: {fileID: 672225889}
     - target: {fileID: 1759307754034332348, guid: 74fbd29c84df5c14db38e230bc8a428d, type: 3}
       propertyPath: smashWavePrefab
       value: 
