@@ -31,10 +31,10 @@ public class EnemyHPBarFollow : MonoBehaviour
         transform.position = screenPos;
 
         // 부드러운 HP 감소
-        //currentFill = Mathf.Lerp(currentFill, targetFill, Time.deltaTime * smoothSpeed);
-        //fillImage.fillAmount = currentFill;
+        currentFill = Mathf.Lerp(currentFill, targetFill, Time.deltaTime * smoothSpeed);
+        fillImage.fillAmount = currentFill;
 
-        //UpdateColor();
+        UpdateColor();
     }
 
     public void SetHP(float current, float max)
@@ -42,7 +42,7 @@ public class EnemyHPBarFollow : MonoBehaviour
         targetFill = Mathf.Clamp01(current / max);
     }
 
-    /*void UpdateColor()
+    void UpdateColor()
     {
         if (currentFill > 0.7f)
         {
@@ -56,5 +56,5 @@ public class EnemyHPBarFollow : MonoBehaviour
         {
             fillImage.color = Color.red;
         }
-    }*/
+    }
 }

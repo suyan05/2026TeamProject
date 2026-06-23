@@ -166,7 +166,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHPBarFollow
   target: {fileID: 0}
   offset: {x: 0, y: 0, z: 0}
-  fillImage: {fileID: 0}
+  fillImage: {fileID: 2231283238427389015}
 --- !u!1 &4120285809439364164
 GameObject:
   m_ObjectHideFlags: 0

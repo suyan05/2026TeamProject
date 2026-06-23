@@ -65,21 +65,21 @@ public class InventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     {
         GetComponent<CanvasGroup>().blocksRaycasts = true;
 
-        // 장비칸에 드롭된 경우 → 원래 자리로 돌아가지 않음
+        // 장비창에 드롭된 경우
         if (droppedOnEquipment)
         {
             Destroy(gameObject);
             return;
         }
 
-        // 인벤토리 영역 밖  바닥에 아이템 드롭
+        // 인벤토리 영역 밖 → 바닥에 드롭
         if (!RectTransformUtility.RectangleContainsScreenPoint(inventoryUI.inventoryArea, Input.mousePosition, eventData.pressEventCamera))
         {
             DropItemToGround();
             return;
         }
 
-        // 장비 슬롯에서 드래그한 경우
+        // 장비창에서 인벤토리로 돌아오는 경우
         if (fromEquipmentSlot != null)
         {
             Vector2Int slot = inventory.FindClosestEmptySlot(Input.mousePosition, inventoryUI);
@@ -100,10 +100,35 @@ public class InventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             return;
         }
 
-        // 인벤토리 내부 드롭 원래 자리로 복귀
+        // -----------------------------
+        // 인벤토리 내부 이동 처리 (핵심 수정)
+        // -----------------------------
+
+        // 1) 원래 슬롯 제거
+        inventory.grid.RemoveItem(itemInstance);
+
+        // 2) 가장 가까운 빈 슬롯 찾기
+        Vector2Int newSlot = inventory.FindClosestEmptySlot(Input.mousePosition, inventoryUI);
+
+        if (newSlot.x != -1)
+        {
+            // 3) 새 슬롯에 배치
+            inventory.grid.PlaceItem(itemInstance, newSlot.x, newSlot.y);
+        }
+        else
+        {
+            // 4) 빈 슬롯 없으면 원래 자리로 복구
+            inventory.grid.PlaceItem(itemInstance, originalX, originalY);
+        }
+
+        // 5) UI 갱신
         transform.SetParent(originalParent);
         inventoryUI.RefreshItems();
+
+        // 6) 드래그 UI 제거
+        Destroy(gameObject);
     }
+
 
     void DropItemToGround()
     {

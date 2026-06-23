@@ -595,7 +595,7 @@ MonoBehaviour:
   slotPrefab: {fileID: 3639052437571593073, guid: 63c40c94ab3dc414b91c5a00a927183d, type: 3}
   itemPrefab: {fileID: 3639052437571593073, guid: 6d3efa91fba975748a0388a415d84dca, type: 3}
   slotSize: 64
-  inventoryArea: {fileID: 0}
+  inventoryArea: {fileID: 6008841165195003019}
 --- !u!114 &3503686595749945069
 MonoBehaviour:
   m_ObjectHideFlags: 0

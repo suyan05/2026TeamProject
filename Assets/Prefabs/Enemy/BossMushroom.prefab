@@ -67,8 +67,10 @@ MonoBehaviour:
   sporeMineIndicator: {fileID: 0}
   jumpSmashIndicator: {fileID: 0}
   fallingIndicatorPrefab: {fileID: 0}
+  rewardGold: 500
   patrolRadius: 6
   patrolSpeed: 2
+  attackCooldown: 2
 --- !u!54 &4550104028423350133
 Rigidbody:
   m_ObjectHideFlags: 0
