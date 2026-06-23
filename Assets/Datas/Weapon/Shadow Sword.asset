@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a268c63b2de0ed34c89ee05d3bab9899, type: 3}
+  m_Name: Shadow Sword
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  rarity: 1
+  itemID: 5
+  itemName: Shadow Sword
+  description: Shadow Sword
+  itemType: 1
+  worldPrefab: {fileID: 5276956284920199777, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+  equipPrefab: {fileID: 6825003717525163545, guid: 88d55b08d64baab4a88bc1e6c6055c21, type: 3}
+  icon: {fileID: 21300000, guid: f47120310336ca44cb682d33d01b1772, type: 3}
+  width: 2
+  height: 1
+  weaponType: 4
+  weaponAttackPower: 30
+  weaponAttackSpeed: 5
+  elementType: 0
+  bonusMaxHp: 0
+  bonusBaseDamage: 0
+  bonusAttackSpeed: 0
