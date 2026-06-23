@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6825003717525163545
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 638980867786216038}
+  m_Layer: 0
+  m_Name: Shadow Sword_b
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &638980867786216038
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6825003717525163545}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3090003586732271232}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &7535004343553132123
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 638980867786216038}
+    m_Modifications:
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.19999997
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.20000006
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.20000005
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.041
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.611
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071067
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.000000018966333
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.00000003135559
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5276956284920199777, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+      propertyPath: m_Name
+      value: Shadow Sword
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1131199871491581424, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+    - {fileID: -2399791812257430940, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+--- !u!4 &3090003586732271232 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4787418096134430939, guid: 5eb10891491146643b1b71e1a331ffa6, type: 3}
+  m_PrefabInstance: {fileID: 7535004343553132123}
+  m_PrefabAsset: {fileID: 0}
