@@ -28,7 +28,7 @@ public class PlayerPickup : MonoBehaviour
         if (inventory == null || inventoryUI == null)
             return;
 
-        Debug.DrawRay(transform.position, transform.right * interactDistance, Color.blue);
+        Debug.DrawRay(transform.position, transform.forward * interactDistance, Color.blue);
 
         if (Input.GetKeyDown(KeyCode.F))
             TryPickup();
@@ -63,7 +63,7 @@ public class PlayerPickup : MonoBehaviour
 
     void TryPickup()
     {
-        Ray ray = new Ray(transform.position, transform.right);
+        Ray ray = new Ray(transform.position, transform.forward);
 
         if (Physics.Raycast(ray, out RaycastHit hit, interactDistance, itemLayer))
         {
